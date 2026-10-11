@@ -4,13 +4,15 @@
 // Lägen: 'bygg' (dra balkar mellan rutnätspunkter) och 'prov' (fysiken
 // räknar, keIWs går). Spelytan anpassar sig efter skärmen: verktygen ligger
 // längst ner när mobilen står och på sidan när den ligger, och kameran
-// zoomar så att hela banan (bana.vy) alltid får plats.
+// visar hela banan (bana.vy) från början. Två fingrar (eller mushjulet)
+// zoomar och flyttar vyn.
 
 const TEST = new URLSearchParams(location.search).has('test');
 const RUTNAT = 1;            // m mellan punkterna man bygger på
 const MAX_LANGD = 12;        // m, längsta balken
 const MAX_STEG = 8;          // fysiksteg per bildruta (annars går det långsamt)
-const KEIWS_HOJD = 1.0;      // m, keIWs från fötterna till huvudet
+const KEIWS_HOJD = 2.0;      // m, keIWs från fötterna till huvudet (stor, så att han syns)
+const MAX_ZOOM = 6;
 const SPARA = 'brobyggare-ritning-';   // + banans nummer
 const SPARA_BANA = 'brobyggare-bana';
 
@@ -36,7 +38,11 @@ let storlek = 1;
 let lageNu = 'bygg';
 let sim = null;
 let drag = null;              // {fran: [x, y], till: [x, y]} medan man drar
+let vald = -1;                // vald balk (verktyget Flytta)
+let flytt = null;             // {balk, ande} eller {nod}, och {till: [x, y]}
 let kam = { sk: 30, ox: 0, oy: 0 };
+let bas = null;               // kameran utan zoom: {sk, cx, cy, B} (B = det som syns)
+let zoom = 1, mitt = null;    // användarens zoom och vyns mitt [x, y] i meter
 let dpr = 1;
 
 // ---------- Ritningen (det man bygger) ----------
@@ -67,7 +73,10 @@ function bytBana(nr) {
     bana = BANOR[nr];
     ritning = lasRitning();
     historik = [];
-    drag = null;
+    drag = flytt = null;
+    vald = -1;
+    zoom = 1;
+    mitt = null;
     try { localStorage.setItem(SPARA_BANA, nr); } catch (e) { /* privat läge */ }
     anpassa();
     uppdateraInfo();
@@ -123,17 +132,70 @@ function laggTillBalk(p, q) {
 function rivBalk(i) {
     andra(() => {
         ritning.balkar.splice(i, 1);
-        const anvand = new Set();
-        ritning.balkar.forEach(b => { anvand.add(b.a); anvand.add(b.b); });
-        const nytt = [];
-        let n = 0;
-        ritning.noder = ritning.noder.filter((nod, j) => {
-            const kvar = nod.fast || anvand.has(j);
-            if (kvar) nytt[j] = n++;
-            return kvar;
-        });
-        ritning.balkar.forEach(b => { b.a = nytt[b.a]; b.b = nytt[b.b]; });
+        stada();
     });
+    vald = -1;
+}
+
+// Tar bort balkar som blivit noll långa eller dubbla, och knutpunkter som
+// inte sitter i någon balk (fästpunkterna blir kvar).
+function stada() {
+    const sedda = new Set();
+    ritning.balkar = ritning.balkar.filter(b => {
+        const nyckel = Math.min(b.a, b.b) + '-' + Math.max(b.a, b.b);
+        if (b.a === b.b || sedda.has(nyckel)) return false;
+        sedda.add(nyckel);
+        return true;
+    });
+    const anvand = new Set();
+    ritning.balkar.forEach(b => { anvand.add(b.a); anvand.add(b.b); });
+    const nytt = [];
+    let n = 0;
+    ritning.noder = ritning.noder.filter((nod, j) => {
+        const kvar = nod.fast || anvand.has(j);
+        if (kvar) nytt[j] = n++;
+        return kvar;
+    });
+    ritning.balkar.forEach(b => { b.a = nytt[b.a]; b.b = nytt[b.b]; });
+}
+
+const langd = (p, q) => Math.hypot(q.x - p.x, q.y - p.y);
+
+// Flyttar ena änden (ande = 'a' eller 'b') av balk i till punkten p. Bara den
+// balken flyttas, de andra som satt i samma knutpunkt blir kvar.
+function flyttaAnde(i, ande, [x, y]) {
+    const b = ritning.balkar[i], annan = ritning.noder[ande === 'a' ? b.b : b.a];
+    const L = Math.hypot(x - annan.x, y - annan.y);
+    if (L < 1e-6 || L > MAX_LANGD + 1e-6) return false;
+    andra(() => {
+        let t = nodVid(x, y);
+        if (t < 0) { ritning.noder.push({ x, y, fast: false, styv: true }); t = ritning.noder.length - 1; }
+        b[ande] = t;
+        stada();
+    });
+    vald = ritning.balkar.indexOf(b);
+    return true;
+}
+
+// Flyttar en knutpunkt med alla balkar som sitter i den. Hamnar den på en
+// annan knutpunkt slås de ihop.
+function flyttaNod(i, [x, y]) {
+    const nod = ritning.noder[i];
+    if (nod.fast) return false;
+    const t = nodVid(x, y);
+    if (t === i) return false;
+    for (const b of ritning.balkar) {
+        if (b.a !== i && b.b !== i) continue;
+        if (langd({ x, y }, ritning.noder[b.a === i ? b.b : b.a]) > MAX_LANGD + 1e-6) return false;
+    }
+    const valdBalk = ritning.balkar[vald];
+    andra(() => {
+        if (t < 0) { nod.x = x; nod.y = y; return; }
+        for (const b of ritning.balkar) { if (b.a === i) b.a = t; if (b.b === i) b.b = t; }
+        stada();
+    });
+    vald = ritning.balkar.indexOf(valdBalk);
+    return true;
 }
 
 function vaxlaForband(i) {
@@ -166,23 +228,49 @@ function anpassa() {
     duk.height = Math.round(h * dpr);
     duk.style.width = w + 'px';
     duk.style.height = h + 'px';
-    // Luft för infotexten upptill (två rader om den inte får plats på en).
-    const vy = bana.vy, luft = infoLuft();
+    // Luft för infotexten upptill. Hela bana.vy ska synas, och blir det
+    // höjd över (mobilen står) går det mesta till himlen.
+    const vy = bana.vy, luft = luftNu;
     const sk = Math.min(w / (vy.x1 - vy.x0), (h - luft) / (vy.y1 - vy.y0));
-    // Blir det höjd över (mobilen står) går det mesta till himlen.
     const over = h - luft - sk * (vy.y1 - vy.y0);
-    kam = {
-        sk,
-        ox: w / 2 - sk * (vy.x0 + vy.x1) / 2,
-        oy: luft + over * 0.7 + sk * vy.y1
-    };
+    const oy = luft + over * 0.7 + sk * vy.y1, cy = (oy - (luft + h) / 2) / sk;
+    const cx = (vy.x0 + vy.x1) / 2;
+    const hw = w / 2 / sk, hh = (h - luft) / 2 / sk;
+    bas = { sk, cx, cy, B: { x0: cx - hw, x1: cx + hw, y0: cy - hh, y1: cy + hh } };
+    sattKamera();
+}
+
+// Kameran från zoom och mitt. Vyn hålls inom det som syns utan zoom.
+function sattKamera() {
+    const w = scen.clientWidth, h = scen.clientHeight, luft = luftNu;
+    zoom = Math.max(1, Math.min(MAX_ZOOM, zoom));
+    const sk = bas.sk * zoom, hw = w / 2 / sk, hh = (h - luft) / 2 / sk, B = bas.B;
+    let [cx, cy] = mitt || [bas.cx, bas.cy];
+    cx = Math.max(B.x0 + hw, Math.min(B.x1 - hw, cx));
+    cy = Math.max(B.y0 + hh, Math.min(B.y1 - hh, cy));
+    mitt = zoom > 1 ? [cx, cy] : null;
+    kam = { sk, ox: w / 2 - cx * sk, oy: (luft + h) / 2 + cy * sk };
+}
+
+// Zoomar (faktor f) så att världspunkten `varld` (annars den som ligger
+// under skärmpunkten) hamnar i skärmpunkten (px, py).
+function zoomaKring(f, px, py, varld) {
+    const [wx, wy] = varld || [(px - kam.ox) / kam.sk, (kam.oy - py) / kam.sk];
+    zoom = Math.max(1, Math.min(MAX_ZOOM, zoom * f));
+    const sk = bas.sk * zoom, w = scen.clientWidth, h = scen.clientHeight;
+    mitt = [wx - (px - w / 2) / sk, wy + (py - (luftNu + h) / 2) / sk];
+    sattKamera();
 }
 
 const sx = x => kam.ox + x * kam.sk;
 const sy = y => kam.oy - y * kam.sk;
-const tillVarld = e => {
+const iDuken = e => {
     const r = duk.getBoundingClientRect();
-    return [(e.clientX - r.left - kam.ox) / kam.sk, (kam.oy - (e.clientY - r.top)) / kam.sk];
+    return [e.clientX - r.left, e.clientY - r.top];
+};
+const tillVarld = e => {
+    const [px, py] = iDuken(e);
+    return [(px - kam.ox) / kam.sk, (kam.oy - py) / kam.sk];
 };
 
 function ritaBakgrund() {
@@ -292,6 +380,7 @@ function ritaBygg() {
         ritaBit(na.x, na.y, nb.x, nb.y, PROFILER[b.material || 'limtra'][b.storlek], b.vag, FARG.tra, FARG.traMork);
     }
     for (const n of ritning.noder) ritaNod(n.x, n.y, n.fast, n.styv);
+    ritaVald();
     if (drag && (drag.till[0] !== drag.fran[0] || drag.till[1] !== drag.fran[1])) {
         const [x1, y1] = drag.fran, [x2, y2] = drag.till;
         const ok = Math.hypot(x2 - x1, y2 - y1) <= MAX_LANGD + 1e-6;
@@ -305,6 +394,48 @@ function ritaBygg() {
             ctx.fillText('Längst ' + MAX_LANGD + ' m', sx((x1 + x2) / 2), sy((y1 + y2) / 2) - 12);
         }
     }
+}
+
+// Verktyget Flytta: den valda balken lyses upp och får handtag i ändarna.
+// Medan man drar visas var balkarna hamnar.
+function ritaVald() {
+    const linje = (p, q) => {
+        ctx.beginPath(); ctx.moveTo(sx(p.x), sy(p.y)); ctx.lineTo(sx(q.x), sy(q.y)); ctx.stroke();
+    };
+    ctx.lineCap = 'round';
+    if (vald >= 0 && ritning.balkar[vald]) {
+        const b = ritning.balkar[vald], na = ritning.noder[b.a], nb = ritning.noder[b.b];
+        ctx.strokeStyle = 'rgba(61, 139, 253, 0.45)';
+        ctx.lineWidth = Math.max(3, PROFILER.limtra[b.storlek].h * kam.sk) + 10;
+        linje(na, nb);
+        const r = Math.max(9, 0.3 * kam.sk);
+        for (const n of [na, nb]) {
+            ctx.fillStyle = 'rgba(61, 139, 253, 0.35)';
+            ctx.beginPath(); ctx.arc(sx(n.x), sy(n.y), r, 0, 7); ctx.fill();
+            ctx.strokeStyle = '#3d8bfd'; ctx.lineWidth = 2.5;
+            ctx.beginPath(); ctx.arc(sx(n.x), sy(n.y), r, 0, 7); ctx.stroke();
+        }
+    }
+    if (!flytt) return;
+    const till = { x: flytt.till[0], y: flytt.till[1] };
+    const andar = [];
+    if (flytt.nod !== undefined) {
+        for (const b of ritning.balkar) {
+            if (b.a === flytt.nod) andar.push(ritning.noder[b.b]);
+            else if (b.b === flytt.nod) andar.push(ritning.noder[b.a]);
+        }
+    } else {
+        const b = ritning.balkar[flytt.balk];
+        andar.push(ritning.noder[flytt.ande === 'a' ? b.b : b.a]);
+    }
+    const ok = andar.every(n => langd(n, till) <= MAX_LANGD + 1e-6);
+    ctx.setLineDash([6, 5]);
+    ctx.strokeStyle = ok ? '#3d8bfd' : FARG.fel;
+    ctx.lineWidth = 3;
+    for (const n of andar) linje(n, till);
+    ctx.setLineDash([]);
+    ctx.fillStyle = ok ? '#3d8bfd' : FARG.fel;
+    ctx.beginPath(); ctx.arc(sx(till.x), sy(till.y), Math.max(5, 0.15 * kam.sk), 0, 7); ctx.fill();
 }
 
 function ritaProv() {
@@ -404,22 +535,38 @@ function ritaPlask() {
 
 // ---------- Info och knappar ----------
 
+const TIPS = {
+    vag: 'Dra mellan två punkter: väg som keIWs går på. Tryck på en knutpunkt: styv/ledad.',
+    balk: 'Dra mellan två punkter: balk. Tryck på en knutpunkt: styv/ledad.',
+    flytta: 'Tryck på en balk och dra i dess ändar, eller dra en knutpunkt.',
+    flyttaVald: 'Dra en ände dit den ska. Storleksknappen byter storlek på balken.',
+    riv: 'Tryck på en balk för att riva den.'
+};
+
+// Infotexten: bana, kostnad och en tredje rad (tips medan man bygger,
+// utnyttjandet under provkörningen). Tre rader när mobilen står.
 function uppdateraInfo() {
     const k = kostnad(), over = k > bana.budget;
     const pil = (v, t, av) => '<button data-v="' + v + '"' + (av ? ' disabled' : '') + '>' + t + '</button>';
     const bygger = lageNu === 'bygg';
-    let text = pil('forra', '‹', !bygger || banaNr === 0) + '<b>Bana ' + (banaNr + 1) + ' · ' + bana.namn + '</b>'
-        + pil('nasta', '›', !bygger || banaNr === BANOR.length - 1)
-        + ' <span class="' + (over ? 'over' : '') + '">' + kr(k) + '</span> av ' + kr(bana.budget);
-    if (lageNu === 'prov' && sim) {
-        text += sim.brott ? ' · <span class="over">bron gick sönder</span>' : ' · högst ' + Math.round(sim.maxU * 100) + ' %';
+    let tredje;
+    if (!bygger && sim) {
+        tredje = sim.brott ? '<span class="over">Bron gick sönder</span>'
+            : 'Högsta utnyttjande ' + Math.round(sim.maxU * 100) + ' %';
+    } else {
+        tredje = TIPS[verktyg === 'flytta' && vald >= 0 ? 'flyttaVald' : verktyg];
     }
-    infoEl.innerHTML = text;
-    for (const v of ['vag', 'balk', 'riv']) knappar[v].classList.toggle('vald', verktyg === v);
-    knappar.storlek.textContent = STORLEKAR[storlek];
+    infoEl.innerHTML = '<div class="rad">' + pil('forra', '‹', !bygger || banaNr === 0)
+        + '<b>Bana ' + (banaNr + 1) + ' · ' + bana.namn + '</b>'
+        + pil('nasta', '›', !bygger || banaNr === BANOR.length - 1) + '</div>'
+        + '<div class="rad"><span class="' + (over ? 'over' : '') + '">' + kr(k) + '</span> av ' + kr(bana.budget) + '</div>'
+        + '<div class="rad' + (bygger ? ' tips' : '') + '">' + tredje + '</div>';
+    for (const v of ['vag', 'balk', 'flytta', 'riv']) knappar[v].classList.toggle('vald', verktyg === v);
+    const valdBalk = verktyg === 'flytta' && vald >= 0 ? ritning.balkar[vald] : null;
+    knappar.storlek.textContent = STORLEKAR[valdBalk ? valdBalk.storlek : storlek];
     knappar.kor.textContent = lageNu === 'bygg' ? 'Kör' : 'Bygg';
     knappar.kor.classList.toggle('stopp', lageNu !== 'bygg');
-    for (const v of ['vag', 'balk', 'riv', 'storlek', 'angra']) knappar[v].disabled = lageNu !== 'bygg';
+    for (const v of ['vag', 'balk', 'flytta', 'riv', 'storlek', 'angra']) knappar[v].disabled = lageNu !== 'bygg';
     knappar.angra.disabled = lageNu !== 'bygg' || !historik.length;
     if (infoLuft() !== luftNu) anpassa();
 }
@@ -461,9 +608,14 @@ document.getElementById('verktyg').addEventListener('click', e => {
     const b = e.target.closest('button');
     if (!b || b.disabled) return;
     const v = b.dataset.v;
-    if (v === 'vag' || v === 'balk' || v === 'riv') verktyg = v;
-    else if (v === 'storlek') storlek = (storlek + 1) % STORLEKAR.length;
-    else if (v === 'angra' && historik.length) { ritning = JSON.parse(historik.pop()); sparaRitning(); }
+    if (v === 'vag' || v === 'balk' || v === 'flytta' || v === 'riv') { verktyg = v; vald = -1; }
+    else if (v === 'storlek') {
+        // Med en vald balk (Flytta) byter knappen storlek på den.
+        const b = verktyg === 'flytta' && vald >= 0 ? ritning.balkar[vald] : null;
+        if (b) andra(() => { b.storlek = (b.storlek + 1) % STORLEKAR.length; });
+        else storlek = (storlek + 1) % STORLEKAR.length;
+    }
+    else if (v === 'angra' && historik.length) { ritning = JSON.parse(historik.pop()); vald = -1; sparaRitning(); }
     else if (v === 'kor') { if (lageNu === 'bygg') kor(); else bygg(); }
     uppdateraInfo();
 });
@@ -495,27 +647,106 @@ function narmasteBalk(wx, wy, max) {
     return bast;
 }
 
+// Närmaste knutpunkt inom `max` m (utan fästpunkterna), eller -1.
+function narmasteNod(wx, wy, max) {
+    let bast = -1, bastD = max;
+    ritning.noder.forEach((n, i) => {
+        const d = Math.hypot(wx - n.x, wy - n.y);
+        if (!n.fast && d < bastD) { bastD = d; bast = i; }
+    });
+    return bast;
+}
+
+// Fingrarna på skärmen just nu: pointerId → [x, y] i duken. Två fingrar
+// zoomar och flyttar vyn (och avbryter det man höll på att bygga). Ett
+// finger under provkörningen flyttar vyn.
+const pekare = new Map();
+let nyp = null, panorera = null;
+
+function nypLage() {
+    const [[x1, y1], [x2, y2]] = [...pekare.values()];
+    return { mx: (x1 + x2) / 2, my: (y1 + y2) / 2, d: Math.hypot(x2 - x1, y2 - y1) || 1 };
+}
+
+const vynsMitt = () => [(scen.clientWidth / 2 - kam.ox) / kam.sk, (kam.oy - (luftNu + scen.clientHeight) / 2) / kam.sk];
+
 duk.addEventListener('pointerdown', e => {
-    if (lageNu !== 'bygg') return;
+    pekare.set(e.pointerId, iDuken(e));
+    try { duk.setPointerCapture(e.pointerId); } catch (err) { /* syntetiska händelser i testerna */ }
+    if (pekare.size >= 2) {
+        drag = flytt = panorera = null;
+        const n = nypLage();
+        nyp = { d: n.d, zoom, varld: [(n.mx - kam.ox) / kam.sk, (kam.oy - n.my) / kam.sk] };
+        return;
+    }
+    if (lageNu !== 'bygg') {
+        panorera = { p: iDuken(e), mitt: vynsMitt() };
+        return;
+    }
     const [wx, wy] = tillVarld(e);
+    const nara = Math.max(0.45, 22 / kam.sk);
     if (verktyg === 'riv') {
         const i = narmasteBalk(wx, wy, Math.max(0.4, 16 / kam.sk));
         if (i >= 0) rivBalk(i);
         return;
     }
+    if (verktyg === 'flytta') {
+        // Först handtagen på den valda balken, sedan knutpunkterna, annars
+        // väljs balken man tryckte på.
+        const b = vald >= 0 ? ritning.balkar[vald] : null;
+        for (const ande of b ? ['a', 'b'] : []) {
+            const n = ritning.noder[b[ande]];
+            if (Math.hypot(wx - n.x, wy - n.y) < nara) {
+                flytt = { balk: vald, ande, till: [n.x, n.y] };
+                return;
+            }
+        }
+        const nod = narmasteNod(wx, wy, nara * 0.8);
+        if (nod >= 0) {
+            flytt = { nod, till: [ritning.noder[nod].x, ritning.noder[nod].y] };
+            return;
+        }
+        vald = narmasteBalk(wx, wy, Math.max(0.4, 16 / kam.sk));
+        uppdateraInfo();
+        return;
+    }
     const p = snappa(wx, wy);
-    if (!p) return;
-    drag = { fran: p, till: p };
-    duk.setPointerCapture(e.pointerId);
+    if (p) drag = { fran: p, till: p };
 });
 
 duk.addEventListener('pointermove', e => {
-    if (!drag) return;
+    if (!pekare.has(e.pointerId)) return;
+    pekare.set(e.pointerId, iDuken(e));
+    if (nyp && pekare.size >= 2) {
+        const n = nypLage();
+        zoom = nyp.zoom;
+        zoomaKring(n.d / nyp.d, n.mx, n.my, nyp.varld);
+        return;
+    }
+    if (panorera) {
+        const [px, py] = iDuken(e);
+        mitt = [panorera.mitt[0] - (px - panorera.p[0]) / kam.sk, panorera.mitt[1] + (py - panorera.p[1]) / kam.sk];
+        sattKamera();
+        return;
+    }
     const p = snappa(...tillVarld(e));
-    if (p) drag.till = p;
+    if (!p) return;
+    if (drag) drag.till = p;
+    if (flytt) flytt.till = p;
 });
 
-function slappDrag() {
+function slapp(e) {
+    pekare.delete(e.pointerId);
+    if (pekare.size < 2) nyp = null;
+    if (!pekare.size) panorera = null;
+    if (flytt) {
+        const f = flytt;
+        flytt = null;
+        if (f.nod !== undefined) flyttaNod(f.nod, f.till);
+        else flyttaAnde(f.balk, f.ande, f.till);
+        uppdateraInfo();
+        return;
+    }
     if (!drag) return;
     const { fran, till } = drag;
     drag = null;
@@ -527,8 +758,19 @@ function slappDrag() {
         laggTillBalk(fran, till);
     }
 }
-duk.addEventListener('pointerup', slappDrag);
-duk.addEventListener('pointercancel', () => { drag = null; });
+duk.addEventListener('pointerup', slapp);
+duk.addEventListener('pointercancel', e => {
+    pekare.delete(e.pointerId);
+    if (pekare.size < 2) nyp = null;
+    drag = flytt = panorera = null;
+});
+
+// Mushjulet zoomar kring muspekaren (på datorn).
+duk.addEventListener('wheel', e => {
+    e.preventDefault();
+    const [px, py] = iDuken(e);
+    zoomaKring(Math.exp(-e.deltaY * 0.0015), px, py);
+}, { passive: false });
 
 // ---------- Spelloopen ----------
 
@@ -573,6 +815,8 @@ if (TEST) {
         get sim() { return sim; },
         get lage() { return lageNu; },
         get kam() { return kam; },
+        get zoom() { return zoom; },
+        get vald() { return vald; },
         get banaNr() { return banaNr; },
         kostnad, kor, bygg, bytBana, losningsRitning: () => losningsRitning(bana)
     };

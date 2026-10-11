@@ -11,7 +11,8 @@ utnyttjad (grön → gul → röd). Över 100 % går den sönder.
 - **Väg:** en balk med vägbana ovanpå, som keIWs går på.
 - **Balk:** bara balken (stöttor, fackverk).
 - **Tryck på en knutpunkt:** växla mellan styvt (fyrkant) och ledat (ring).
-- **Riv** och **Ångra**.
+- **Flytta:** tryck på en balk och dra i dess ändar, eller dra en knutpunkt.
+- **Riv** och **Ångra**. Två fingrar zoomar och flyttar vyn.
 
 Spelas i webbläsaren, stående eller liggande. Idéer och beslut finns i
 [IDEER.md](IDEER.md).

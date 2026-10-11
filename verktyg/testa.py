@@ -7,9 +7,15 @@ läsa), stående och liggande. Kontrollerar att:
   - inga JavaScript-fel uppstår,
   - verktygen ligger nedtill när mobilen står och till höger när den ligger,
     och att hela banan syns,
+  - infotexten har tre rader när mobilen står (bana, kostnad, tips eller
+    utnyttjande) och inget kapas,
   - man kan bygga en väg genom att dra mellan punkterna, trycka på en
     knutpunkt (styvt/ledat), riva en balk och ångra, men inte bygga för
     långa balkar,
+  - Flytta: välja en balk och dra ena änden (bara den balken flyttas),
+    dra en knutpunkt (alla balkar följer med), byta storlek på vald balk,
+  - zoom med mushjulet och nyp med två fingrar (punkten under fingrarna
+    står kvar, inget byggs), och att zoomen nollas vid byte av bana,
   - provkörningar slutar med "Bron höll!" för broar som håller och
     "Plask!" för en som är för klen.
 
@@ -135,6 +141,75 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     sida.click('#verktyg [data-v=vag]')
     dra(sida, (0, 0), (11, -5))                   # 12,1 m
     kolla(f'{namn}: för lång balk går inte', antal_balkar(sida) == 2)
+    if bredd < hojd:
+        rader = sida.evaluate('''() => [...document.querySelectorAll('#info .rad')].map(r => {
+            const b = r.getBoundingClientRect();
+            return { y: b.top, kapad: r.scrollWidth > r.clientWidth + 1, synlig: b.height > 0 };
+        })''')
+        kolla(f'{namn}: infotexten på tre rader, inget kapat',
+              len(rader) == 3 and all(r['synlig'] for r in rader)
+              and rader[0]['y'] < rader[1]['y'] < rader[2]['y'] and not any(r['kapad'] for r in rader[:2]))
+
+    # Flytta: en snedbalk som hamnade fel flyttas i ena änden.
+    sida.click('#verktyg [data-v=balk]')
+    dra(sida, (6, 0), (3, -3))
+    sida.click('#verktyg [data-v=flytta]')
+    tryck(sida, (4.5, -1.5))
+    kolla(f'{namn}: Flytta väljer balken man trycker på', sida.evaluate('() => window.bro.vald') == 2)
+    dra(sida, (3, -3), (4, -3))
+    r = sida.evaluate('() => window.bro.ritning')
+    b = r['balkar'][2]
+    andar = sorted([(r['noder'][b['a']]['x'], r['noder'][b['a']]['y']), (r['noder'][b['b']]['x'], r['noder'][b['b']]['y'])])
+    kolla(f'{namn}: änden flyttas, den gamla punkten försvinner',
+          andar == [(4, -3), (6, 0)] and not any(n['x'] == 3 and n['y'] == -3 for n in r['noder']), str(andar))
+    tryck(sida, (3, 0))                           # välj vägen till vänster
+    sida.click('#verktyg [data-v=storlek]')
+    kolla(f'{namn}: storleksknappen byter storlek på vald balk',
+          sida.evaluate('() => window.bro.ritning.balkar[0].storlek') == 2
+          and sida.evaluate('() => window.bro.ritning.balkar[1].storlek') == 1)
+    sida.click('#verktyg [data-v=angra]')
+    tryck(sida, (3, 3))                           # tomt: ingen vald
+    dra(sida, (6, 0), (6, 1))                     # knutpunkten med alla balkar
+    r = sida.evaluate('() => window.bro.ritning')
+    i = next(j for j, n in enumerate(r['noder']) if n['x'] == 6 and n['y'] == 1)
+    kolla(f'{namn}: knutpunkten flyttas med alla tre balkarna',
+          sum(1 for b in r['balkar'] if i in (b['a'], b['b'])) == 3)
+    sida.click('#verktyg [data-v=angra]')
+    sida.click('#verktyg [data-v=riv]')
+    tryck(sida, (5, -1.5))
+    kolla(f'{namn}: tillbaka till två vägbalkar', antal_balkar(sida) == 2)
+
+    # Zoom: mushjulet kring en punkt, sedan nyp med två fingrar.
+    x, y = skarm(sida, (6, 0))
+    sida.mouse.move(x, y)
+    sida.mouse.wheel(0, -400)
+    sida.wait_for_timeout(100)
+    x2, y2 = skarm(sida, (6, 0))
+    zoom = sida.evaluate('() => window.bro.zoom')
+    kolla(f'{namn}: mushjulet zoomar in kring pekaren', zoom > 1.2 and abs(x2 - x) < 2 and abs(y2 - y) < 2,
+          f'zoom {zoom:.2f}')
+    sida.mouse.wheel(0, 3000)
+    sida.wait_for_timeout(100)
+    kolla(f'{namn}: och ut igen', sida.evaluate('() => window.bro.zoom') == 1)
+    x, y = skarm(sida, (6, -2))
+    box = sida.locator('#duk').bounding_box()
+    sida.evaluate('''([x, y, ox, oy]) => {
+        const duk = document.getElementById('duk');
+        const h = (typ, id, px, py) => duk.dispatchEvent(new PointerEvent(typ, {
+            pointerId: id, pointerType: 'touch', clientX: px + ox, clientY: py + oy, bubbles: true }));
+        h('pointerdown', 11, x - 40, y); h('pointerdown', 12, x + 40, y);
+        for (let k = 1; k <= 5; k++) { h('pointermove', 11, x - 40 - 16 * k, y); h('pointermove', 12, x + 40 + 16 * k, y); }
+        h('pointerup', 11, x - 120, y); h('pointerup', 12, x + 120, y);
+    }''', [x - box['x'], y - box['y'], box['x'], box['y']])
+    x2, y2 = skarm(sida, (6, -2))
+    zoom = sida.evaluate('() => window.bro.zoom')
+    kolla(f'{namn}: nyp med två fingrar zoomar (3×), punkten står kvar, inget byggs',
+          abs(zoom - 3) < 0.05 and abs(x2 - x) < 2 and abs(y2 - y) < 2 and antal_balkar(sida) == 2,
+          f'zoom {zoom:.2f}')
+    bild(sida, bilder, f'{namn}-0-zoom')
+    sida.mouse.wheel(0, 3000)
+    sida.wait_for_timeout(100)
+    sida.click('#verktyg [data-v=vag]')
     bild(sida, bilder, f'{namn}-1-bygg')
 
     sida.click('#verktyg [data-v=kor]')
@@ -166,9 +241,12 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     # Bana 2: dubbelt så långt spann. Pilen byter bana, ritningen sparas
     # per bana, och den sparade lösningen (fackverk) håller.
     sida.click('#ruta [data-v=bygg]')
+    sida.mouse.move(*skarm(sida, (6, 0)))
+    sida.mouse.wheel(0, -400)
     sida.click('#info [data-v=nasta]')
     kolla(f'{namn}: pilen byter till bana 2', sida.evaluate('() => window.bro.banaNr') == 1
           and antal_balkar(sida) == 0)
+    kolla(f'{namn}: zoomen nollas vid byte av bana', sida.evaluate('() => window.bro.zoom') == 1)
     v = sida.evaluate('() => BANOR[1].vy')
     duk = sida.locator('#duk').bounding_box()
     (x0, y0), (x1, y1) = skarm(sida, (v['x0'], v['y1'])), skarm(sida, (v['x1'], v['y0']))

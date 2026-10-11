@@ -43,8 +43,39 @@ html, body {
     right: 10px;
     color: #2f3f4c;
     font-size: 15px;
-    line-height: 32px;
+    line-height: 22px;
     pointer-events: none;
+}
+
+/* Stående: bana, kostnad och utnyttjande (eller tips) på varsin rad.
+   Liggande: allt på en rad, utan tipsen. */
+#info .rad {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#info .rad:first-child {
+    line-height: 32px;
+    margin-bottom: 2px;
+}
+
+#info .tips {
+    font-size: 13px;
+    white-space: normal;
+    opacity: 0.75;
+}
+
+@media (orientation: landscape) {
+    #info .rad {
+        display: inline-block;
+        margin-right: 14px;
+        vertical-align: middle;
+    }
+
+    #info .tips {
+        display: none;
+    }
 }
 
 #info button {
@@ -79,7 +110,7 @@ html, body {
 
 #verktyg {
     display: flex;
-    gap: 6px;
+    gap: 4px;
     padding: 8px;
     padding-bottom: max(8px, env(safe-area-inset-bottom));
     background-color: #2f3f4c;
@@ -89,13 +120,13 @@ html, body {
     flex: 1;
     min-width: 0;
     min-height: 48px;
-    padding: 4px 2px;
+    padding: 4px 1px;
     border: none;
     border-radius: 10px;
     background-color: #4a5d6c;
     color: #f2f4f5;
     font: inherit;
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 600;
     cursor: pointer;
 }
@@ -133,7 +164,8 @@ html, body {
 
     #verktyg button {
         flex: 1;
-        max-height: 64px;
+        min-height: 40px;
+        max-height: 60px;
     }
 
     #verktyg button.kor {

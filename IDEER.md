@@ -210,8 +210,15 @@ stora håller men kostar 36 000 kr, och ett fackverk av små balkar håller
 för 31 340 kr. Pilar vid banans namn byter bana, och varje bana sparar
 sin egen ritning.
 
+Efter test på mobilen (stående): infotexten på tre rader (bana, kostnad,
+tips/utnyttjande), keIWs dubbelt så stor (2 m hög, fortfarande 80 kg),
+zoom och panorering med två fingrar (mushjulet på datorn, ett finger
+flyttar vyn under provkörningen), och verktyget **Flytta**: tryck på en
+balk och dra i dess ändar (bara den balken flyttas), eller dra en
+knutpunkt (alla balkar följer med, släpps den på en annan slås de ihop).
+Med en vald balk byter storleksknappen storlek på just den.
+
 Att fundera på efter utkastet:
-- Zooma och panorera med två fingrar (stående blir banan liten).
 - Fästpunkterna låser både x och y, så en balk mellan två fästen hänger
   delvis i drag som en lina och håller mer än en fritt upplagd balk.
   Fysikaliskt riktigt, men ska en fästpunkt kunna vara glidlager?

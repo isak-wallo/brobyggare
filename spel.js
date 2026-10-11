@@ -12,7 +12,7 @@ const TYNGD_TID = 1.0;       // s, tyngden läggs på under den här tiden
 const START_TID = 1.4;       // s, då börjar keIWs gå
 const FART = 1.6;            // m/s, keIWs gångfart
 const KEIWS_MASSA = 80;      // kg
-const KEIWS_START = -2;      // m, startpunkten på vänster klippa
+const KEIWS_START = -2.5;    // m, startpunkten på vänster klippa
 const KLIV_UPP = 0.25;       // m, så högt kliver keIWs upp utan att hoppa
 const LUFT_TID = 0.15;       // s i luften innan det räknas som att falla
 

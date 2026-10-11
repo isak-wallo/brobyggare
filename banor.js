@@ -5,7 +5,7 @@
 //   vatten: vattenytan, keIWs som hamnar där har misslyckats
 //   budget: i kronor; man får bygga över, men då blir det inga stjärnor
 //   omrade: där man får sätta knutpunkter
-//   vy:     det som alltid ska synas på skärmen
+//   vy:     det som syns utan zoom
 //   losning: en bro som håller (testerna kör den)
 
 const BANOR = [
@@ -16,7 +16,7 @@ const BANOR = [
         vatten: -6,
         budget: 12000,
         omrade: { x0: 0, x1: 12, y0: -5, y1: 4 },
-        vy: { x0: -3, x1: 15, y0: -6.5, y1: 4.5 },
+        vy: { x0: -4, x1: 16, y0: -6.5, y1: 4.5 },
         losning: {
             noder: [[0, 0], [0, -3], [12, 0], [12, -3], [4, 0], [8, 0], [4, -2], [8, -2]],
             balkar: [
@@ -33,7 +33,7 @@ const BANOR = [
         vatten: -6,
         budget: 32000,
         omrade: { x0: 0, x1: 24, y0: -5, y1: 6 },
-        vy: { x0: -3, x1: 27, y0: -6.5, y1: 6.5 },
+        vy: { x0: -4, x1: 28, y0: -6.5, y1: 6.5 },
         losning: {
             // Fackverk av små balkar: väg överst, underram 3 m ner.
             noder: [[0, 0], [0, -3], [24, 0], [24, -3], [4, 0], [8, 0], [12, 0], [16, 0], [20, 0],
