@@ -1,0 +1,162 @@
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    margin: 0;
+    height: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    background-color: #2f3f4c;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+/* Stående: spelytan överst och verktygen i en list längst ner.
+   Liggande: verktygen i en list till höger (se media-frågan). */
+#app {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+#scen {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+}
+
+#duk {
+    display: block;
+    touch-action: none;
+}
+
+#info {
+    position: absolute;
+    top: max(8px, env(safe-area-inset-top));
+    left: max(10px, env(safe-area-inset-left));
+    right: 10px;
+    color: #2f3f4c;
+    font-size: 15px;
+    pointer-events: none;
+}
+
+#info .over {
+    color: #c0392b;
+    font-weight: bold;
+}
+
+#verktyg {
+    display: flex;
+    gap: 6px;
+    padding: 8px;
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
+    background-color: #2f3f4c;
+}
+
+#verktyg button {
+    flex: 1;
+    min-width: 0;
+    min-height: 48px;
+    padding: 4px 2px;
+    border: none;
+    border-radius: 10px;
+    background-color: #4a5d6c;
+    color: #f2f4f5;
+    font: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+#verktyg button.vald {
+    background-color: #e8b062;
+    color: #2f3f4c;
+}
+
+#verktyg button.kor {
+    background-color: #5cb260;
+    color: #fff;
+}
+
+#verktyg button.kor.stopp {
+    background-color: #6c8796;
+}
+
+#verktyg button:disabled {
+    opacity: 0.4;
+    cursor: default;
+}
+
+@media (orientation: landscape) {
+    #app {
+        flex-direction: row;
+    }
+
+    #verktyg {
+        flex-direction: column;
+        width: 96px;
+        padding: 8px;
+        padding-right: max(8px, env(safe-area-inset-right));
+    }
+
+    #verktyg button {
+        flex: 1;
+        max-height: 64px;
+    }
+
+    #verktyg button.kor {
+        margin-top: auto;
+    }
+}
+
+/* Resultatrutan efter en provkörning */
+#ruta {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: min(86%, 360px);
+    padding: 16px 18px;
+    border-radius: 14px;
+    background-color: rgba(250, 252, 248, 0.95);
+    box-shadow: 0 6px 20px rgba(47, 63, 76, 0.3);
+    color: #2f3f4c;
+    text-align: center;
+}
+
+#ruta.dold {
+    display: none;
+}
+
+#ruta h1 {
+    margin: 0 0 6px;
+    font-size: 24px;
+}
+
+#ruta p {
+    margin: 0 0 14px;
+    line-height: 1.4;
+}
+
+#ruta button {
+    min-height: 44px;
+    padding: 0 18px;
+    margin: 0 4px;
+    border: none;
+    border-radius: 10px;
+    background-color: #4a5d6c;
+    color: #fff;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+#ruta button[data-v="kor"] {
+    background-color: #5cb260;
+}

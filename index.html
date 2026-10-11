@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#2f3f4c">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="icon" href="icon-192.png">
+    <title>Brobyggare – bygg en bro åt keIWs</title>
+    <meta name="description" content="Bygg en bro av riktiga limträbalkar och se om keIWs kommer över. Fysiken räknas på riktigt.">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="app">
+    <div id="scen">
+        <canvas id="duk"></canvas>
+        <div id="info"></div>
+        <div id="ruta" class="dold"></div>
+    </div>
+    <div id="verktyg">
+        <button data-v="vag">Väg</button>
+        <button data-v="balk">Balk</button>
+        <button data-v="storlek">Mellan</button>
+        <button data-v="riv">Riv</button>
+        <button data-v="angra">Ångra</button>
+        <button data-v="kor" class="kor">Kör</button>
+    </div>
+</div>
+
+<script src="figur_data.js" defer></script>
+<script src="material.js" defer></script>
+<script src="fysik.js" defer></script>
+<script src="banor.js" defer></script>
+<script src="spel.js" defer></script>
+<script src="app.js" defer></script>
+</body>
+</html>

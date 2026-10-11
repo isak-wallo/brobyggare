@@ -193,8 +193,27 @@ väg förenklad.
   per balk), snittkraftsdiagram och förstorad nedböjning. Till vardags
   syns bara färgerna.
 
-## Öppna frågor
+- **Både stående och liggande:** kameran zoomar så att hela banan får
+  plats. Verktygen ligger nedtill när mobilen står och till höger när
+  den ligger. Liggande blir bäst för breda broar.
 
+## Första utkastet (2026-10-11)
+
+En bana (Bäcken, 12 m spann, budget 12 000 kr), bara limträ i tre
+storlekar, verktygen Väg/Balk/Riv/Ångra, styvt/ledat genom att trycka på
+en knutpunkt, och provkörning med riktig FE och belastningsfärger.
+keIWs går över (80 kg) och ramlar i vattnet om bron rasar.
+
+Att fundera på efter utkastet:
+- Zooma och panorera med två fingrar (stående blir banan liten).
+- Fästpunkterna låser både x och y, så en balk mellan två fästen hänger
+  delvis i drag som en lina och håller mer än en fritt upplagd balk.
+  Fysikaliskt riktigt, men ska en fästpunkt kunna vara glidlager?
+- Vägbanan väger 200 kg/m (plankor + beläggning), så att egenvikten är
+  det som styr. keIWs väger lite i jämförelse – tyngre last senare?
+- Stjärnor efter kostnad, fler banor, kablar och stål.
+
+## Öppna frågor
 
 - Bara Bridge Constructor-stil, eller också ett "rita"-läge?
 - Hur många banor till första versionen? (förslag: 8–10 korta)

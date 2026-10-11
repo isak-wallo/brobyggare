@@ -1,0 +1,39 @@
+# Brobyggare – anteckningar för Claude
+
+Ett brobyggarspel med keIWs: vanilla JS + canvas, inga beroenden, PWA.
+Idéer och beslut i `IDEER.md` (läs den först).
+
+## Regler
+
+- Svenska överallt: kod (namn), kommentarer, commit-meddelanden, texter.
+- Jobba direkt på `main`, inga grenar eller PR. Isak testar från GitHub
+  Pages (https://isak-wallo.github.io/brobyggare/), så pusha när något
+  är klart och testat.
+- Höj `VERSION` i `sw.js` (v1-test → v2-test …) vid varje push som ändrar
+  filer som laddas.
+- Ingen skarp sida (brobyggare.keiws.com) förrän Isak säger till.
+- Kör testerna före varje push: `python verktyg/testa.py` (kör även
+  `node verktyg/testa_fysik.js`).
+
+## Filer
+
+- `material.js` – material (limträ GL30c) och profilerna liten/mellan/stor,
+  vägbanan och förbanden (vikt och pris).
+- `fysik.js` – FE-lösaren: korotationella Euler–Bernoulli-element, Newmark
+  + Newton–Raphson, bandad Cholesky med Cuthill–McKee, brott (spänning,
+  skjuvning, Euler-knäckning). SI-enheter, y uppåt.
+- `banor.js` – banorna (spann, fästpunkter, budget, en sparad lösning).
+- `spel.js` – provkörningen utan ritning: keIWs som rörlig last, faller
+  utan vägbana, berget stoppar fallande bitar. Testerna kör den i node.
+- `app.js` – ritning, verktyg, bygga med fingret, kamera och layout
+  (stående: verktyg nedtill; liggande: till höger).
+- `figur_data.js` – keIWs rektanglar och animationer. Kopierad från
+  flappy-keiws (samma fil); ändra inte för hand.
+
+## Fysiken i korthet
+
+Varje balk delas i element på ca 0,75 m. Styvt förband = balkändarna delar
+vridningen, ledat = egen vridning per ände. Fästpunkterna låser x och y
+(och vridningen om de är styva). Massan klumpas i noderna. Tyngden läggs
+på under 1 s, sedan går keIWs (80 kg) över. Ett element över 100 %
+utnyttjande tas bort; en balk som knäcks tappar mittelementet.
