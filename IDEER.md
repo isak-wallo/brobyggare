@@ -30,17 +30,42 @@ Inget är bestämt än – det här är en samlingsplats att bolla idéer i.
   banor (t.ex. kastar klossar på bron?).
 - Kanske: keIWs bygger själv – syns bredvid med verktyg medan man bygger.
 
-## Material (förslag, börja med få)
+## Material och tvärsnitt – riktiga balkar, inte bara "trä eller stål"
 
-| Material | Används till | Egenskap |
-|----------|--------------|----------|
-| Väg | det keIWs går/kör på | måste finnas hela vägen |
-| Trä | balkar, billigt | svagt |
-| Stål | balkar, dyrt | starkt |
-| Rep/kabel | hängbroar | håller bara i drag, inte tryck |
+Isaks önskemål: inte bara välja trä, stål eller betong som i de flesta
+brobyggarspel, utan olika dimensioner och regelrätta balkar, och inte
+bara fackverk.
 
-Senare kanske: hydraulik (rörliga delar), stöttor ner i vattnet, vikt i
-lasten (keIWs + kompisar, lastbil).
+**Man väljer i tre steg: material → profiltyp → dimension.** Varje val ger
+verkliga tvärsnittsvärden (A, I, W, i), vikt per meter och pris per meter.
+Lösaren räknar med dem, så en grövre balk är styvare, starkare och tyngre,
+och dyrare.
+
+| Material | Hållfasthet | Profiltyper (exempel) |
+|----------|-------------|-----------------------|
+| Trä | C24 (konstruktionsvirke) | 45×95, 45×145, 45×195, 70×220 ... |
+| Limträ | GL30c | 90×225, 115×315, 140×450, 190×630 ... |
+| Stål | S235 / S355 | IPE 100–600, HEA/HEB 100–400, VKR/KKR-rör, UPE, plattstång |
+| Kabel/rep | brottlast | stålvajer Ø 10–60, fiberrep (bara drag) |
+| Betong (senare?) | C30/37 + armering | rektangel, T-balk; kräver sprickmodell |
+| Vägbana | – | trä, stålplåt, betongplatta (egenvikt + bärighet) |
+
+- **Riktiga brotyper ska fungera, inte bara fackverk:** balkbro (en
+  kraftig IPE/HEB eller limträbalk över spannet), kontinuerlig balk över
+  stöd, rambro (styva hörn), bågbro, fackverk, hängbro och snedkabelbro.
+  Det följer av FE-lösaren med balkelement och styva förband.
+- Profiltabellerna läggs som data (JSON), med värden ur standardtabeller
+  (t.ex. EN 10365 för IPE/HE, tillverkartabeller för limträ och VKR).
+- **I 2D böjs balken alltid kring sin starka axel.** Vippning och
+  knäckning ut ur planet räknas inte; vi kan ev. lägga in en förenklad
+  kontroll (eller förutsätta att balkarna är stagade i sidled).
+- Ingenjörsläget kan föreslå "en dimension upp/ner" för en balk, och
+  visa vilken kontroll som styr (moment, tryck/knäckning, drag, skjuv).
+- Pris per meter (och per förband) ungefär som i verkligheten, så att
+  budgeten blir en riktig optimering: rätt profil på rätt ställe.
+
+Senare kanske: hydraulik (rörliga delar), pelare/stöttor ner i vattnet,
+pålar, vikt i lasten (keIWs + kompisar, lastbil).
 
 ## Banor och svårighet
 
