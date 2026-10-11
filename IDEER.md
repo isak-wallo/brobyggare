@@ -204,6 +204,12 @@ storlekar, verktygen Väg/Balk/Riv/Ångra, styvt/ledat genom att trycka på
 en knutpunkt, och provkörning med riktig FE och belastningsfärger.
 keIWs går över (80 kg) och ramlar i vattnet om bron rasar.
 
+Samma kväll: längsta balk 12 m (först 6 m) och **bana 2, Ån**: som
+Bäcken men 24 m spann, budget 32 000 kr. Två mellanbalkar rasar, två
+stora håller men kostar 36 000 kr, och ett fackverk av små balkar håller
+för 31 340 kr. Pilar vid banans namn byter bana, och varje bana sparar
+sin egen ritning.
+
 Att fundera på efter utkastet:
 - Zooma och panorera med två fingrar (stående blir banan liten).
 - Fästpunkterna låser både x och y, så en balk mellan två fästen hänger

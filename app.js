@@ -8,10 +8,11 @@
 
 const TEST = new URLSearchParams(location.search).has('test');
 const RUTNAT = 1;            // m mellan punkterna man bygger på
-const MAX_LANGD = 6;         // m, längsta balken
+const MAX_LANGD = 12;        // m, längsta balken
 const MAX_STEG = 8;          // fysiksteg per bildruta (annars går det långsamt)
 const KEIWS_HOJD = 1.0;      // m, keIWs från fötterna till huvudet
-const SPARA = 'brobyggare-ritning-';
+const SPARA = 'brobyggare-ritning-';   // + banans nummer
+const SPARA_BANA = 'brobyggare-bana';
 
 const FARG = {
     himmel: ['#9fcbe0', '#d8ecf2'], berg: '#8b7a66', bergMork: '#6f604f', gras: '#7cae5c',
@@ -26,7 +27,8 @@ const infoEl = document.getElementById('info');
 const rutaEl = document.getElementById('ruta');
 const knappar = Object.fromEntries([...document.querySelectorAll('#verktyg button')].map(b => [b.dataset.v, b]));
 
-let bana = BANOR[0];
+let banaNr = lasBanaNr();
+let bana = BANOR[banaNr];
 let ritning = lasRitning();
 let historik = [];
 let verktyg = 'vag';
@@ -39,16 +41,36 @@ let dpr = 1;
 
 // ---------- Ritningen (det man bygger) ----------
 
+// Varje bana har sin egen sparade ritning, och spelet minns vilken bana
+// man var på.
+function lasBanaNr() {
+    let nr = 0;
+    try { nr = parseInt(localStorage.getItem(SPARA_BANA), 10) || 0; } catch (e) { /* privat läge */ }
+    return Math.max(0, Math.min(BANOR.length - 1, nr));
+}
+
 function lasRitning() {
     try {
-        const r = JSON.parse(localStorage.getItem(SPARA + 0));
+        const r = JSON.parse(localStorage.getItem(SPARA + banaNr));
         if (r && r.noder && r.balkar) return r;
     } catch (e) { /* ingen sparad */ }
-    return nyRitning(BANOR[0]);
+    return nyRitning(bana);
 }
 
 function sparaRitning() {
-    try { localStorage.setItem(SPARA + 0, JSON.stringify(ritning)); } catch (e) { /* privat läge */ }
+    try { localStorage.setItem(SPARA + banaNr, JSON.stringify(ritning)); } catch (e) { /* privat läge */ }
+}
+
+function bytBana(nr) {
+    if (lageNu !== 'bygg' || nr < 0 || nr >= BANOR.length) return;
+    banaNr = nr;
+    bana = BANOR[nr];
+    ritning = lasRitning();
+    historik = [];
+    drag = null;
+    try { localStorage.setItem(SPARA_BANA, nr); } catch (e) { /* privat läge */ }
+    anpassa();
+    uppdateraInfo();
 }
 
 function andra(f) {
@@ -133,15 +155,19 @@ const kr = v => v.toLocaleString('sv-SE') + ' kr';
 
 // ---------- Skärmen ----------
 
+const infoLuft = () => infoEl.offsetTop + infoEl.offsetHeight + 4;
+let luftNu = 0;
+
 function anpassa() {
+    luftNu = infoLuft();
     dpr = window.devicePixelRatio || 1;
     const w = scen.clientWidth, h = scen.clientHeight;
     duk.width = Math.round(w * dpr);
     duk.height = Math.round(h * dpr);
     duk.style.width = w + 'px';
     duk.style.height = h + 'px';
-    // Lite luft för infotexten upptill.
-    const vy = bana.vy, luft = 34;
+    // Luft för infotexten upptill (två rader om den inte får plats på en).
+    const vy = bana.vy, luft = infoLuft();
     const sk = Math.min(w / (vy.x1 - vy.x0), (h - luft) / (vy.y1 - vy.y0));
     // Blir det höjd över (mobilen står) går det mesta till himlen.
     const over = h - luft - sk * (vy.y1 - vy.y0);
@@ -380,7 +406,11 @@ function ritaPlask() {
 
 function uppdateraInfo() {
     const k = kostnad(), over = k > bana.budget;
-    let text = '<b>' + bana.namn + '</b> · <span class="' + (over ? 'over' : '') + '">' + kr(k) + '</span> av ' + kr(bana.budget);
+    const pil = (v, t, av) => '<button data-v="' + v + '"' + (av ? ' disabled' : '') + '>' + t + '</button>';
+    const bygger = lageNu === 'bygg';
+    let text = pil('forra', '‹', !bygger || banaNr === 0) + '<b>Bana ' + (banaNr + 1) + ' · ' + bana.namn + '</b>'
+        + pil('nasta', '›', !bygger || banaNr === BANOR.length - 1)
+        + ' <span class="' + (over ? 'over' : '') + '">' + kr(k) + '</span> av ' + kr(bana.budget);
     if (lageNu === 'prov' && sim) {
         text += sim.brott ? ' · <span class="over">bron gick sönder</span>' : ' · högst ' + Math.round(sim.maxU * 100) + ' %';
     }
@@ -391,6 +421,7 @@ function uppdateraInfo() {
     knappar.kor.classList.toggle('stopp', lageNu !== 'bygg');
     for (const v of ['vag', 'balk', 'riv', 'storlek', 'angra']) knappar[v].disabled = lageNu !== 'bygg';
     knappar.angra.disabled = lageNu !== 'bygg' || !historik.length;
+    if (infoLuft() !== luftNu) anpassa();
 }
 
 function visaRuta(rubrik, text, knapptext) {
@@ -435,6 +466,12 @@ document.getElementById('verktyg').addEventListener('click', e => {
     else if (v === 'angra' && historik.length) { ritning = JSON.parse(historik.pop()); sparaRitning(); }
     else if (v === 'kor') { if (lageNu === 'bygg') kor(); else bygg(); }
     uppdateraInfo();
+});
+
+infoEl.addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if (!b || b.disabled) return;
+    bytBana(banaNr + (b.dataset.v === 'nasta' ? 1 : -1));
 });
 
 rutaEl.addEventListener('click', e => {
@@ -536,6 +573,7 @@ if (TEST) {
         get sim() { return sim; },
         get lage() { return lageNu; },
         get kam() { return kam; },
-        kostnad, kor, bygg, losningsRitning: () => losningsRitning(bana)
+        get banaNr() { return banaNr; },
+        kostnad, kor, bygg, bytBana, losningsRitning: () => losningsRitning(bana)
     };
 }

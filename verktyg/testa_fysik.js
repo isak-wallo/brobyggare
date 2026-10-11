@@ -8,11 +8,12 @@
 const fs = require('fs'), path = require('path'), vm = require('vm');
 
 const ROT = path.join(__dirname, '..');
-const ctx = vm.createContext({ console, Math });
+// Spelets filer körs som vanliga skript i den här kontexten (som i
+// webbläsaren). En egen vm-kontext gör lösaren ca tio gånger långsammare.
 for (const f of ['material.js', 'fysik.js', 'banor.js', 'spel.js']) {
-    if (fs.existsSync(path.join(ROT, f))) vm.runInContext(fs.readFileSync(path.join(ROT, f), 'utf8'), ctx, { filename: f });
+    vm.runInThisContext(fs.readFileSync(path.join(ROT, f), 'utf8'), { filename: f });
 }
-const S = name => vm.runInContext(name, ctx);
+const S = name => vm.runInThisContext(name);
 
 let fel = 0;
 function kolla(namn, ok, text) {
@@ -112,9 +113,7 @@ const mat = MATERIAL.limtra;
           'δ/L ' + (-y / L).toFixed(3) + ', x/L ' + (x / L).toFixed(3));
 }
 
-if (typeof ctx.testaBanor === 'undefined' && fs.existsSync(path.join(ROT, 'spel.js'))) {
-    require(path.join(__dirname, 'testa_banor.js'))(S, kolla);
-}
+require(path.join(__dirname, 'testa_banor.js'))(S, kolla);
 
 console.log(fel ? fel + ' FEL' : 'Allt OK');
 process.exit(fel ? 1 : 0);

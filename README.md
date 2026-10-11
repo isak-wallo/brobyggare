@@ -4,7 +4,7 @@ Ett 2D-webbspel där man bygger broar som keIWs tar sig över. Broarna
 räknas med en riktig liten FE-lösare (korotationella balkelement,
 implicit tidsstegning), och balkarna är riktiga limträprofiler.
 
-**Första utkastet:** en bana. Dra balkar mellan punkterna, välj liten,
+**Första utkastet:** två banor (12 och 24 m spann), byt med pilarna. Dra balkar mellan punkterna, välj liten,
 mellan eller stor, och tryck **Kör**. Färgen visar hur hårt balken är
 utnyttjad (grön → gul → röd). Över 100 % går den sönder.
 

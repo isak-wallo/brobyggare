@@ -43,7 +43,33 @@ html, body {
     right: 10px;
     color: #2f3f4c;
     font-size: 15px;
+    line-height: 32px;
     pointer-events: none;
+}
+
+#info button {
+    pointer-events: auto;
+    min-width: 36px;
+    height: 32px;
+    margin: 0 6px;
+    border: none;
+    border-radius: 8px;
+    background-color: rgba(47, 63, 76, 0.75);
+    color: #fff;
+    font: inherit;
+    font-size: 20px;
+    line-height: 1;
+    vertical-align: middle;
+    cursor: pointer;
+}
+
+#info button:first-child {
+    margin-left: 0;
+}
+
+#info button:disabled {
+    opacity: 0.25;
+    cursor: default;
 }
 
 #info .over {

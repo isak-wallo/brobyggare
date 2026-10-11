@@ -133,7 +133,7 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     kolla(f'{namn}: ångra tar tillbaka den', antal_balkar(sida) == 3)
     tryck(sida, (6, 2))
     sida.click('#verktyg [data-v=vag]')
-    dra(sida, (0, 0), (7, 0))
+    dra(sida, (0, 0), (11, -5))                   # 12,1 m
     kolla(f'{namn}: för lång balk går inte', antal_balkar(sida) == 2)
     bild(sida, bilder, f'{namn}-1-bygg')
 
@@ -162,6 +162,33 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     bild(sida, bilder, f'{namn}-6-ras')
     kolla(f'{namn}: en för klen bro rasar', vanta_resultat(sida) == 'Plask!')
     bild(sida, bilder, f'{namn}-7-plask')
+
+    # Bana 2: dubbelt så långt spann. Pilen byter bana, ritningen sparas
+    # per bana, och den sparade lösningen (fackverk) håller.
+    sida.click('#ruta [data-v=bygg]')
+    sida.click('#info [data-v=nasta]')
+    kolla(f'{namn}: pilen byter till bana 2', sida.evaluate('() => window.bro.banaNr') == 1
+          and antal_balkar(sida) == 0)
+    v = sida.evaluate('() => BANOR[1].vy')
+    duk = sida.locator('#duk').bounding_box()
+    (x0, y0), (x1, y1) = skarm(sida, (v['x0'], v['y1'])), skarm(sida, (v['x1'], v['y0']))
+    info = sida.locator('#info').bounding_box()
+    kolla(f'{namn}: hela bana 2 syns, under infotexten',
+          x0 >= duk['x'] - 1 and x1 <= duk['x'] + duk['width'] + 1
+          and y0 >= info['y'] + info['height'] - 1 and y1 <= duk['y'] + duk['height'] + 1)
+    sida.click('#verktyg [data-v=vag]')
+    dra(sida, (0, 0), (12, 0))
+    kolla(f'{namn}: en 12 m balk går att bygga', antal_balkar(sida) == 1)
+    sida.evaluate('() => { window.bro.ritning = window.bro.losningsRitning(); }')
+    bild(sida, bilder, f'{namn}-8-bana2')
+    sida.click('#verktyg [data-v=kor]')
+    sida.wait_for_timeout(9000)
+    bild(sida, bilder, f'{namn}-9-bana2-prov')
+    kolla(f'{namn}: fackverket på bana 2 håller', vanta_resultat(sida, 60) == 'Bron höll!')
+    sida.click('#ruta [data-v=bygg]')
+    sida.click('#info [data-v=forra]')
+    kolla(f'{namn}: bana 1 har kvar sin ritning', sida.evaluate('() => window.bro.banaNr') == 0
+          and antal_balkar(sida) == 1)
     kolla(f'{namn}: inga JavaScript-fel', not js_fel, '; '.join(js_fel))
     sida.close()
 

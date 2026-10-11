@@ -384,7 +384,3 @@ function brott(m) {
     }
     return antal;
 }
-
-if (typeof module !== 'undefined') {
-    module.exports = { G, byggModell, steg, losStatiskt, utnyttjande, brott, lage, montera };
-}
