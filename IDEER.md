@@ -141,11 +141,16 @@ väg förenklad.
   klarad över budget = klarad utan stjärnor (eller en stjärna), under
   budget = stjärnor efter hur billigt.
 
+- **Fysikaliskt korrekt:** riktig FE i 2D, se Fysik.
+- **Knutpunkter väljs per förband:** ledat eller styvt (styvt dyrare?).
+  I lösaren: ett styvt förband delar rotationsfrihetsgraden, ett ledat ger
+  varje balkände en egen rotation.
+- **Ingenjörsläge** som man slår på: siffror (N, V, M, utnyttjandegrad
+  per balk), snittkraftsdiagram och förstorad nedböjning. Till vardags
+  syns bara färgerna.
+
 ## Öppna frågor
 
-- Fysik: ledade eller styva knutpunkter (eller valbart per förband)?
-- Fysik: ska man kunna se siffror (normalkraft, moment, utnyttjandegrad)
-  när man trycker på en balk, som ett riktigt beräkningsprogram?
 
 - Bara Bridge Constructor-stil, eller också ett "rita"-läge?
 - Hur många banor till första versionen? (förslag: 8–10 korta)
