@@ -30,39 +30,52 @@ Inget är bestämt än – det här är en samlingsplats att bolla idéer i.
   banor (t.ex. kastar klossar på bron?).
 - Kanske: keIWs bygger själv – syns bredvid med verktyg medan man bygger.
 
-## Material och tvärsnitt – riktiga balkar, inte bara "trä eller stål"
+## Material och tvärsnitt – enkelt i spelet, riktigt i ingenjörsläget
 
-Isaks önskemål: inte bara välja trä, stål eller betong som i de flesta
-brobyggarspel, utan olika dimensioner och regelrätta balkar, och inte
-bara fackverk.
+Inte bara "trä eller stål" som i de flesta brobyggarspel, men inte heller
+en hel profilkatalog. Riktiga balkar, inte bara fackverk.
 
-**Man väljer i tre steg: material → profiltyp → dimension.** Varje val ger
-verkliga tvärsnittsvärden (A, I, W, i), vikt per meter och pris per meter.
-Lösaren räknar med dem, så en grövre balk är styvare, starkare och tyngre,
-och dyrare.
+**Tre material, en hållfasthet var:**
 
-| Material | Hållfasthet | Profiltyper (exempel) |
-|----------|-------------|-----------------------|
-| Trä | C24 (konstruktionsvirke) | 45×95, 45×145, 45×195, 70×220 ... |
-| Limträ | GL30c | 90×225, 115×315, 140×450, 190×630 ... |
-| Stål | S235 / S355 | IPE 100–600, HEA/HEB 100–400, VKR/KKR-rör, UPE, plattstång |
-| Kabel/rep | brottlast | stålvajer Ø 10–60, fiberrep (bara drag) |
-| Betong (senare?) | C30/37 + armering | rektangel, T-balk; kräver sprickmodell |
-| Vägbana | – | trä, stålplåt, betongplatta (egenvikt + bärighet) |
+| Material | Hållfasthet | Tar |
+|----------|-------------|-----|
+| Limträ | GL30c | drag, tryck, böjning – lätt och billigt |
+| Stål | S355 | drag, tryck, böjning – starkt, tungt, dyrt |
+| Kabel | stålvajer | bara drag (slak i tryck) |
 
-- **Riktiga brotyper ska fungera, inte bara fackverk:** balkbro (en
-  kraftig IPE/HEB eller limträbalk över spannet), kontinuerlig balk över
-  stöd, rambro (styva hörn), bågbro, fackverk, hängbro och snedkabelbro.
-  Det följer av FE-lösaren med balkelement och styva förband.
-- Profiltabellerna läggs som data (JSON), med värden ur standardtabeller
-  (t.ex. EN 10365 för IPE/HE, tillverkartabeller för limträ och VKR).
+**Spelläge: liten, mellan, stor.** Varje storlek är en väl vald riktig
+profil, så att lösaren ändå räknar med verkliga A, I, W, vikt och pris.
+Förslag (justeras när vi provar):
+
+| Material | Liten | Mellan | Stor |
+|----------|-------|--------|------|
+| Limträ | 90×225 | 140×405 | 190×630 |
+| Stål | IPE 200 | IPE 400 | HEB 500 |
+| Kabel | Ø 16 | Ø 32 | Ø 52 |
+
+**Ingenjörsläge: en handfull riktiga profiler** per material, med sina
+tabellvärden synliga, t.ex.:
+- Limträ: 90×225, 115×315, 140×405, 165×495, 190×630
+- Stål: IPE 200, IPE 300, IPE 400, IPE 600, HEB 300, HEB 500, KKR 150×150×8
+- Kabel: Ø 16, Ø 24, Ø 32, Ø 40, Ø 52
+
+Spelläget och ingenjörsläget räknar likadant – skillnaden är bara hur
+mycket man får välja och se.
+
+- **Riktiga brotyper ska fungera, inte bara fackverk:** balkbro (en stor
+  stål- eller limträbalk över spannet), kontinuerlig balk över stöd,
+  rambro (styva hörn), bågbro, fackverk, hängbro och snedkabelbro. Det
+  följer av FE-lösaren med balkelement och styva förband.
+- Profilerna läggs som data (JSON) med värden ur standardtabeller.
 - **I 2D böjs balken alltid kring sin starka axel.** Vippning och
-  knäckning ut ur planet räknas inte; vi kan ev. lägga in en förenklad
-  kontroll (eller förutsätta att balkarna är stagade i sidled).
-- Ingenjörsläget kan föreslå "en dimension upp/ner" för en balk, och
-  visa vilken kontroll som styr (moment, tryck/knäckning, drag, skjuv).
+  knäckning ut ur planet räknas inte (balkarna antas stagade i sidled).
+- Ingenjörsläget kan föreslå en dimension upp/ner och visa vilken
+  kontroll som styr (moment, tryck/knäckning, drag, skjuv).
 - Pris per meter (och per förband) ungefär som i verkligheten, så att
-  budgeten blir en riktig optimering: rätt profil på rätt ställe.
+  budgeten blir en riktig optimering: rätt storlek på rätt ställe.
+- Vägbanan: egen del (t.ex. limträ- eller stålplåtsdäck) som keIWs går
+  och fordonen kör på; bär sin egenvikt och lasten till balkarna.
+- Betong kanske senare, som ett eget steg med sprickmodell.
 
 Senare kanske: hydraulik (rörliga delar), pelare/stöttor ner i vattnet,
 pålar, vikt i lasten (keIWs + kompisar, lastbil).
@@ -170,12 +183,10 @@ väg förenklad.
 - **Knutpunkter väljs per förband:** ledat eller styvt (styvt dyrare?).
   I lösaren: ett styvt förband delar rotationsfrihetsgraden, ett ledat ger
   varje balkände en egen rotation.
-- **Material:** trä (C24), limträ (GL30c), stål (S235/S355) och
-  kabel från början. **Betong senare**, som ett eget steg med
-  sprickmodell, så att den blir rätt.
-- **Dimensioner:** ett urval per profiltyp (ca 5–8, t.ex. IPE 100, 160,
-  220, 300, 400, 500, 600) i vanliga läget. Hela tabellen finns i
-  ingenjörsläget.
+- **Material:** limträ (GL30c), stål (S355) och kabel, en hållfasthet
+  per material. Inte både trä och limträ. Betong kanske senare.
+- **Storlekar:** spelläge liten/mellan/stor (tre väl valda profiler per
+  material), ingenjörsläge en handfull riktiga profiler.
 - **Ingenjörsläge** som man slår på: siffror (N, V, M, utnyttjandegrad
   per balk), snittkraftsdiagram och förstorad nedböjning. Till vardags
   syns bara färgerna.
