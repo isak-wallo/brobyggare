@@ -170,6 +170,12 @@ väg förenklad.
 - **Knutpunkter väljs per förband:** ledat eller styvt (styvt dyrare?).
   I lösaren: ett styvt förband delar rotationsfrihetsgraden, ett ledat ger
   varje balkände en egen rotation.
+- **Material:** trä (C24), limträ (GL30c), stål (S235/S355) och
+  kabel från början. **Betong senare**, som ett eget steg med
+  sprickmodell, så att den blir rätt.
+- **Dimensioner:** ett urval per profiltyp (ca 5–8, t.ex. IPE 100, 160,
+  220, 300, 400, 500, 600) i vanliga läget. Hela tabellen finns i
+  ingenjörsläget.
 - **Ingenjörsläge** som man slår på: siffror (N, V, M, utnyttjandegrad
   per balk), snittkraftsdiagram och förstorad nedböjning. Till vardags
   syns bara färgerna.
