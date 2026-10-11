@@ -67,8 +67,9 @@ mycket man får välja och se.
   rambro (styva hörn), bågbro, fackverk, hängbro och snedkabelbro. Det
   följer av FE-lösaren med balkelement och styva förband.
 - Profilerna läggs som data (JSON) med värden ur standardtabeller.
-- **I 2D böjs balken alltid kring sin starka axel.** Vippning och
-  knäckning ut ur planet räknas inte (balkarna antas stagade i sidled).
+- **Bara 2D (beslut):** balken böjs alltid kring sin starka axel.
+  Ingen vippning, ingen knäckning ut ur planet, ingen lokal buckling –
+  balkarna antas stagade i sidled. Lite förenklat, för att det är ett spel.
 - Ingenjörsläget kan föreslå en dimension upp/ner och visa vilken
   kontroll som styr (moment, tryck/knäckning, drag, skjuv).
 - Pris per meter (och per förband) ungefär som i verkligheten, så att
@@ -179,7 +180,8 @@ väg förenklad.
   klarad över budget = klarad utan stjärnor (eller en stjärna), under
   budget = stjärnor efter hur billigt.
 
-- **Fysikaliskt korrekt:** riktig FE i 2D, se Fysik.
+- **Fysikaliskt korrekt, men lite förenklat för spel:** riktig FE i 2D
+  (se Fysik). Ingen vippning eller annat utanför planet.
 - **Knutpunkter väljs per förband:** ledat eller styvt (styvt dyrare?).
   I lösaren: ett styvt förband delar rotationsfrihetsgraden, ett ledat ger
   varje balkände en egen rotation.
