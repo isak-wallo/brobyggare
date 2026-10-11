@@ -10,16 +10,22 @@
 const DT = 1 / 120;          // s, ett fysiksteg
 const TYNGD_TID = 1.0;       // s, tyngden läggs på under den här tiden
 const START_TID = 1.4;       // s, då börjar keIWs gå
-const FART = 1.6;            // m/s, keIWs gångfart
 const KEIWS_MASSA = 80;      // kg
-const KEIWS_START = -2.5;    // m, startpunkten på vänster klippa
 const KLIV_UPP = 0.25;       // m, så högt kliver keIWs upp utan att hoppa
 const LUFT_TID = 0.15;       // s i luften innan det räknas som att falla
+
+// keIWs storlek (m, fötter till huvud) beror på banan, så att han syns lika
+// bra på långa banor. Vikten är densamma. Startpunkten, målet och farten
+// följer storleken (större kliv).
+const keiwsHojd = bana => bana.keiws || 2;
+const keiwsStart = bana => -1.25 * keiwsHojd(bana);
+const keiwsMal = bana => bana.spann + 1.25 * keiwsHojd(bana);
+const keiwsFart = bana => 1.2 * keiwsHojd(bana);      // m/s
 
 function nySim(ritning, bana) {
     return {
         bana, m: byggModell(ritning), t: 0, brott: 0, maxU: 0,
-        keiws: { x: KEIWS_START, y: 0, vy: 0, lage: 'vantar', luft: 0, gatt: 0 },
+        keiws: { x: keiwsStart(bana), y: 0, vy: 0, lage: 'vantar', luft: 0, gatt: 0 },
         resultat: null      // 'klarade' eller 'vatten', med tiden i sim.slutTid
     };
 }
@@ -52,8 +58,9 @@ function keiwsSteg(sim, dt) {
     }
     if (k.lage === 'klar' || k.lage === 'plask') return;
 
-    if (k.lage !== 'faller') { k.x += FART * dt; k.gatt += FART * dt; }
-    else k.x += FART * 0.4 * dt;
+    const fart = keiwsFart(sim.bana);
+    if (k.lage !== 'faller') { k.x += fart * dt; k.gatt += fart * dt; }
+    else k.x += fart * 0.4 * dt;
     k.vy -= G * dt;
     const ny = k.y + k.vy * dt;
     const yta = ytaUnder(sim, k.x, k.y + KLIV_UPP);
@@ -73,7 +80,7 @@ function keiwsSteg(sim, dt) {
     if (k.y < sim.bana.vatten) {
         k.lage = 'plask';
         if (!sim.resultat) { sim.resultat = 'vatten'; sim.slutTid = sim.t; }
-    } else if (k.x > sim.bana.spann + 2.5 && k.lage === 'gar') {
+    } else if (k.x > keiwsMal(sim.bana) && k.lage === 'gar') {
         k.lage = 'klar';
         if (!sim.resultat) { sim.resultat = 'klarade'; sim.slutTid = sim.t; }
     }

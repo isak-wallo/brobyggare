@@ -16,6 +16,8 @@ läsa), stående och liggande. Kontrollerar att:
     dra en knutpunkt (alla balkar följer med), byta storlek på vald balk,
   - zoom med mushjulet och nyp med två fingrar (punkten under fingrarna
     står kvar, inget byggs), och att zoomen nollas vid byte av bana,
+  - keIWs bygger bron först (virvelvind, 1–3 s) och ett tryck hoppar över
+    bygget,
   - provkörningar slutar med "Bron höll!" för broar som håller och
     "Plask!" för en som är för klen.
 
@@ -32,6 +34,7 @@ import os
 import subprocess
 import sys
 import threading
+import time
 
 from playwright.sync_api import sync_playwright
 
@@ -213,7 +216,14 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     bild(sida, bilder, f'{namn}-1-bygg')
 
     sida.click('#verktyg [data-v=kor]')
-    sida.wait_for_timeout(5000)
+    t0 = time.time()
+    kolla(f'{namn}: keIWs bygger först', sida.evaluate('() => window.bro.bygger'))
+    sida.wait_for_timeout(450)
+    bild(sida, bilder, f'{namn}-2-virvel')
+    sida.wait_for_function('() => !window.bro.bygger', timeout=6000)
+    tid = time.time() - t0
+    kolla(f'{namn}: bygget tar 1–3 s', 0.9 < tid < 3.6, f'{tid:.1f} s')
+    sida.wait_for_timeout(2500)
     bild(sida, bilder, f'{namn}-2-prov')
     rubrik = vanta_resultat(sida)
     kolla(f'{namn}: vägen av mellanbalkar håller', rubrik == 'Bron höll!', rubrik)
@@ -224,7 +234,11 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     sida.evaluate('() => { window.bro.ritning = window.bro.losningsRitning(); }')
     bild(sida, bilder, f'{namn}-4-fackverk')
     sida.click('#verktyg [data-v=kor]')
-    sida.wait_for_timeout(6000)
+    sida.wait_for_timeout(1000)
+    bild(sida, bilder, f'{namn}-5-fackverk-virvel')
+    tryck(sida, (6, 3))
+    kolla(f'{namn}: ett tryck hoppar över bygget', not sida.evaluate('() => window.bro.bygger'))
+    sida.wait_for_timeout(4000)
     bild(sida, bilder, f'{namn}-5-fackverk-prov')
     kolla(f'{namn}: fackverket håller', vanta_resultat(sida) == 'Bron höll!')
 
@@ -233,7 +247,7 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     sida.evaluate('() => { window.bro.ritning = { noder: window.bro.ritning.noder.filter(n => n.fast), '
                   'balkar: [{ a: 0, b: 2, storlek: 0, vag: true, material: "limtra" }] }; }')
     sida.click('#verktyg [data-v=kor]')
-    sida.wait_for_timeout(2500)
+    sida.wait_for_timeout(3300)
     bild(sida, bilder, f'{namn}-6-ras')
     kolla(f'{namn}: en för klen bro rasar', vanta_resultat(sida) == 'Plask!')
     bild(sida, bilder, f'{namn}-7-plask')

@@ -2,7 +2,8 @@
 // Brobyggare: bygg en bro, tryck Kör och se om keIWs kommer över.
 //
 // Lägen: 'bygg' (dra balkar mellan rutnätspunkter) och 'prov' (fysiken
-// räknar, keIWs går). Spelytan anpassar sig efter skärmen: verktygen ligger
+// räknar, keIWs går). Provkörningen börjar med att keIWs bygger bron som en
+// virvelvind (bara animering, ingen fysik), sedan går han över. Spelytan anpassar sig efter skärmen: verktygen ligger
 // längst ner när mobilen står och på sidan när den ligger, och kameran
 // visar hela banan (bana.vy) från början. Två fingrar (eller mushjulet)
 // zoomar och flyttar vyn.
@@ -11,8 +12,12 @@ const TEST = new URLSearchParams(location.search).has('test');
 const RUTNAT = 1;            // m mellan punkterna man bygger på
 const MAX_LANGD = 12;        // m, längsta balken
 const MAX_STEG = 8;          // fysiksteg per bildruta (annars går det långsamt)
-const KEIWS_HOJD = 2.0;      // m, keIWs från fötterna till huvudet (stor, så att han syns)
 const MAX_ZOOM = 6;
+const BYGG_PER_BALK = 0.2;   // s per balk när keIWs bygger ...
+const BYGG_MIN = 1.0;        // ... men hela bygget tar minst ...
+const BYGG_MAX = 3.0;        // ... och högst så här länge (s)
+const BYGG_HEM = 0.35;       // s, tillbaka till startplatsen efteråt
+const POFF_TID = 0.35;       // s, dammet när virveln blir keIWs igen
 const SPARA = 'brobyggare-ritning-';   // + banans nummer
 const SPARA_BANA = 'brobyggare-bana';
 
@@ -213,7 +218,8 @@ function kostnad() {
     return Math.round(k / 10) * 10;
 }
 
-const kr = v => v.toLocaleString('sv-SE') + ' kr';
+// Spelets pengar: $$ (påhittad valuta).
+const kr = v => v.toLocaleString('sv-SE') + ' $$';
 
 // ---------- Skärmen ----------
 
@@ -438,7 +444,85 @@ function ritaVald() {
     ctx.beginPath(); ctx.arc(sx(till.x), sy(till.y), Math.max(5, 0.15 * kam.sk), 0, 7); ctx.fill();
 }
 
+// Medan keIWs bygger: de färdiga balkarna, och den som växer fram.
+function ritaBygget() {
+    const lage = byggLage(sim.bygge);
+    ritning.balkar.forEach((b, i) => {
+        if (!sim.bygge.klara.has(i)) return;
+        const na = ritning.noder[b.a], nb = ritning.noder[b.b];
+        ritaBit(na.x, na.y, nb.x, nb.y, PROFILER.limtra[b.storlek], b.vag, FARG.tra, FARG.traMork);
+    });
+    if (lage.vaxer) {
+        const b = ritning.balkar[lage.vaxer.balk], [x1, y1] = lage.vaxer.fran;
+        ritaBit(x1, y1, x1 + (lage.x - x1), y1 + (lage.y - y1), PROFILER.limtra[b.storlek], b.vag, FARG.tra, FARG.traMork);
+    }
+    ritning.noder.forEach(n => {
+        if (n.fast || ritning.balkar.some((b, i) => sim.bygge.klara.has(i) && (ritning.noder[b.a] === n || ritning.noder[b.b] === n))) {
+            ritaNod(n.x, n.y, n.fast, n.styv);
+        }
+    });
+}
+
+// keIWs som virvelvind: en snurrande tratt i keIWs färger, med ögon som
+// skymtar fram, och damm som virvlar runt nertill.
+function ritaVirvel(x, y, t) {
+    const H = keiwsHojd(bana) * 1.3, s = kam.sk;
+    const cx = sx(x), botten = sy(y) + 0.25 * H * s;
+    const farger = [FIG.farger.bla, FIG.farger.mellan, FIG.farger.ljus, FIG.farger.mork];
+    const lager = 9;
+    for (let k = 0; k < lager; k++) {
+        const f = k / (lager - 1);
+        const ry = botten - f * H * s;
+        const rx = (0.12 + 0.42 * f * f) * H * s;
+        const svaj = Math.sin(t * 17 + k * 0.9) * 0.07 * H * s;
+        ctx.fillStyle = farger[(k + Math.floor(t * 24)) % farger.length];
+        ctx.globalAlpha = 0.9;
+        ctx.beginPath();
+        ctx.ellipse(cx + svaj, ry, rx, Math.max(2, 0.07 * H * s), 0, 0, 7);
+        ctx.fill();
+        // Vita fartstreck runt tratten.
+        ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+        ctx.lineWidth = Math.max(1, 0.012 * H * s);
+        const v = t * 22 + k * 1.7;
+        ctx.beginPath();
+        ctx.ellipse(cx + svaj, ry, rx * 1.15, Math.max(2, 0.09 * H * s), 0, v % 6.28, v % 6.28 + 1.4);
+        ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+    // Ögonen skymtar fram ibland.
+    if (Math.sin(t * 9) > 0.2) {
+        const oy = botten - 0.62 * H * s, d = 0.09 * H * s, e = 0.07 * H * s;
+        const dx = Math.sin(t * 17 + 5) * 0.07 * H * s;
+        ctx.fillStyle = FIG.farger.oga;
+        ctx.fillRect(cx + dx - d - e / 2, oy, e, e);
+        ctx.fillRect(cx + dx + d - e / 2, oy, e, e);
+    }
+    // Damm.
+    ctx.fillStyle = 'rgba(170, 160, 145, 0.75)';
+    for (let k = 0; k < 7; k++) {
+        const v = t * 11 + k * 0.9;
+        const r = (0.3 + 0.08 * Math.sin(k * 3.1 + t * 5)) * H * s;
+        ctx.beginPath();
+        ctx.arc(cx + Math.cos(v) * r, botten + Math.sin(v) * 0.08 * H * s, Math.max(2, 0.04 * H * s), 0, 7);
+        ctx.fill();
+    }
+}
+
+// Damm som pyser ut när virveln blir keIWs igen.
+function ritaPoff(x, y, t) {
+    const H = keiwsHojd(bana), f = t / POFF_TID;
+    ctx.fillStyle = 'rgba(200, 192, 180, ' + (0.8 * (1 - f)) + ')';
+    for (let k = 0; k < 8; k++) {
+        const v = k / 8 * 6.28;
+        const r = (0.3 + 0.7 * f) * H * 0.7;
+        ctx.beginPath();
+        ctx.arc(sx(x + Math.cos(v) * r), sy(y + 0.4 * H + Math.sin(v) * r * 0.6), Math.max(2, 0.12 * H * kam.sk * (1 - f * 0.5)), 0, 7);
+        ctx.fill();
+    }
+}
+
 function ritaProv() {
+    if (sim.bygge) { ritaBygget(); return; }
     const m = sim.m;
     // Varje balk: först kanten som en hel linje (för de bitar som sitter
     // ihop), sedan varje element i sin färg. Då syns inga skarvar.
@@ -478,11 +562,10 @@ function ritaProv() {
 // ---------- keIWs ----------
 
 const FIG = FIGUR_DATA.keiws;
-const FIG_SK = KEIWS_HOJD / 204;      // m per figurpixel (204 px hög)
 
 // Rektanglar [x0, y0, x1, y1, färg, del] med fötternas mitt i (x, y).
 function ritaFigur(rekt, x, y, lyft) {
-    const s = FIG_SK * kam.sk;
+    const s = keiwsHojd(bana) / 204 * kam.sk;     // figuren är 204 px hög
     const ox = sx(x) - 80 * s, oy = sy(y) - 204 * s;
     for (const [x0, y0, x1, y1, farg, del] of rekt) {
         const dy = lyft ? lyft(del) : 0;
@@ -502,7 +585,12 @@ function ritaKeiws() {
     const k = sim ? sim.keiws : null;
     if (!k) {
         // På klippan och väntar medan man bygger.
-        ritaFigur(ruta(FIG.idle, performance.now() / 1000), KEIWS_START, 0);
+        ritaFigur(ruta(FIG.idle, performance.now() / 1000), keiwsStart(bana), 0);
+        return;
+    }
+    if (sim.bygge) {
+        const lage = byggLage(sim.bygge);
+        ritaVirvel(lage.x, lage.y, sim.bygge.t);
         return;
     }
     if (k.lage === 'plask') return;
@@ -510,7 +598,7 @@ function ritaKeiws() {
     if (k.lage === 'klar') { ritaFigur(ruta(FIG.rekordjubel, sim.t - sim.slutTid), k.x, k.y); return; }
     if (k.lage === 'vantar') { ritaFigur(FIG.vrid[3], k.x, k.y); return; }
     // Går: benen kliver i takt med sträckan, armarna pendlar emot.
-    const fas = Math.floor(k.gatt / 0.22) % 2;
+    const fas = Math.floor(k.gatt / (0.11 * keiwsHojd(bana))) % 2;
     ritaFigur(FIG.vrid[3], k.x, k.y, del => {
         if (del === 'nara_ben') return fas ? -12 : 0;
         if (del === 'bortre_ben') return fas ? 0 : -12;
@@ -521,6 +609,7 @@ function ritaKeiws() {
 }
 
 function ritaPlask() {
+    if (sim && sim.poff !== undefined && sim.poff < POFF_TID) ritaPoff(keiwsStart(bana), 0, sim.poff);
     if (!sim || sim.resultat !== 'vatten') return;
     const t = sim.t - sim.slutTid;
     if (t > 1.2) return;
@@ -550,7 +639,9 @@ function uppdateraInfo() {
     const pil = (v, t, av) => '<button data-v="' + v + '"' + (av ? ' disabled' : '') + '>' + t + '</button>';
     const bygger = lageNu === 'bygg';
     let tredje;
-    if (!bygger && sim) {
+    if (!bygger && sim && sim.bygge) {
+        tredje = 'keIWs bygger …';
+    } else if (!bygger && sim) {
         tredje = sim.brott ? '<span class="over">Bron gick sönder</span>'
             : 'Högsta utnyttjande ' + Math.round(sim.maxU * 100) + ' %';
     } else {
@@ -579,10 +670,62 @@ function visaRuta(rubrik, text, knapptext) {
 
 function doljRuta() { rutaEl.classList.add('dold'); }
 
+// Bygget som keIWs gör innan provkörningen: en lista med sträckor som
+// virveln flyger (flyg) eller bygger längs (balk = vilken balk som växer
+// fram). Balkarna byggs från vänster till höger, och varje balk från den
+// ände som ligger närmast.
+function nyttBygge() {
+    const start = [keiwsStart(bana), 0];
+    const ordning = ritning.balkar.map((b, i) => i).sort((i, j) => {
+        const mi = Math.min(ritning.noder[ritning.balkar[i].a].x, ritning.noder[ritning.balkar[i].b].x);
+        const mj = Math.min(ritning.noder[ritning.balkar[j].a].x, ritning.noder[ritning.balkar[j].b].x);
+        return mi - mj;
+    });
+    const n = ordning.length;
+    const per = n ? Math.min(BYGG_MAX, Math.max(BYGG_MIN, n * BYGG_PER_BALK)) / n : 0;
+    const stracka = [];
+    let p = start, t = 0;
+    const flyg = (till, tid, balk, fran) => {
+        stracka.push({ fran: fran || p, till, t0: t, t1: t + tid, balk });
+        p = till; t += tid;
+    };
+    for (const i of ordning) {
+        const b = ritning.balkar[i], na = ritning.noder[b.a], nb = ritning.noder[b.b];
+        const [A, B] = Math.hypot(na.x - p[0], na.y - p[1]) <= Math.hypot(nb.x - p[0], nb.y - p[1])
+            ? [[na.x, na.y], [nb.x, nb.y]] : [[nb.x, nb.y], [na.x, na.y]];
+        flyg(A, 0.3 * per);
+        flyg(B, 0.7 * per, i);
+    }
+    flyg(start, BYGG_HEM);
+    return { t: 0, stracka, slut: t, klara: new Set() };
+}
+
+// Var virveln är just nu, och hur långt den växande balken har kommit.
+function byggLage(bygge) {
+    const s = bygge.stracka.find(s => bygge.t < s.t1) || bygge.stracka[bygge.stracka.length - 1];
+    const f = s.t1 > s.t0 ? Math.min(1, Math.max(0, (bygge.t - s.t0) / (s.t1 - s.t0))) : 1;
+    bygge.klara = new Set(bygge.stracka.filter(x => x.balk !== undefined && x.t1 <= bygge.t).map(x => x.balk));
+    return {
+        x: s.fran[0] + (s.till[0] - s.fran[0]) * f, y: s.fran[1] + (s.till[1] - s.fran[1]) * f,
+        vaxer: s.balk !== undefined && f < 1 ? { balk: s.balk, fran: s.fran, f } : null
+    };
+}
+
 function kor() {
     doljRuta();
     sim = nySim(ritning, bana);
+    sim.bygge = nyttBygge();
     lageNu = 'prov';
+    uppdateraInfo();
+}
+
+// Bygget är klart (eller överhoppat): keIWs står på startplatsen och
+// provkörningen börjar.
+function byggKlart() {
+    if (!sim || !sim.bygge) return;
+    sim.bygge = null;
+    sim.poff = 0;
+    ackumulerat = 0;
     uppdateraInfo();
 }
 
@@ -680,6 +823,7 @@ duk.addEventListener('pointerdown', e => {
         return;
     }
     if (lageNu !== 'bygg') {
+        if (sim && sim.bygge) byggKlart();       // ett tryck hoppar över bygget
         panorera = { p: iDuken(e), mitt: vynsMitt() };
         return;
     }
@@ -779,7 +923,11 @@ let forra = performance.now(), ackumulerat = 0;
 function loop(nu) {
     const dt = Math.min(0.1, (nu - forra) / 1000);
     forra = nu;
-    if (lageNu === 'prov' && sim) {
+    if (lageNu === 'prov' && sim && sim.bygge) {
+        sim.bygge.t += dt;
+        if (sim.bygge.t >= sim.bygge.slut) byggKlart();
+    } else if (lageNu === 'prov' && sim) {
+        if (sim.poff !== undefined) sim.poff += dt;
         ackumulerat += dt;
         let n = 0;
         while (ackumulerat >= DT && n < MAX_STEG) { simSteg(sim); ackumulerat -= DT; n++; }
@@ -818,6 +966,7 @@ if (TEST) {
         get zoom() { return zoom; },
         get vald() { return vald; },
         get banaNr() { return banaNr; },
-        kostnad, kor, bygg, bytBana, losningsRitning: () => losningsRitning(bana)
+        get bygger() { return !!(sim && sim.bygge); },
+        kostnad, kor, bygg, bytBana, byggKlart, losningsRitning: () => losningsRitning(bana)
     };
 }

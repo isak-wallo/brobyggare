@@ -2,7 +2,8 @@
 //
 // Spelläget har tre storlekar per material (liten, mellan, stor). Var och en
 // är en riktig profil, så att lösaren räknar med verkliga A, I, W, vikt och
-// pris. Enheter: SI (m, kg, N, Pa). Priserna är ungefärliga, i kronor.
+// pris. Enheter: SI (m, kg, N, Pa). Priserna är i spelets pengar, $$
+// (ungefär som kronor).
 
 const MATERIAL = {
     limtra: {
@@ -14,7 +15,7 @@ const MATERIAL = {
         ft: 19.5e6,        // drag längs fibrerna
         fc: 24.5e6,        // tryck längs fibrerna
         fv: 3.5e6,         // skjuvning
-        prisM3: 9000       // kr/m³
+        prisM3: 9000       // $$/m³
     }
 };
 
@@ -26,7 +27,7 @@ function rektangel(material, b, h) {
         namn: b + '×' + h, material, b: bm, h: hm,
         A, I: bm * hm ** 3 / 12, W: bm * hm ** 2 / 6,
         massa: A * mat.densitet,                       // kg/m
-        pris: Math.round(A * mat.prisM3 / 10) * 10     // kr/m
+        pris: Math.round(A * mat.prisM3 / 10) * 10     // $$/m
     };
 }
 

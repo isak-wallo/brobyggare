@@ -3,7 +3,9 @@
 //   spann:  avståndet mellan klippkanterna (vänster kant vid x = 0)
 //   fasten: fästpunkterna i berget [x, y]
 //   vatten: vattenytan, keIWs som hamnar där har misslyckats
-//   budget: i kronor; man får bygga över, men då blir det inga stjärnor
+//   budget: i $$ (spelets pengar); man får bygga över, men då blir det
+//           inga stjärnor
+//   keiws:  keIWs höjd i meter (bara utseendet, större på långa banor)
 //   omrade: där man får sätta knutpunkter
 //   vy:     det som syns utan zoom
 //   losning: en bro som håller (testerna kör den)
@@ -15,6 +17,7 @@ const BANOR = [
         fasten: [[0, 0], [0, -3], [12, 0], [12, -3]],
         vatten: -6,
         budget: 12000,
+        keiws: 2,
         omrade: { x0: 0, x1: 12, y0: -5, y1: 4 },
         vy: { x0: -4, x1: 16, y0: -6.5, y1: 4.5 },
         losning: {
@@ -32,8 +35,9 @@ const BANOR = [
         fasten: [[0, 0], [0, -3], [24, 0], [24, -3]],
         vatten: -6,
         budget: 32000,
+        keiws: 3.5,
         omrade: { x0: 0, x1: 24, y0: -5, y1: 6 },
-        vy: { x0: -4, x1: 28, y0: -6.5, y1: 6.5 },
+        vy: { x0: -7, x1: 31, y0: -6.5, y1: 6.5 },
         losning: {
             // Fackverk av små balkar: väg överst, underram 3 m ner.
             noder: [[0, 0], [0, -3], [24, 0], [24, -3], [4, 0], [8, 0], [12, 0], [16, 0], [20, 0],

@@ -218,6 +218,14 @@ balk och dra i dess ändar (bara den balken flyttas), eller dra en
 knutpunkt (alla balkar följer med, släpps den på en annan slås de ihop).
 Med en vald balk byter storleksknappen storlek på just den.
 
+Sedan: keIWs storlek beror på banan (2 m på Bäcken, 3,5 m på Ån, samma
+vikt) och han går fortare (1,2 × sin höjd per sekund). Pengarna heter
+**$$** (påhittad valuta, ungefär som kronor). Det man ritar är bara en
+ritning: när man trycker Bygg virvlar keIWs fram som en virvelvind och
+bygger bron balk för balk från vänster (1–3 s, bara animering, balkarna
+får hänga i luften), sedan pyser han ihop till keIWs igen och går över.
+Ett tryck på skärmen hoppar över bygget.
+
 Att fundera på efter utkastet:
 - Fästpunkterna låser både x och y, så en balk mellan två fästen hänger
   delvis i drag som en lina och håller mer än en fritt upplagd balk.
