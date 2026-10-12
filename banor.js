@@ -44,14 +44,14 @@ const BANOR = [
         omrade: { x0: -3, x1: 27, y0: -5, y1: 9 },
         vy: { x0: -7, x1: 31, y0: -6.5, y1: 9.5 },
         losning: {
-            // Fackverk av små balkar: väg överst, underram 3 m ner (24 830 $$).
+            // Fackverk av Pytte: väg överst, underram 3 m ner (22 970 $$).
             noder: [[0, 0], [0, -3], [24, 0], [24, -3], [-3, 0], [27, 0], [4, 0], [8, 0], [12, 0], [16, 0], [20, 0],
                     [4, -3], [8, -3], [12, -3], [16, -3], [20, -3]],
             balkar: [
-                [0, 6, 1, true], [6, 7, 1, true], [7, 8, 1, true], [8, 9, 1, true], [9, 10, 1, true], [10, 2, 1, true],
-                [1, 11, 1], [11, 12, 1], [12, 13, 1], [13, 14, 1], [14, 15, 1], [15, 3, 1],
-                [6, 11, 1], [7, 12, 1], [8, 13, 1], [9, 14, 1], [10, 15, 1],
-                [1, 6, 1], [11, 7, 1], [12, 8, 1], [8, 14, 1], [9, 15, 1], [10, 3, 1]
+                [0, 6, 0, true], [6, 7, 0, true], [7, 8, 0, true], [8, 9, 0, true], [9, 10, 0, true], [10, 2, 0, true],
+                [1, 11, 0], [11, 12, 0], [12, 13, 0], [13, 14, 0], [14, 15, 0], [15, 3, 0],
+                [6, 11, 0], [7, 12, 0], [8, 13, 0], [9, 14, 0], [10, 15, 0],
+                [1, 6, 0], [11, 7, 0], [12, 8, 0], [8, 14, 0], [9, 15, 0], [10, 3, 0]
             ]
         }
     }
@@ -59,7 +59,7 @@ const BANOR = [
 
 // En banas fästpunkter som noder i en ny ritning.
 function nyRitning(bana) {
-    return { version: 3, noder: bana.fasten.map(([x, y, lager]) => fastNod(x, y, lager)), balkar: [] };
+    return { version: 4, noder: bana.fasten.map(([x, y, lager]) => fastNod(x, y, lager)), balkar: [] };
 }
 
 function fastNod(x, y, lager) {
@@ -72,7 +72,7 @@ function fastNod(x, y, lager) {
 function losningsRitning(bana) {
     const l = bana.losning;
     return {
-        version: 3,
+        version: 4,
         noder: l.noder.map(([x, y], i) => i < bana.fasten.length ? fastNod(x, y, bana.fasten[i][2])
                                                                  : { x, y, fast: false, styv: true }),
         balkar: l.balkar.map(([a, b, storlek, vag]) => ({ a, b, storlek, vag: !!vag, material: 'limtra' }))

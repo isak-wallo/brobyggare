@@ -82,7 +82,7 @@ function lasBanaNr() {
 
 // Ritningar från när det fanns tre storlekar (utan version) får de nya
 // numren, så att balkarna behåller sina mått. Fästena får sina brolager
-// från banan (version 3).
+// från banan (version 3). Version 4: nya trämått (samma storleksnamn).
 function uppgradera(r, b = bana) {
     if (!r.version) {
         for (const k of r.balkar) k.storlek = [1, 3, 4][k.storlek] ?? 2;
@@ -96,7 +96,7 @@ function uppgradera(r, b = bana) {
     for (const [x, y, lager] of b.fasten) {
         if (!r.noder.some(n => n.fast && n.x === x && n.y === y)) r.noder.push(fastNod(x, y, lager));
     }
-    r.version = 3;
+    r.version = 4;
     return r;
 }
 
@@ -116,8 +116,9 @@ function sparaRitning() {
 function lasBasta(nr) {
     try {
         const b = JSON.parse(localStorage.getItem(SPARA_BASTA + nr));
-        // Före brolagren (version 3) räknades bron annorlunda: börja om.
-        if (b && (b.ritning.version || 0) < 3) return null;
+        // Före brolagren (version 3) och de nya trämåtten (version 4)
+        // räknades bron annorlunda: börja om.
+        if (b && (b.ritning.version || 0) < 4) return null;
         return b;
     } catch (e) { return null; }
 }

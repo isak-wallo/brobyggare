@@ -93,8 +93,10 @@ function vajer(d) {
 const STORLEKAR = ['Pytte', 'Liten', 'Mellan', 'Stor', 'Jätte'];
 
 const PROFILER = {
-    limtra: [rektangel('limtra', 56, 135), rektangel('limtra', 66, 180), rektangel('limtra', 90, 270),
-             rektangel('limtra', 140, 405), rektangel('limtra', 190, 630)],
+    // Ungefär 2,5 gånger styvare (I) för varje steg, så att knäckningen inte
+    // tar för stora kliv.
+    limtra: [rektangel('limtra', 56, 180), rektangel('limtra', 66, 225), rektangel('limtra', 90, 270),
+             rektangel('limtra', 115, 360), rektangel('limtra', 140, 450)],
     // HEA, böjning kring den styva axeln (W elastiskt, A_v = livets area).
     stal: [iprofil('HEA 100', 21.2, 349, 72.8, 7.56, 96), iprofil('HEA 140', 31.4, 1033, 155, 10.1, 133),
            iprofil('HEA 180', 45.3, 2510, 294, 14.5, 171), iprofil('HEA 240', 76.8, 7763, 675, 25.2, 230),

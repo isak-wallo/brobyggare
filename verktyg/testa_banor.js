@@ -20,8 +20,11 @@ module.exports = function (S, kolla) {
         sim = korSim(enBalk(bana, 1), bana);
         kolla(namn + ': en liten balk går av', sim.resultat === 'vatten' && sim.brott > 0,
               sim.resultat + ', brott ' + sim.brott);
+        // En rak träbalk räcker bara över det korta spannet.
         sim = korSim(enBalk(bana, 4), bana);
-        kolla(namn + ': en jättebalk håller', sim.resultat === 'klarade' && sim.brott === 0,
+        const raktTra = bana.spann <= 12;
+        kolla(namn + (raktTra ? ': en jättebalk av trä håller' : ': en jättebalk av trä räcker inte rakt'),
+              raktTra ? sim.resultat === 'klarade' && sim.brott === 0 : sim.resultat === 'vatten',
               sim.resultat + ', max ' + Math.round(sim.maxU * 100) + ' %');
         sim = korSim(enBalk(bana, 3, 'stal'), bana);
         kolla(namn + ': en stålbalk Stor (HEA 240) håller', sim.resultat === 'klarade' && sim.brott === 0,

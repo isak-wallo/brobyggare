@@ -51,7 +51,7 @@ Spelläget har fem storlekar (från början tre, men hoppen blev för stora):
 
 | Material | Pytte | Liten | Mellan | Stor | Jätte |
 |----------|-------|-------|--------|------|-------|
-| Limträ | 56×135 | 66×180 | 90×270 | 140×405 | 190×630 |
+| Limträ | 56×180 | 66×225 | 90×270 | 115×360 | 140×450 |
 | Pris $$/m | 70 | 110 | 220 | 510 | 1080 |
 
 Förslag för stål och kabel (tre storlekar, utökas som limträ):
@@ -366,6 +366,14 @@ så bron sjunker och går av på mitten. Testsidan (github.io och lokalt, inte
 den skarpa) har "Dela konstruktionen (test)" i menyn: text som börjar med
 BROBYGGARE och JSON (version, bana, ritning, senaste provkörningen) som
 Claude kan återskapa exakt.
+
+v26-test: jämnare trästorlekar. Förut var stegen i tröghetsmoment 2,8×,
+4,6×, 5,2× och 5,1×, så knäckningen tog jättekliv (Isaks bro på Ån: två
+11 m strävor höll med Mellan, 29 %, men knäcktes med Liten, 133 %). Nu
+GL30c 56×180, 66×225, 90×270, 115×360, 140×450, ungefär 2,5× per steg.
+En rak Jätte i trä räcker inte längre över Ån (24 m), bara över Bäcken.
+Ån-lösningen är nu Pytte överallt (22 970 $$). Gamla "billigaste broar"
+nollställs (ritningsversion 4).
 
 Beslut 2026-10-12: stålpriset behålls (15 $$/kg). Plastiska leder i stål
 (moment begränsat till Mpl, brott först vid en vridgräns) väntar tills vi
