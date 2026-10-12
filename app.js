@@ -1004,7 +1004,7 @@ function visaMeny() {
         : '<p>Ingen bro har hållit här än.</p>';
     menyEl.firstChild.innerHTML = '<button class="stang" data-v="stang">✕</button>'
         + '<h2>Brobyggare</h2>'
-        + '<h3>Bana ' + (banaNr + 1) + ' · ' + bana.namn + '</h3>' + basta
+        + '<h3>Bana ' + (banaNr + 1) + ' · ' + bana.namn + ' (budget ' + kr(bana.budget) + ')</h3>' + basta
         + '<details><summary>Hur funkar det?</summary>' + LEKMAN_TEXT + '</details>'
         + '<details><summary>Förutsättningar – för nördar</summary>' + nordText() + '</details>'
         + '<p class="liten">Version ' + (version || 'okänd') + '</p>';

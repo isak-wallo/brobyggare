@@ -392,7 +392,7 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     sida.click('#menyknapp')
     text = sida.locator('#meny').inner_text()
     kolla(f'{namn}: menyn visar billigaste bron och förklaringen',
-          'Billigaste bron som höll' in text and 'Hur funkar det?' in text
+          'Billigaste bron som höll' in text and '(budget 12 000 $$)' in text.replace(' ', ' ') and 'Hur funkar det?' in text
           and 'Förutsättningar – för nördar' in text and 'Version v' in text)
     sida.click('#meny details:nth-of-type(2) summary')
     kolla(f'{namn}: materialtabellen har limträ, stål och vajer',

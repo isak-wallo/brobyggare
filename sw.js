@@ -1,6 +1,6 @@
 // Höj VERSION (v1-test -> v2-test osv.) varje gång du laddar upp nya
 // filer, så hämtas och cachas den nya versionen säkert.
-const VERSION = 'v22-test';
+const VERSION = 'v23-test';
 const CACHE = 'brobyggare-' + VERSION;
 
 const ASSETS = [
