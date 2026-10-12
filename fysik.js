@@ -26,7 +26,8 @@ const TOL = 1e-7;             // m, Newton är klar när ändringen är mindre
 
 // Ritningen → en beräkningsmodell.
 //
-// ritning.noder:  [{x, y, fast, styv}]  fast = fästpunkt i berget
+// ritning.noder:  [{x, y, fast, styv, lager}]  fast = fästpunkt i berget,
+//                  lager 'glid' = rör sig fritt i x
 // ritning.balkar: [{a, b, storlek, vag, material}]
 //
 // Ett styvt förband delar vridningen mellan balkändarna. Ett ledat ger varje
@@ -39,10 +40,10 @@ function byggModell(ritning) {
 
     const nyRot = fast => { rotFast.push(!!fast); return rotFast.length - 1; };
     const nodPunkt = ritning.noder.map(n => {
-        punkter.push({ x0: n.x, y0: n.y, fast: !!n.fast, forband: !n.fast });
+        punkter.push({ x0: n.x, y0: n.y, fast: !!n.fast, glid: n.lager === 'glid', forband: !n.fast });
         return punkter.length - 1;
     });
-    const nodRot = ritning.noder.map(n => n.styv ? nyRot(n.fast) : -1);
+    const nodRot = ritning.noder.map(n => n.styv && !n.lager ? nyRot(n.fast) : -1);
 
     ritning.balkar.forEach((b, bi) => {
         const na = ritning.noder[b.a], nb = ritning.noder[b.b];
@@ -90,7 +91,8 @@ function byggModell(ritning) {
     };
     punkter.forEach((p, i) => {
         m.X0[2 * i] = p.x0; m.X0[2 * i + 1] = p.y0;
-        m.fri[2 * i] = m.fri[2 * i + 1] = p.fast ? 0 : 1;
+        m.fri[2 * i] = p.fast && !p.glid ? 0 : 1;
+        m.fri[2 * i + 1] = p.fast ? 0 : 1;
         if (p.forband) m.massa[2 * i] = m.massa[2 * i + 1] = FORBAND.massa;
     });
     rotFast.forEach((f, r) => { m.fri[2 * np + r] = f ? 0 : 1; });
@@ -319,11 +321,13 @@ function steg(m, dt) {
     return iter;
 }
 
-// Statisk lösning (för testerna): tyngden och lasterna läggs på i `delar`
-// steg, med Newton–Raphson i varje.
+// Statisk lösning: tyngden och lasterna läggs på i `delar` steg, med
+// Newton–Raphson i varje. Returnerar false om den inte gick ihop (t.ex.
+// en mekanism som inte kan stå still).
 function losStatiskt(m, lg = 1, ll = 1, delar = 10) {
-    const w = m.band + 1;
-    for (let s = 1; s <= delar; s++) {
+    let ok = true;
+    for (let s = 1; s <= delar && ok; s++) {
+        let max = Infinity;
         for (let iter = 0; iter < 30; iter++) {
             montera(m, true);
             for (let d = 0; d < m.ntot; d++) {
@@ -333,17 +337,20 @@ function losStatiskt(m, lg = 1, ll = 1, delar = 10) {
             cholesky(m.K, m.neq, m.band);
             m.du.set(m.R);
             cholLos(m.K, m.neq, m.band, m.du);
-            let max = 0;
+            max = 0;
             for (let d = 0; d < m.ntot; d++) {
                 const p = m.eq[d];
                 if (p < 0) continue;
                 m.q[d] += m.du[p];
                 max = Math.max(max, Math.abs(m.du[p]));
             }
+            if (!(max < 50)) break;          // NaN eller orimligt: ger upp
             if (max < 1e-10) break;
         }
+        ok = max < 1e-6;
     }
     montera(m, false);
+    return ok && m.q.every(Number.isFinite);
 }
 
 // Utnyttjandegraden i ett element (N, M, V) efter materialets typ, se

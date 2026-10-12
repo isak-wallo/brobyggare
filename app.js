@@ -74,12 +74,18 @@ function lasBanaNr() {
 }
 
 // Ritningar från när det fanns tre storlekar (utan version) får de nya
-// numren, så att balkarna behåller sina mått.
-function uppgradera(r) {
+// numren, så att balkarna behåller sina mått. Fästena får sina brolager
+// från banan (version 3).
+function uppgradera(r, b = bana) {
     if (!r.version) {
-        for (const b of r.balkar) b.storlek = [1, 3, 4][b.storlek] ?? 2;
-        r.version = 2;
+        for (const k of r.balkar) k.storlek = [1, 3, 4][k.storlek] ?? 2;
     }
+    for (const n of r.noder) {
+        if (!n.fast) continue;
+        const f = b.fasten.find(([x, y]) => x === n.x && y === n.y);
+        if (f && f[2]) { n.lager = f[2]; n.styv = false; }
+    }
+    r.version = 3;
     return r;
 }
 
@@ -99,7 +105,8 @@ function sparaRitning() {
 function lasBasta(nr) {
     try {
         const b = JSON.parse(localStorage.getItem(SPARA_BASTA + nr));
-        if (b) uppgradera(b.ritning);
+        // Före brolagren (version 3) räknades bron annorlunda: börja om.
+        if (b && (b.ritning.version || 0) < 3) return null;
         return b;
     } catch (e) { return null; }
 }
@@ -245,7 +252,9 @@ function flyttaNod(i, [x, y]) {
     return true;
 }
 
+// Brolagren är alltid ledade.
 function vaxlaForband(i) {
+    if (ritning.noder[i].lager) return;
     andra(() => { ritning.noder[i].styv = !ritning.noder[i].styv; });
 }
 
@@ -401,9 +410,25 @@ function ritaBit(x1, y1, x2, y2, prof, vag, farg, kant) {
     }
 }
 
-function ritaNod(x, y, fast, styv) {
+function ritaNod(x, y, { fast, styv, lager }) {
     const r = Math.max(3.5, 0.13 * kam.sk);
     ctx.fillStyle = FARG.nod;
+    if (lager) {
+        // Brolager: en triangel med en led i toppen, på rullar om det glider.
+        // Stort nog att synas under balken (ca 0,55 m högt).
+        const X = sx(x), Y = sy(y), h = Math.max(r * 2.6, 0.55 * kam.sk), b = h * 0.7, rr = h * 0.17;
+        const fot = Y + h + (lager === 'glid' ? rr * 2.4 : 0);
+        ctx.beginPath(); ctx.moveTo(X, Y); ctx.lineTo(X - b, Y + h); ctx.lineTo(X + b, Y + h); ctx.closePath(); ctx.fill();
+        if (lager === 'glid') {
+            for (const dx of [-b * 0.6, 0, b * 0.6]) {
+                ctx.beginPath(); ctx.arc(X + dx, Y + h + rr * 1.2, rr, 0, 7); ctx.fill();
+            }
+        }
+        ctx.fillRect(X - b * 1.3, fot, b * 2.6, Math.max(2, h * 0.1));
+        ctx.fillStyle = '#e8ecef';
+        ctx.beginPath(); ctx.arc(X, Y, r * 0.55, 0, 7); ctx.fill();
+        return;
+    }
     if (fast) {
         // Fästpunkt: en kloss i berget.
         ctx.fillRect(sx(x) - r * 1.6, sy(y) - r * 1.6, r * 3.2, r * 3.2);
@@ -433,7 +458,7 @@ function ritaBygg() {
         const na = ritning.noder[b.a], nb = ritning.noder[b.b];
         ritaBalk(na.x, na.y, nb.x, nb.y, b.material || 'limtra', b.storlek, b.vag);
     }
-    for (const n of ritning.noder) ritaNod(n.x, n.y, n.fast, n.styv);
+    for (const n of ritning.noder) ritaNod(n.x, n.y, n);
     ritaVald();
     if (drag && (drag.till[0] !== drag.fran[0] || drag.till[1] !== drag.fran[1])) {
         const [x1, y1] = drag.fran, [x2, y2] = drag.till;
@@ -507,7 +532,7 @@ function ritaBygget() {
     }
     ritning.noder.forEach(n => {
         if (n.fast || ritning.balkar.some((b, i) => sim.bygge.klara.has(i) && (ritning.noder[b.a] === n || ritning.noder[b.b] === n))) {
-            ritaNod(n.x, n.y, n.fast, n.styv);
+            ritaNod(n.x, n.y, n);
         }
     });
 }
@@ -604,7 +629,7 @@ function ritaProv() {
     }
     ritning.noder.forEach((n, i) => {
         const [x, y] = lage(m, m.nodPunkt[i]);
-        ritaNod(x, y, n.fast, n.styv);
+        ritaNod(x, y, n);
     });
 }
 
@@ -844,8 +869,10 @@ man trycker på från båda ändarna.</li>
 stället för att böjas, och då räcker små balkar långt.</li>
 <li><b>Styv knut:</b> balkarna sitter fast i varandra. <b>Ledad knut:</b> de
 kan vrida sig som ett gångjärn.</li>
-<li><b>Fästena i berget</b> håller balkarna på plats, så en balk mellan två
-fästen kan hänga lite som en lina.</li>
+<li><b>Brons ändar vid vägen vilar på lager</b>, som på riktiga broar: det
+vänstra sitter fast, det högra står på rullar och kan glida i sidled. Då
+kan bron inte hänga som en lina mellan kanterna, utan måste bära själv.
+De andra fästena i berget sitter fast.</li>
 </ul>`;
 
 // Materialens egenskaper: [nyckel, rubrik, enhet, omräkning].
@@ -887,11 +914,14 @@ function nordText() {
 <li>Varje balk delas i balkelement på ca 0,75 m (Euler–Bernoulli): de tar
 drag, tryck, böjning och tvärkraft.</li>
 <li>Korotationella element: stora rörelser och rotationer (bron får rasa),
-små töjningar, linjärt elastiskt material. Linverkan kommer med.</li>
+små töjningar, linjärt elastiskt material. Linverkan kommer med där
+balkarna sitter fast i båda ändar.</li>
 <li>Newmark (120 steg/s) med Newton–Raphson i varje steg, lite dämpning.
 Massan klumpas i knutpunkterna.</li>
 <li>Styvt förband: delad vridning, moment förs över. Ledat: fri vridning.
-Fästpunkterna låser x och y.</li>
+Vägbanans fästen är brolager, alltid ledade: vänster fast (låser x och
+y), höger glidlager (låser bara y). Övriga fästpunkter låser x och y och
+kan vara styva eller ledade.</li>
 </ul>
 <h4>Laster</h4>
 <table class="tabell">
@@ -900,7 +930,8 @@ Fästpunkterna låser x och y.</li>
 <tr><th>Förband</th><td>${FORBAND.massa}</td><td class="v">kg/st</td></tr>
 <tr><th>keIWs</th><td>${KEIWS_MASSA}</td><td class="v">kg, rörlig last</td></tr>
 </table>
-<p>Tyngden läggs på under 1 s, sedan går keIWs över.</p>
+<p>Egentyngden räknas statiskt (bron är färdigbyggd och står still), sedan
+går keIWs över och resten räknas dynamiskt.</p>
 <h4>Material</h4>
 <div class="rulla"><table class="tabell">
 <tr><th></th>${huvud}</tr>
@@ -1012,7 +1043,7 @@ document.getElementById('verktyg').addEventListener('click', e => {
         vald = -1;
         valjareOppen = false;
     }
-    else if (v === 'angra' && historik.length) { ritning = JSON.parse(historik.pop()); vald = -1; sparaRitning(); }
+    else if (v === 'angra' && historik.length) { ritning = uppgradera(JSON.parse(historik.pop())); vald = -1; sparaRitning(); }
     else if (v === 'kor') { if (lageNu === 'bygg') kor(); else bygg(); }
     uppdateraInfo();
 });
@@ -1287,7 +1318,7 @@ if ('serviceWorker' in navigator && !TEST) {
 if (TEST) {
     window.bro = {
         get ritning() { return ritning; },
-        set ritning(r) { ritning = r; historik = []; sparaRitning(); uppdateraInfo(); },
+        set ritning(r) { ritning = uppgradera(r); historik = []; sparaRitning(); uppdateraInfo(); },
         get sim() { return sim; },
         get lage() { return lageNu; },
         get kam() { return kam; },

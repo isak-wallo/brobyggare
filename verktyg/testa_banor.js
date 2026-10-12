@@ -21,10 +21,14 @@ module.exports = function (S, kolla) {
         kolla(namn + ': en liten balk går av', sim.resultat === 'vatten' && sim.brott > 0,
               sim.resultat + ', brott ' + sim.brott);
         sim = korSim(enBalk(bana, 4), bana);
-        sim = korSim(enBalk(bana, 2, 'stal'), bana);
-        kolla(namn + ': en stålbalk Mellan (HEA 180) håller', sim.resultat === 'klarade' && sim.brott === 0,
-              sim.resultat + ', max ' + Math.round(sim.maxU * 100) + ' %');
         kolla(namn + ': en jättebalk håller', sim.resultat === 'klarade' && sim.brott === 0,
               sim.resultat + ', max ' + Math.round(sim.maxU * 100) + ' %');
+        sim = korSim(enBalk(bana, 3, 'stal'), bana);
+        kolla(namn + ': en stålbalk Stor (HEA 240) håller', sim.resultat === 'klarade' && sim.brott === 0,
+              sim.resultat + ', max ' + Math.round(sim.maxU * 100) + ' %');
+        // Glidlagret: en klen balk kan inte hänga som en lina mellan fästena.
+        sim = korSim(enBalk(bana, 0, 'stal'), bana);
+        kolla(namn + ': en stålbalk Pytte (HEA 100) går av, ingen linverkan', sim.resultat === 'vatten' && sim.brott > 0,
+              sim.resultat + ', brott ' + sim.brott);
     });
 };

@@ -35,6 +35,8 @@ Idéer och beslut i `IDEER.md` (läs den först).
 
 Varje balk delas i element på ca 0,75 m. Styvt förband = balkändarna delar
 vridningen, ledat = egen vridning per ände. Fästpunkterna låser x och y
-(och vridningen om de är styva). Massan klumpas i noderna. Tyngden läggs
-på under 1 s, sedan går keIWs (100 kg) över. g = 10 m/s². Ett element över 100 %
+(och vridningen om de är styva), utom brolagren i vägbanans nivå (banans
+`fasten` [x, y, 'fast'|'glid']): alltid ledade, glidlagret låser bara y.
+Massan klumpas i noderna. Egentyngden räknas statiskt (losStatiskt; går
+det inte läggs den på under 1 s), sedan går keIWs (100 kg) över. g = 10 m/s². Ett element över 100 %
 utnyttjande tas bort; en balk som knäcks tappar mittelementet.

@@ -42,6 +42,21 @@ const mat = MATERIAL.limtra;
     kolla('fritt upplagd balk, moment qL²/8', nara(M, Mh, 0.03), pct(M, Mh));
 }
 
+// 1b. Samma balk på brolager (fast + glid): ingen normalkraft, M = qL²/8
+//     även med 12 m spann och stor nedböjning (ingen linverkan).
+{
+    const L = 12, p = PROFILER.stal[2];
+    const m = byggModell({ noder: [{ x: 0, y: 0, fast: true, lager: 'fast' }, { x: L, y: 0, fast: true, lager: 'glid' }],
+                           balkar: [{ a: 0, b: 1, storlek: 2, material: 'stal' }] });
+    const ok = losStatiskt(m, 1, 0);
+    const q = p.massa * G, M = Math.max(...m.element.map(e => Math.abs(e.M1))), Mh = q * L * L / 8;
+    const N = Math.max(...m.element.map(e => Math.abs(e.N)));
+    kolla('brolager, moment qL²/8', ok && nara(M, Mh, 0.03), pct(M, Mh));
+    kolla('brolager, ingen normalkraft', N < 0.01 * q * L, (N / 1000).toFixed(3) + ' kN');
+    const g = m.q[2 * m.nodPunkt[1]];
+    kolla('glidlagret rör sig i sidled', Math.abs(g) > 1e-6, (g * 1000).toFixed(2) + ' mm');
+}
+
 // 2. Konsol med punktlast: δ = PL³/3EI, M = PL vid infästningen.
 {
     const L = 4, P = 2000, p = PROFILER.limtra[1];

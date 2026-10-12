@@ -1,14 +1,16 @@
 // Provkörningen: bron räknas med fysik.js och keIWs går över. Ingen ritning
 // här, så att testerna kan köra samma sak utan webbläsare.
 //
-// Först läggs tyngden på gradvis (bron sätter sig), sedan går keIWs från
-// vänster klippa. keIWs är en rörlig last på vägbanan: tyngden fördelas på
+// Först räknas bron statiskt under sin egen tyngd (som om den byggts
+// färdigt i lugn och ro), sedan går keIWs från vänster klippa. Går det
+// inte att räkna statiskt (en mekanism) läggs tyngden på gradvis i stället. keIWs är en rörlig last på vägbanan: tyngden fördelas på
 // de två noderna i elementet under fötterna. Finns ingen vägbana under,
 // faller keIWs. Hamnar keIWs i vattnet har bron misslyckats, och kommer
 // keIWs fram till andra sidan har den klarat sig.
 
 const DT = 1 / 120;          // s, ett fysiksteg
-const TYNGD_TID = 1.0;       // s, tyngden läggs på under den här tiden
+const TYNGD_TID = 1.0;       // s, tyngden läggs på under den här tiden (om
+                             // bron inte gick att räkna statiskt)
 const START_TID = 1.4;       // s, då börjar keIWs gå
 const KEIWS_MASSA = 100;     // kg
 const KLIV_UPP = 0.25;       // m, så högt kliver keIWs upp utan att hoppa
@@ -23,8 +25,14 @@ const keiwsMal = bana => bana.spann + 1.25 * keiwsHojd(bana);
 const keiwsFart = bana => 1.8 * keiwsHojd(bana);      // m/s
 
 function nySim(ritning, bana) {
+    const m = byggModell(ritning);
+    const statisk = losStatiskt(m, 1, 0);
+    if (!statisk) m.q.fill(0);
+    m.v.fill(0);
+    m.a.fill(0);
+    montera(m, false);
     return {
-        bana, m: byggModell(ritning), t: 0, brott: 0, maxU: 0,
+        bana, m, statisk, t: 0, brott: 0, maxU: 0,
         keiws: { x: keiwsStart(bana), y: 0, vy: 0, lage: 'vantar', luft: 0, gatt: 0 },
         resultat: null      // 'klarade' eller 'vatten', med tiden i sim.slutTid
     };
@@ -107,7 +115,7 @@ function berget(sim) {
 
 // Ett steg i provkörningen.
 function simSteg(sim, dt = DT) {
-    const s = Math.min(1, sim.t / TYNGD_TID);
+    const s = sim.statisk ? 1 : Math.min(1, sim.t / TYNGD_TID);
     sim.m.tyngd = s * s * (3 - 2 * s);
     keiwsSteg(sim, dt);
     steg(sim.m, dt);

@@ -293,10 +293,25 @@ och kameran följer honom mjukt över bron. Håller man i vyn följer den inte
 just då. Bygg ger tillbaka vyn man hade när man tryckte Kör. Utan zoom är
 allt som förut, med virveln.
 
+Brolager (v16-test): en rak HEA 140 på Ån höll med ledade fästen men
+rasade med styva. Det var linverkan: med x låst i båda ändar hängde den
+ledade balken som en lina (672 kN drag), fast den bara klarar en
+tredjedel av momentet qL²/8. Dessutom lades tyngden på under 1 s, vilket
+gav svängningar (långa veka spann har ~1,5 s period). Nu:
+- Vägbanans fästen är landfästen med brolager, alltid ledade: vänster
+  fast lager, höger glidlager (rör sig fritt i x). De nedre fästena är
+  fasta som förut (valv och strävor funkar). Per bana i `fasten`, så att
+  senare banor (mellanstöd m.m.) kan ha andra lager.
+- Egentyngden räknas statiskt innan keIWs går; bara om det inte går
+  (mekanism) läggs den på under 1 s som förut.
+- Raka balkar stämmer nu med handräkning: Ån, HEA 180 rasar (qL²/8 ger
+  163 %), HEA 240 håller (81 %).
+- Gamla "bästa resultat" nollställs (räknades med den gamla fysiken).
+- Kvar att fundera på: stål är segt, så ett moment över gränsen vid ett
+  styvt stöd borde ge en plastisk led (omlagring) i stället för att
+  elementet går av. Nu är allt sprött.
+
 Att fundera på efter utkastet:
-- Fästpunkterna låser både x och y, så en balk mellan två fästen hänger
-  delvis i drag som en lina och håller mer än en fritt upplagd balk.
-  Fysikaliskt riktigt, men ska en fästpunkt kunna vara glidlager?
 - Vägbanan väger 200 kg/m (plankor + beläggning), så att egenvikten är
   det som styr. keIWs väger lite i jämförelse – tyngre last senare?
 - Stjärnor efter kostnad, fler banor, kablar.
