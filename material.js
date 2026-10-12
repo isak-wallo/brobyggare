@@ -1,7 +1,9 @@
 // Material och tvärsnitt.
 //
-// Spelläget har fem storlekar per material (Pytte–Jätte). Var och en är en
-// riktig profil, så att lösaren räknar med verkliga A, I, W, vikt och pris.
+// Spelläget har fem storlekar per material (Pytte–Jätte) och ett halvsteg
+// efter var och en utom Jätte (Pytte+ … Stor+, storlek 0,5 … 3,5) som man
+// når med −/+ under knapparna. Var och en är en riktig profil, så att
+// lösaren räknar med verkliga A, I, W, vikt och pris.
 // Enheter: SI (m, kg, N, Pa). Priserna är i spelets pengar, $$ (ungefär som
 // kronor).
 //
@@ -104,6 +106,19 @@ const PROFILER = {
     // Preliminär (vajern finns inte i spelet än).
     vajer: [vajer(8), vajer(12), vajer(16), vajer(24), vajer(32)]
 };
+
+// Halvstegen: PLUS[material][i] ligger mellan storlek i och i + 1.
+const PLUS = {
+    limtra: [rektangel('limtra', 66, 200), rektangel('limtra', 78, 250), rektangel('limtra', 115, 300),
+             rektangel('limtra', 140, 405)],
+    stal: [iprofil('HEA 120', 25.3, 606, 106, 8.46, 114), iprofil('HEA 160', 38.8, 1673, 220, 13.2, 152),
+           iprofil('HEA 200', 53.8, 3692, 389, 18.1, 190), iprofil('HEA 260', 86.8, 10450, 836, 28.8, 250)],
+    vajer: [vajer(10), vajer(14), vajer(20), vajer(28)]
+};
+
+// Profilen för en storlek (0, 0,5, 1 … 4) och dess namn (Liten, Liten+ …).
+const profil = (material, s) => Number.isInteger(s) ? PROFILER[material][s] : PLUS[material][Math.floor(s)];
+const storleksNamn = s => STORLEKAR[Math.floor(s)] + (Number.isInteger(s) ? '' : '+');
 
 // Vägbanan: plankor ovanpå balken som keIWs går på. Väger och kostar per
 // meter, utöver balken under.

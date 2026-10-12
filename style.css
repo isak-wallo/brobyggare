@@ -253,6 +253,26 @@ html, body {
     grid-template-columns: repeat(5, 1fr);
 }
 
+/* Finjusteringen av en vald balk: − Liten+ · 78×250 · 180 $$/m + */
+#valjare .fin {
+    display: grid;
+    grid-template-columns: 48px 1fr 48px;
+    gap: 4px;
+    align-items: center;
+    margin-top: 6px;
+    color: #f2f4f5;
+    font-size: 13px;
+    text-align: center;
+}
+
+#valjare .fin button {
+    font-size: 20px;
+}
+
+#valjare .fin button:disabled {
+    opacity: 0.35;
+}
+
 #valjare button {
     min-width: 0;
     min-height: 40px;

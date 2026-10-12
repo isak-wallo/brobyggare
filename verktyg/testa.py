@@ -248,7 +248,10 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     kolla(f'{namn}: och byter material till stål (HEA)', sida.evaluate('() => window.bro.ritning.balkar[0].material') == 'stal'
           and 'HEA 300' in sida.inner_text('#valjare [data-s="4"]'))
     bild(sida, bilder, f'{namn}-0-stal')
-    for _ in range(3):
+    sida.click('#valjare [data-f="-1"]')
+    kolla(f'{namn}: − ger ett halvsteg (Stor+, HEA 260)', sida.evaluate('() => window.bro.ritning.balkar[0].storlek') == 3.5
+          and 'Stor+' in sida.inner_text('#valjare .fin') and 'HEA 260' in sida.inner_text('#valjare .fin'))
+    for _ in range(4):
         sida.click('#verktyg [data-v=angra]')
     tryck(sida, (3, 3))                           # tomt: ingen vald
     dra(sida, (6, 0), (6, 1))                     # knutpunkten med alla balkar

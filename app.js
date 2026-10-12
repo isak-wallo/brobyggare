@@ -277,7 +277,7 @@ function kostnad() {
     for (const b of ritning.balkar) {
         const na = ritning.noder[b.a], nb = ritning.noder[b.b];
         const L = Math.hypot(nb.x - na.x, nb.y - na.y);
-        k += L * (PROFILER[b.material || 'limtra'][b.storlek].pris + (b.vag ? VAG.pris : 0));
+        k += L * (profil(b.material || 'limtra', b.storlek).pris + (b.vag ? VAG.pris : 0));
     }
     for (const n of ritning.noder) if (!n.fast) k += FORBAND.pris[n.styv ? 'styvt' : 'ledat'];
     return Math.round(k / 10) * 10;
@@ -405,7 +405,7 @@ function utnyttjandeFarg(u) {
 // En balk i byggläget, i materialets färger.
 function ritaBalk(x1, y1, x2, y2, material, storlek, vag) {
     const [farg, kant] = FARG.material[material];
-    ritaBit(x1, y1, x2, y2, PROFILER[material][storlek], vag, farg, kant);
+    ritaBit(x1, y1, x2, y2, profil(material, storlek), vag, farg, kant);
 }
 
 function ritaBit(x1, y1, x2, y2, prof, vag, farg, kant) {
@@ -493,7 +493,7 @@ function ritaBygg() {
         const ok = Math.hypot(x2 - x1, y2 - y1) <= MAX_LANGD + 1e-6;
         ctx.globalAlpha = 0.6;
         if (ok) ritaBalk(x1, y1, x2, y2, ritMaterial, storlek, ritVag);
-        else ritaBit(x1, y1, x2, y2, PROFILER[ritMaterial][storlek], ritVag, FARG.fel, FARG.fel);
+        else ritaBit(x1, y1, x2, y2, profil(ritMaterial, storlek), ritVag, FARG.fel, FARG.fel);
         ctx.globalAlpha = 1;
         const L = Math.hypot(x2 - x1, y2 - y1);
         langdText(x1, y1, x2, y2, ok ? tal(L, 1) + ' m' : 'Längst ' + MAX_LANGD + ' m', ok ? FARG.text : FARG.fel);
@@ -535,7 +535,7 @@ function ritaVald() {
     if (vald >= 0 && ritning.balkar[vald]) {
         const b = ritning.balkar[vald], na = ritning.noder[b.a], nb = ritning.noder[b.b];
         ctx.strokeStyle = 'rgba(61, 139, 253, 0.45)';
-        ctx.lineWidth = Math.max(3, PROFILER[b.material || 'limtra'][b.storlek].h * kam.sk) + 10;
+        ctx.lineWidth = Math.max(3, profil(b.material || 'limtra', b.storlek).h * kam.sk) + 10;
         linje(na, nb);
         const r = Math.max(9, 0.3 * kam.sk);
         for (const n of [na, nb]) {
@@ -766,7 +766,7 @@ const TIPS = {
     vag: 'Dra mellan två punkter: väg som keIWs går på. Tryck på en knutpunkt: styv/ledad.',
     balk: 'Dra mellan två punkter: balk. Tryck på en knutpunkt: styv/ledad.',
     andra: 'Tryck på en balk för att ändra eller riva den, eller dra en knutpunkt.',
-    andraVald: 'Dra i en ände, eller byt material, storlek eller riv i rutan.',
+    andraVald: 'Dra i en ände, eller byt material, storlek (−/+ i halvsteg) eller riv i rutan.',
     fri: 'Inget verktyg valt: dra med ett finger för att flytta vyn (zooma in först). Välj Väg eller Ändra för att bygga.'
 };
 
@@ -791,7 +791,7 @@ function uppdateraInfo() {
         + '<div class="rad"><span class="' + (over ? 'over' : '') + '">' + kr(k) + '</span> av ' + kr(bana.budget) + '</div>'
         + '<div class="rad tredje' + (bygger ? ' tips' : '') + '">' + tredje + '</div>';
     for (const v of ['rita', 'andra']) knappar[v].classList.toggle('vald', verktyg === v);
-    knappar.rita.innerHTML = '<span>' + (ritVag ? 'Väg' : 'Balk') + '</span><small>' + MATERIAL[ritMaterial].kort + ' · ' + STORLEKAR[storlek] + ' ▴</small>';
+    knappar.rita.innerHTML = '<span>' + (ritVag ? 'Väg' : 'Balk') + '</span><small>' + MATERIAL[ritMaterial].kort + ' · ' + storleksNamn(storlek) + ' ▴</small>';
     knappar.kor.textContent = lageNu === 'bygg' ? 'Kör' : 'Bygg';
     knappar.kor.classList.toggle('stopp', lageNu !== 'bygg');
     for (const v of ['rita', 'andra']) knappar[v].disabled = lageNu !== 'bygg';
@@ -823,7 +823,10 @@ function visaValjare() {
             knapp('data-m="' + nyckel + '"', m.kort, nyckel === mat)).join('') + '</div>'
         + '<div class="storlekar">' + STORLEKAR.map((namn, i) => knapp('data-s="' + i + '"', '<b>' + namn + '</b><small>'
             + PROFILER[mat][i].namn + '</small><small>' + kr(PROFILER[mat][i].pris + (vag ? VAG.pris : 0)) + '/m</small>',
-            i === st)).join('') + '</div>';
+            i === Math.floor(st))).join('') + '</div>'
+        + '<div class="fin"><button data-f="-1"' + (gra || st <= 0 ? ' disabled' : '') + '>−</button><span><b>'
+            + storleksNamn(st) + '</b> · ' + profil(mat, st).namn + ' · ' + kr(profil(mat, st).pris + (vag ? VAG.pris : 0))
+            + '/m</span><button data-f="1"' + (gra || st >= 4 ? ' disabled' : '') + '>+</button></div>';
     if (valjareEl.innerHTML !== html) valjareEl.innerHTML = html;
 }
 
@@ -970,10 +973,12 @@ function nordText() {
         return '<p' + kommerKlass(m) + '><b>' + { tra: 'Trä', stal: 'Stål', vajer: 'Vajer' }[t] + '</b></p><ul'
             + kommerKlass(m) + '>' + BROTTREGLER[t].map(r => '<li>' + r + '</li>').join('') + '</ul>';
     }).join('');
-    const profiler = Object.entries(PROFILER).map(([nyckel, lista]) => lista.map((p, i) =>
-        '<tr' + kommerKlass(MATERIAL[nyckel]) + '>' + (i ? '' : '<th rowspan="' + lista.length + '">' + MATERIAL[nyckel].namn.split(' ')[0] + '</th>')
-        + '<td class="v">' + STORLEKAR[i] + '</td><td class="v">' + p.namn + '</td><td>' + tal(p.massa, 1) + '</td><td>' + tal(p.pris) + '</td></tr>'
-    ).join('')).join('');
+    const steg = [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4];
+    const profiler = Object.keys(PROFILER).map(nyckel => steg.map((s, i) => {
+        const p = profil(nyckel, s);
+        return '<tr' + kommerKlass(MATERIAL[nyckel]) + '>' + (i ? '' : '<th rowspan="' + steg.length + '">' + MATERIAL[nyckel].namn.split(' ')[0] + '</th>')
+            + '<td class="v">' + storleksNamn(s) + '</td><td class="v">' + p.namn + '</td><td>' + tal(p.massa, 1) + '</td><td>' + tal(p.pris) + '</td></tr>';
+    }).join('')).join('');
     return `
 <h4>Modellen</h4>
 <ul>
@@ -1181,6 +1186,11 @@ valjareEl.addEventListener('click', e => {
         const m = b.dataset.m;
         if (valdBalk) { if ((valdBalk.material || 'limtra') !== m) andra(() => { valdBalk.material = m; }); }
         else ritMaterial = m;
+    } else if (b.dataset.f) {
+        // Finjustering i halvsteg (Liten, Liten+, Mellan …).
+        const fore = valdBalk ? valdBalk.storlek : storlek, s = Math.max(0, Math.min(4, fore + 0.5 * b.dataset.f));
+        if (valdBalk) { if (s !== fore) andra(() => { valdBalk.storlek = s; }); }
+        else storlek = s;
     } else if (b.dataset.s !== undefined) {
         const s = +b.dataset.s;
         if (valdBalk) { if (valdBalk.storlek !== s) andra(() => { valdBalk.storlek = s; }); }

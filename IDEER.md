@@ -375,6 +375,11 @@ En rak Jätte i trä räcker inte längre över Ån (24 m), bara över Bäcken.
 Ån-lösningen är nu Pytte överallt (22 970 $$). Gamla "billigaste broar"
 nollställs (ritningsversion 4).
 
+v27-test: halvsteg. Fem storlekar på knapparna som förut, och −/+ under
+dem stegar i halvsteg (Pytte, Pytte+, Liten … Stor+, Jätte; nio per
+material). Halvstegen: trä 66×200, 78×250, 115×300, 140×405; stål HEA
+120, 160, 200, 260. Storlek 0,5 … 3,5 i ritningen (PLUS i material.js).
+
 Beslut 2026-10-12: stålpriset behålls (15 $$/kg). Plastiska leder i stål
 (moment begränsat till Mpl, brott först vid en vridgräns) väntar tills vi
 gör banor där stål ska löna sig.

@@ -48,7 +48,7 @@ function byggModell(ritning) {
     ritning.balkar.forEach((b, bi) => {
         const na = ritning.noder[b.a], nb = ritning.noder[b.b];
         const material = b.material || 'limtra';
-        const prof = PROFILER[material][b.storlek], mat = MATERIAL[material];
+        const prof = profil(material, b.storlek), mat = MATERIAL[material];
         const dx = nb.x - na.x, dy = nb.y - na.y, L = Math.hypot(dx, dy);
         const n = Math.max(2, Math.ceil(L / ELEMENT_LANGD));
         const pts = [nodPunkt[b.a]], rots = [nodRot[b.a] >= 0 ? nodRot[b.a] : nyRot(false)];
