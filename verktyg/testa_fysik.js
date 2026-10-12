@@ -29,9 +29,9 @@ const mat = MATERIAL.limtra;
 
 // 1. Fritt upplagd balk under egenvikt: δ = 5qL⁴/384EI.
 {
-    const L = 6, p = PROFILER.limtra[1];
+    const L = 6, p = PROFILER.limtra[3];
     const m = byggModell({ noder: [{ x: 0, y: 0, fast: true }, { x: L, y: 0, fast: true }],
-                           balkar: [{ a: 0, b: 1, storlek: 1 }] });
+                           balkar: [{ a: 0, b: 1, storlek: 3 }] });
     losStatiskt(m, 1, 0);
     const q = p.massa * G;
     const mitt = m.punkter.findIndex(pt => Math.abs(pt.x0 - L / 2) < 1e-9);
@@ -44,9 +44,9 @@ const mat = MATERIAL.limtra;
 
 // 2. Konsol med punktlast: δ = PL³/3EI, M = PL vid infästningen.
 {
-    const L = 4, P = 2000, p = PROFILER.limtra[0];
+    const L = 4, P = 2000, p = PROFILER.limtra[1];
     const m = byggModell({ noder: [{ x: 0, y: 0, fast: true, styv: true }, { x: L, y: 0 }],
-                           balkar: [{ a: 0, b: 1, storlek: 0 }] });
+                           balkar: [{ a: 0, b: 1, storlek: 1 }] });
     m.last[2 * m.nodPunkt[1] + 1] = -P;
     losStatiskt(m, 0, 1);
     const d = -m.q[2 * m.nodPunkt[1] + 1], hand = P * L ** 3 / (3 * mat.E * p.I);
@@ -59,7 +59,7 @@ const mat = MATERIAL.limtra;
 {
     const P = 10000;
     const m = byggModell({ noder: [{ x: 0, y: 0, fast: true }, { x: 4, y: 0, fast: true }, { x: 2, y: 2 }],
-                           balkar: [{ a: 0, b: 2, storlek: 1 }, { a: 2, b: 1, storlek: 1 }] });
+                           balkar: [{ a: 0, b: 2, storlek: 3 }, { a: 2, b: 1, storlek: 3 }] });
     m.last[2 * m.nodPunkt[2] + 1] = -P;
     losStatiskt(m, 0, 1);
     const N = m.element[m.balkar[0].element[0]].N, hand = -P / (2 * Math.SQRT1_2);
@@ -68,10 +68,10 @@ const mat = MATERIAL.limtra;
 
 // 4. Knäckning: tryck 0,5 · Pcr ger utnyttjandet 0,5 mot knäckning.
 {
-    const L = 4, p = PROFILER.limtra[0];
+    const L = 4, p = PROFILER.limtra[1];
     const Pcr = Math.PI ** 2 * mat.E05 * p.I / (L * L);
     const m = byggModell({ noder: [{ x: 0, y: 0, fast: true }, { x: 0, y: L }, { x: 1, y: L, fast: true }],
-                           balkar: [{ a: 0, b: 1, storlek: 0 }, { a: 1, b: 2, storlek: 2 }] });
+                           balkar: [{ a: 0, b: 1, storlek: 1 }, { a: 1, b: 2, storlek: 4 }] });
     m.last[2 * m.nodPunkt[1] + 1] = -0.5 * Pcr;
     losStatiskt(m, 0, 1);
     S('utnyttjande')(m);
@@ -80,9 +80,9 @@ const mat = MATERIAL.limtra;
 
 // 5. Dynamik: konsolens egenfrekvens f = 1,875²/(2π) · √(EI/(mL⁴)).
 {
-    const L = 4, p = PROFILER.limtra[0];
+    const L = 4, p = PROFILER.limtra[1];
     const m = byggModell({ noder: [{ x: 0, y: 0, fast: true, styv: true }, { x: L, y: 0 }],
-                           balkar: [{ a: 0, b: 1, storlek: 0 }] });
+                           balkar: [{ a: 0, b: 1, storlek: 1 }] });
     m.massa[2 * m.nodPunkt[1]] -= 20; m.massa[2 * m.nodPunkt[1] + 1] -= 20;   // inget förband i änden
     const spets = 2 * m.nodPunkt[1] + 1;
     m.last[spets] = -500; losStatiskt(m, 0, 1); m.last[spets] = 0; m.tyngd = 0;
@@ -101,9 +101,9 @@ const mat = MATERIAL.limtra;
 // 6. Stora förskjutningar: konsolen under stor last sjunker mindre än
 // den linjära teorin och kortas av i x (geometrisk olinjäritet).
 {
-    const L = 4, p = PROFILER.limtra[0];
+    const L = 4, p = PROFILER.limtra[1];
     const m = byggModell({ noder: [{ x: 0, y: 0, fast: true, styv: true }, { x: L, y: 0 }],
-                           balkar: [{ a: 0, b: 1, storlek: 0 }] });
+                           balkar: [{ a: 0, b: 1, storlek: 1 }] });
     const P = 3 * mat.E * p.I / L ** 2;          // linjärt: δ = L (orimligt)
     m.last[2 * m.nodPunkt[1] + 1] = -P;
     losStatiskt(m, 0, 1, 40);

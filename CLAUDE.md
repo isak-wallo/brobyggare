@@ -17,7 +17,7 @@ Idéer och beslut i `IDEER.md` (läs den först).
 
 ## Filer
 
-- `material.js` – material (limträ GL30c) och profilerna liten/mellan/stor,
+- `material.js` – material (limträ GL30c) och de fem profilerna (Pytte–Jätte),
   vägbanan och förbanden (vikt och pris).
 - `fysik.js` – FE-lösaren: korotationella Euler–Bernoulli-element, Newmark
   + Newton–Raphson, bandad Cholesky med Cuthill–McKee, brott (spänning,
@@ -35,5 +35,5 @@ Idéer och beslut i `IDEER.md` (läs den först).
 Varje balk delas i element på ca 0,75 m. Styvt förband = balkändarna delar
 vridningen, ledat = egen vridning per ände. Fästpunkterna låser x och y
 (och vridningen om de är styva). Massan klumpas i noderna. Tyngden läggs
-på under 1 s, sedan går keIWs (80 kg) över. Ett element över 100 %
+på under 1 s, sedan går keIWs (100 kg) över. g = 10 m/s². Ett element över 100 %
 utnyttjande tas bort; en balk som knäcks tappar mittelementet.

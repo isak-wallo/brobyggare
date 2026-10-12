@@ -124,8 +124,11 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
           x0 >= duk['x'] - 1 and x1 <= duk['x'] + duk['width'] + 1
           and y0 >= duk['y'] - 1 and y1 <= duk['y'] + duk['height'] + 1)
 
-    # Bygg en väg i två delar (Mellan) genom att dra med musen.
+    # Bygg en väg i två delar (Stor) genom att dra med musen.
     sida.click('#verktyg [data-v=vag]')
+    kolla(f'{namn}: fem storlekar, Mellan från början', sida.inner_text('#verktyg [data-v=storlek]') == 'Mellan'
+          and sida.evaluate('() => STORLEKAR.length') == 5)
+    sida.click('#verktyg [data-v=storlek]')
     dra(sida, (0, 0), (6, 0))
     dra(sida, (6, 0), (12, 0))
     r = sida.evaluate('() => window.bro.ritning')
@@ -178,8 +181,8 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     tryck(sida, (3, 0))                           # välj vägen till vänster
     sida.click('#verktyg [data-v=storlek]')
     kolla(f'{namn}: storleksknappen byter storlek på vald balk',
-          sida.evaluate('() => window.bro.ritning.balkar[0].storlek') == 2
-          and sida.evaluate('() => window.bro.ritning.balkar[1].storlek') == 1)
+          sida.evaluate('() => window.bro.ritning.balkar[0].storlek') == 4
+          and sida.evaluate('() => window.bro.ritning.balkar[1].storlek') == 3)
     sida.click('#verktyg [data-v=angra]')
     tryck(sida, (3, 3))                           # tomt: ingen vald
     dra(sida, (6, 0), (6, 1))                     # knutpunkten med alla balkar
@@ -244,7 +247,7 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     hojder.append(info_h())
     kolla(f'{namn}: infotexten har samma höjd hela tiden', len(set(hojder)) == 1, str(hojder))
     rubrik = vanta_resultat(sida)
-    kolla(f'{namn}: vägen av mellanbalkar håller', rubrik == 'Bron höll!', rubrik)
+    kolla(f'{namn}: vägen av stora balkar håller', rubrik == 'Bron höll!', rubrik)
     bild(sida, bilder, f'{namn}-3-holl')
 
     # Den sparade lösningen (fackverk av små balkar).

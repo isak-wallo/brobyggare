@@ -17,11 +17,11 @@ module.exports = function (S, kolla) {
               + (Date.now() - t0) + ' ms för ' + sim.t.toFixed(1) + ' s');
         sim = korSim(nyRitning(bana), bana);
         kolla(namn + ': utan bro hamnar keIWs i vattnet', sim.resultat === 'vatten');
-        sim = korSim(enBalk(bana, 0), bana);
+        sim = korSim(enBalk(bana, 1), bana);
         kolla(namn + ': en liten balk går av', sim.resultat === 'vatten' && sim.brott > 0,
               sim.resultat + ', brott ' + sim.brott);
-        sim = korSim(enBalk(bana, 2), bana);
-        kolla(namn + ': en stor balk håller', sim.resultat === 'klarade' && sim.brott === 0,
+        sim = korSim(enBalk(bana, 4), bana);
+        kolla(namn + ': en jättebalk håller', sim.resultat === 'klarade' && sim.brott === 0,
               sim.resultat + ', max ' + Math.round(sim.maxU * 100) + ' %');
     });
 };

@@ -16,7 +16,7 @@
 //
 // Enheter: SI (m, kg, s, N, Pa). y är uppåt.
 
-const G = 9.81;
+const G = 10;                 // m/s², avrundat (keIWs 100 kg = 1 kN)
 const ELEMENT_LANGD = 0.75;   // m, ungefärlig längd på elementen i en balk
 const NEWMARK_BETA = 0.3025;  // (γ + 1/2)² / 4
 const NEWMARK_GAMMA = 0.6;    // > 1/2 dämpar bort de högsta frekvenserna

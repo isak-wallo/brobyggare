@@ -45,7 +45,7 @@ let ritning = lasRitning();
 let historik = [];
 let verktyg = 'vag';
 let ritverktyg = 'vag';       // senaste av Väg/Balk, dit Flytta och Riv går tillbaka
-let storlek = 1;
+let storlek = 2;              // Mellan
 let lageNu = 'bygg';
 let sim = null;
 let drag = null;              // {fran: [x, y], till: [x, y]} medan man drar
@@ -68,10 +68,20 @@ function lasBanaNr() {
     return Math.max(0, Math.min(BANOR.length - 1, nr));
 }
 
+// Ritningar från när det fanns tre storlekar (utan version) får de nya
+// numren, så att balkarna behåller sina mått.
+function uppgradera(r) {
+    if (!r.version) {
+        for (const b of r.balkar) b.storlek = [1, 3, 4][b.storlek] ?? 2;
+        r.version = 2;
+    }
+    return r;
+}
+
 function lasRitning() {
     try {
         const r = JSON.parse(localStorage.getItem(SPARA + banaNr));
-        if (r && r.noder && r.balkar) return r;
+        if (r && r.noder && r.balkar) return uppgradera(r);
     } catch (e) { /* ingen sparad */ }
     return nyRitning(bana);
 }
@@ -82,7 +92,11 @@ function sparaRitning() {
 
 // Billigaste bron som höll på en bana: {kostnad, ritning}.
 function lasBasta(nr) {
-    try { return JSON.parse(localStorage.getItem(SPARA_BASTA + nr)); } catch (e) { return null; }
+    try {
+        const b = JSON.parse(localStorage.getItem(SPARA_BASTA + nr));
+        if (b) uppgradera(b.ritning);
+        return b;
+    } catch (e) { return null; }
 }
 
 function sparaBasta(k) {
@@ -786,7 +800,8 @@ Därför kommer linverkan med – en balk mellan två fästen bär delvis i drag
 <ul>
 <li>Egenvikt: balkarna, vägbanan ${VAG.massa} kg/m och förbanden ${FORBAND.massa} kg styck,
 samlade i knutpunkterna.</li>
-<li>Tyngden läggs på under 1 s, sedan går keIWs (80 kg) över som en rörlig last.</li>
+<li>Tyngden läggs på under 1 s, sedan går keIWs (${KEIWS_MASSA} kg) över som en rörlig last.</li>
+<li>g = ${G} m/s² (avrundat).</li>
 <li>Tiden stegas fram 120 gånger per sekund (Newmark) med Newton–Raphson i
 varje steg, och lite dämpning.</li>
 </ul>

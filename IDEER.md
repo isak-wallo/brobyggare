@@ -47,9 +47,17 @@ en hel profilkatalog. Riktiga balkar, inte bara fackverk.
 profil, så att lösaren ändå räknar med verkliga A, I, W, vikt och pris.
 Förslag (justeras när vi provar):
 
+Spelläget har fem storlekar (från början tre, men hoppen blev för stora):
+
+| Material | Pytte | Liten | Mellan | Stor | Jätte |
+|----------|-------|-------|--------|------|-------|
+| Limträ | 56×135 | 66×180 | 90×270 | 140×405 | 190×630 |
+| Pris $$/m | 70 | 110 | 220 | 510 | 1080 |
+
+Förslag för stål och kabel (tre storlekar, utökas som limträ):
+
 | Material | Liten | Mellan | Stor |
 |----------|-------|--------|------|
-| Limträ | 66×180 | 140×405 | 190×630 |
 | Stål | IPE 200 | IPE 400 | HEB 500 |
 | Kabel | Ø 16 | Ø 32 | Ø 52 |
 
@@ -240,6 +248,14 @@ och väg av små med två snedsträvor 8 100 $$ (92 %). Åns budget sänktes til
 visar bara kostnaden, och förklaringen är uppdelad i rubriker och listor.
 I menyn finns också "Riv allt och börja om" (går att ångra), och keIWs går
 20 % fortare (1,44 × sin höjd per sekund).
+
+Sedan: fem storlekar i spelläget (Pytte 56×135 – Jätte 190×630, varje steg
+ungefär dubbla priset; gamla sparade ritningar översätts så att balkarna
+behåller sina mått). keIWs väger 100 kg och g = 10 m/s² (runda tal: 1 kN).
+Med det håller på Bäcken t.ex. väg av Stor (11 420 $$), fackverk av Liten
+(9 910 $$), väg 3×4 m + två strävor av Liten (8 220 $$) eller Pytte
+(7 340 $$, 80 %). Väg av Mellan rasar. På Ån håller fackverket av Liten
+(24 830 $$) och av Pytte (21 110 $$, 95 %).
 
 Att fundera på efter utkastet:
 - Fästpunkterna låser både x och y, så en balk mellan två fästen hänger
