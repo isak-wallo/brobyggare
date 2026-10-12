@@ -47,7 +47,8 @@ let banaNr = lasBanaNr();
 let bana = BANOR[banaNr];
 let ritning = lasRitning();
 let historik = [];
-let verktyg = 'rita';         // 'rita' (nya balkar) eller 'andra' (flytta, byta, riva)
+let verktyg = 'rita';         // 'rita' (nya balkar), 'andra' (flytta, byta, riva) eller
+                             // null (inget valt: ett finger flyttar vyn)
 let ritVag = true;            // ritar väg (som keIWs går på) eller balk
 let valjareOppen = false;     // väljaren för väg/balk och storlek (verktyget Rita)
 let storlek = 2;              // Mellan
@@ -745,7 +746,8 @@ const TIPS = {
     vag: 'Dra mellan två punkter: väg som keIWs går på. Tryck på en knutpunkt: styv/ledad.',
     balk: 'Dra mellan två punkter: balk. Tryck på en knutpunkt: styv/ledad.',
     andra: 'Tryck på en balk för att ändra eller riva den, eller dra en knutpunkt.',
-    andraVald: 'Dra i en ände, eller byt material, storlek eller riv i rutan.'
+    andraVald: 'Dra i en ände, eller byt material, storlek eller riv i rutan.',
+    fri: 'Inget verktyg valt: dra med ett finger för att flytta vyn (zooma in först). Välj Väg eller Ändra för att bygga.'
 };
 
 // Infotexten: bana, kostnad och en tredje rad (tips medan man bygger,
@@ -761,7 +763,7 @@ function uppdateraInfo() {
         tredje = sim.brott ? '<span class="over">Bron gick sönder</span>'
             : 'Högsta utnyttjande ' + Math.round(sim.maxU * 100) + ' %';
     } else {
-        tredje = TIPS[verktyg === 'andra' ? (vald >= 0 ? 'andraVald' : 'andra') : ritVag ? 'vag' : 'balk'];
+        tredje = TIPS[!verktyg ? 'fri' : verktyg === 'andra' ? (vald >= 0 ? 'andraVald' : 'andra') : ritVag ? 'vag' : 'balk'];
     }
     infoEl.innerHTML = '<div class="rad">' + pil('forra', '‹', !bygger || banaNr === 0)
         + '<b>Bana ' + (banaNr + 1) + ' · ' + bana.namn + '</b>'
@@ -1094,14 +1096,15 @@ document.getElementById('verktyg').addEventListener('click', e => {
     if (!b || b.disabled) return;
     const v = b.dataset.v;
     if (v === 'rita') {
-        // Rita: ett tryck öppnar (eller stänger) väljaren för väg/balk och storlek.
-        valjareOppen = verktyg === 'rita' ? !valjareOppen : true;
-        verktyg = 'rita';
+        // Rita: ett tryck öppnar väljaren för väg/balk och storlek, ett tryck
+        // till (med väljaren öppen) väljer bort verktyget.
+        if (verktyg === 'rita' && valjareOppen) { verktyg = null; valjareOppen = false; }
+        else { verktyg = 'rita'; valjareOppen = true; }
         vald = -1;
     }
     else if (v === 'andra') {
-        // Ändra: ett tryck till går tillbaka till Rita.
-        verktyg = verktyg === 'andra' ? 'rita' : 'andra';
+        // Ändra: ett tryck till väljer bort verktyget.
+        verktyg = verktyg === 'andra' ? null : 'andra';
         vald = -1;
         valjareOppen = false;
     }
@@ -1196,6 +1199,11 @@ duk.addEventListener('pointerdown', e => {
     }
     if (lageNu !== 'bygg') {
         if (sim && sim.bygge) byggKlart();       // ett tryck hoppar över bygget
+        panorera = { p: iDuken(e), mitt: vynsMitt() };
+        return;
+    }
+    // Inget verktyg valt: ett finger flyttar vyn var man än trycker.
+    if (!verktyg) {
         panorera = { p: iDuken(e), mitt: vynsMitt() };
         return;
     }

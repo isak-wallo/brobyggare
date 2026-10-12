@@ -17,7 +17,8 @@ läsa), stående och liggande. Kontrollerar att:
     ny balk från en ny punkt går att rätta i startänden,
   - Ändra: välja en balk (väljaren byter storlek, väg/balk och trä/stål, eller river) och dra ena änden (bara den balken flyttas),
     dra en knutpunkt (alla balkar följer med), byta storlek på vald balk,
-  - inzoomad flyttar ett finger utanför rutnätet vyn,
+  - inzoomad flyttar ett finger utanför rutnätet vyn (och var som helst
+    när inget verktyg är valt; Väg/Ändra en gång till väljer bort),
   - zoom med mushjulet och nyp med två fingrar (punkten under fingrarna
     står kvar, inget byggs), och att zoomen nollas vid byte av bana,
   - keIWs bygger bron först (virvelvind, 1–3 s) och ett tryck hoppar över
@@ -251,8 +252,27 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     kolla(f'{namn}: tillbaka till två vägbalkar', antal_balkar(sida) == 2
           and all(b['vag'] and b['storlek'] == 3 for b in sida.evaluate('() => window.bro.ritning.balkar')))
     sida.click('#verktyg [data-v=andra]')
-    kolla(f'{namn}: ett tryck till på Ändra går tillbaka till Rita',
-          sida.evaluate('() => window.bro.verktyg') == 'rita' and not sida.locator('#valjare').is_visible())
+    kolla(f'{namn}: ett tryck till på Ändra väljer bort verktyget',
+          sida.evaluate('() => window.bro.verktyg') is None and not sida.locator('#valjare').is_visible()
+          and 'Inget verktyg valt' in sida.inner_html('#info'))
+
+    # Inget verktyg: inzoomad flyttar ett finger vyn även mitt i rutnätet.
+    sida.mouse.move(*skarm(sida, (6, 0)))
+    sida.mouse.wheel(0, -600)
+    sida.wait_for_timeout(100)
+    fore = skarm(sida, (6, 0))
+    dra(sida, (5, 2), (7, 2))
+    efter = skarm(sida, (6, 0))
+    kolla(f'{namn}: utan verktyg flyttar ett finger vyn i rutnätet, bygger inget',
+          abs(efter[0] - fore[0]) > 20 and antal_balkar(sida) == 2, f'{efter[0] - fore[0]:.0f} px')
+    sida.mouse.wheel(0, 3000)
+    sida.wait_for_timeout(100)
+    sida.click('#verktyg [data-v=rita]')
+    kolla(f'{namn}: Väg väljer Rita igen och öppnar väljaren',
+          sida.evaluate('() => window.bro.verktyg') == 'rita' and sida.locator('#valjare').is_visible())
+    sida.click('#verktyg [data-v=rita]')
+    kolla(f'{namn}: ett tryck till på Väg väljer bort verktyget', sida.evaluate('() => window.bro.verktyg') is None)
+    valj(sida, 'vag', 3)
 
     # Inzoomad: ett finger utanför rutnätet (här i berget) flyttar vyn,
     # bygger inget.

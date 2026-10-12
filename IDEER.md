@@ -352,6 +352,10 @@ får gärna vara lite dyrare än nu om det ska vänta till senare banor.
 Stål vinner i verkligheten när höjden är begränsad (fri höjd under bron,
 grund konstruktionshöjd) eller laster/spann är stora – idéer för senare
 banor.
+v22-test: inget verktyg valt. Ett tryck till på Ändra (eller på Väg när
+väljaren är öppen) väljer bort verktyget, och då flyttar ett finger vyn
+var man än trycker (när man har zoomat in). Väg eller Ändra väljer igen.
+
 Beslut 2026-10-12: stålpriset behålls (15 $$/kg). Plastiska leder i stål
 (moment begränsat till Mpl, brott först vid en vridgräns) väntar tills vi
 gör banor där stål ska löna sig.
