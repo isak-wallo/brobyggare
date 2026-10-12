@@ -311,6 +311,16 @@ gav svängningar (långa veka spann har ~1,5 s period). Nu:
   styvt stöd borde ge en plastisk led (omlagring) i stället för att
   elementet går av. Nu är allt sprött.
 
+Lättare att rita (v17-test). Svårast är att träffa startpunkten (1 m
+rutnät, ca 10 px på Ån i stående läge). Ingen lupp eller snäppning av
+slutpunkten:
+- Längden visas ovanför balken medan man ritar eller flyttar en ände.
+- Trycker man inom 24 px (minst en halv ruta) från en knutpunkt eller ett
+  fäste börjar balken där, annars i närmaste punkt.
+- Började balken i en ny punkt får startänden ett handtag i 2,5 s som går
+  att dra rätt (bara då, så att man kan bygga flera balkar från samma
+  knutpunkt i följd).
+
 Att fundera på efter utkastet:
 - Vägbanan väger 200 kg/m (plankor + beläggning), så att egenvikten är
   det som styr. keIWs väger lite i jämförelse – tyngre last senare?

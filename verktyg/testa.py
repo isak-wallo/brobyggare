@@ -13,7 +13,8 @@ läsa), stående och liggande. Kontrollerar att:
     knutpunkt (styvt/ledat), riva en balk och ångra, men inte bygga för
     långa balkar,
   - Rita: väljaren för väg/balk, trä/stål och storlek öppnas och stängs,
-    och man kan rita i stål,
+    och man kan rita i stål; en balk börjar i en knutpunkt intill, och en
+    ny balk från en ny punkt går att rätta i startänden,
   - Ändra: välja en balk (väljaren byter storlek, väg/balk och trä/stål, eller river) och dra ena änden (bara den balken flyttas),
     dra en knutpunkt (alla balkar följer med), byta storlek på vald balk,
   - inzoomad flyttar ett finger utanför rutnätet vyn,
@@ -173,6 +174,31 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     valj(sida, 'vag', 3)
     dra(sida, (0, 0), (11, -5))                   # 12,1 m
     kolla(f'{namn}: för lång balk går inte', antal_balkar(sida) == 2)
+
+    # Startpunkten: nära en knutpunkt börjar balken i den, fast närmaste
+    # rutnätspunkt är en annan.
+    valj(sida, 'balk', 3)
+    sk = sida.evaluate('() => window.bro.kam.sk')
+    d = min(0.9, 20 / sk)
+    dra(sida, (6 + d, -0.15), (9, -3))
+    r = sida.evaluate('() => window.bro.ritning')
+    b = r['balkar'][-1]
+    kolla(f'{namn}: balken börjar i knutpunkten intill', (r['noder'][b['a']]['x'], r['noder'][b['a']]['y']) == (6, 0),
+          f'{d:.2f} m bredvid')
+    sida.click('#verktyg [data-v=angra]')
+    # En ny balk som började i en ny punkt går att rätta i startänden.
+    dra(sida, (3, -3), (6, 0))
+    kolla(f'{namn}: ny balk från en ny punkt får ett handtag', sida.evaluate('() => !!window.bro.ratta'))
+    bild(sida, bilder, f'{namn}-0-langd')
+    dra(sida, (3, -3), (4, -3))
+    r = sida.evaluate('() => window.bro.ritning')
+    b = r['balkar'][-1]
+    kolla(f'{namn}: handtaget flyttar startänden', len(r['balkar']) == 3
+          and (r['noder'][b['a']]['x'], r['noder'][b['a']]['y']) == (4, -3)
+          and not any(n['x'] == 3 and n['y'] == -3 for n in r['noder']))
+    sida.click('#verktyg [data-v=angra]')
+    sida.click('#verktyg [data-v=angra]')
+    kolla(f'{namn}: ångrat tillbaka', antal_balkar(sida) == 2)
     if bredd < hojd:
         rader = sida.evaluate('''() => [...document.querySelectorAll('#info .rad')].map(r => {
             const b = r.getBoundingClientRect();

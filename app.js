@@ -11,6 +11,8 @@
 const TEST = new URLSearchParams(location.search).has('test');
 const RUTNAT = 1;            // m mellan punkterna man bygger på
 const MAX_LANGD = 12;        // m, längsta balken
+const START_NARA = 24;       // px: så nära en knutpunkt börjar en ny balk i den
+const RATTA_TID = 2.5;       // s som en ny balks startände går att dra rätt
 const MAX_STEG = 8;          // fysiksteg per bildruta (annars går det långsamt)
 const MAX_ZOOM = 6;
 const BYGG_PER_BALK = 0.2;   // s per balk när keIWs bygger ...
@@ -55,6 +57,7 @@ let sim = null;
 let drag = null;              // {fran: [x, y], till: [x, y]} medan man drar
 let vald = -1;                // vald balk (verktyget Ändra)
 let flytt = null;             // {balk, ande} eller {nod}, och {till: [x, y]}
+let ratta = null;             // {balk, t}: ny balk som började i en ny punkt
 let kam = { sk: 30, ox: 0, oy: 0 };
 let bas = null;               // kameran utan zoom: {sk, cx, cy, B} (B = det som syns)
 let zoom = 1, mitt = null;    // användarens zoom och vyns mitt [x, y] i meter
@@ -128,6 +131,7 @@ function bytBana(nr) {
     historik = [];
     drag = flytt = null;
     vald = -1;
+    ratta = null;
     zoom = 1;
     mitt = null;
     try { localStorage.setItem(SPARA_BANA, nr); } catch (e) { /* privat läge */ }
@@ -137,6 +141,7 @@ function bytBana(nr) {
 }
 
 function andra(f) {
+    ratta = null;
     historik.push(JSON.stringify(ritning));
     if (historik.length > 100) historik.shift();
     f();
@@ -467,13 +472,34 @@ function ritaBygg() {
         if (ok) ritaBalk(x1, y1, x2, y2, ritMaterial, storlek, ritVag);
         else ritaBit(x1, y1, x2, y2, PROFILER[ritMaterial][storlek], ritVag, FARG.fel, FARG.fel);
         ctx.globalAlpha = 1;
-        if (!ok) {
-            ctx.fillStyle = FARG.fel;
-            ctx.font = 'bold 14px system-ui, sans-serif';
-            ctx.textAlign = 'center';
-            ctx.fillText('Längst ' + MAX_LANGD + ' m', sx((x1 + x2) / 2), sy((y1 + y2) / 2) - 12);
-        }
+        const L = Math.hypot(x2 - x1, y2 - y1);
+        langdText(x1, y1, x2, y2, ok ? tal(L, 1) + ' m' : 'Längst ' + MAX_LANGD + ' m', ok ? FARG.text : FARG.fel);
     }
+    if (rattaAktiv()) {
+        // Handtaget på den nya balkens startände, som bleknar bort.
+        const n = ritning.noder[ritning.balkar[ratta.balk].a], r = Math.max(9, 0.3 * kam.sk);
+        const kvar = RATTA_TID - (performance.now() - ratta.t) / 1000;
+        ctx.globalAlpha = Math.min(1, kvar / 0.6);
+        ctx.fillStyle = 'rgba(61, 139, 253, 0.35)';
+        ctx.beginPath(); ctx.arc(sx(n.x), sy(n.y), r, 0, 7); ctx.fill();
+        ctx.strokeStyle = '#3d8bfd'; ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.arc(sx(n.x), sy(n.y), r, 0, 7); ctx.stroke();
+        ctx.globalAlpha = 1;
+    }
+}
+
+// Balkens längd medan man ritar eller flyttar, ovanför mitten (fingret
+// skymmer änden).
+function langdText(x1, y1, x2, y2, text, farg) {
+    ctx.font = 'bold 14px system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.lineJoin = 'round';
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+    const x = sx((x1 + x2) / 2), y = sy((y1 + y2) / 2) - 14;
+    ctx.strokeText(text, x, y);
+    ctx.fillStyle = farg;
+    ctx.fillText(text, x, y);
 }
 
 // Verktyget Ändra: den valda balken lyses upp och får handtag i ändarna.
@@ -514,6 +540,10 @@ function ritaVald() {
     ctx.lineWidth = 3;
     for (const n of andar) linje(n, till);
     ctx.setLineDash([]);
+    if (andar.length === 1) {
+        const n = andar[0], L = langd(n, till);
+        langdText(n.x, n.y, till.x, till.y, ok ? tal(L, 1) + ' m' : 'Längst ' + MAX_LANGD + ' m', ok ? FARG.text : FARG.fel);
+    }
     ctx.fillStyle = ok ? '#3d8bfd' : FARG.fel;
     ctx.beginPath(); ctx.arc(sx(till.x), sy(till.y), Math.max(5, 0.15 * kam.sk), 0, 7); ctx.fill();
 }
@@ -1043,7 +1073,7 @@ document.getElementById('verktyg').addEventListener('click', e => {
         vald = -1;
         valjareOppen = false;
     }
-    else if (v === 'angra' && historik.length) { ritning = uppgradera(JSON.parse(historik.pop())); vald = -1; sparaRitning(); }
+    else if (v === 'angra' && historik.length) { ritning = uppgradera(JSON.parse(historik.pop())); vald = -1; ratta = null; sparaRitning(); }
     else if (v === 'kor') { if (lageNu === 'bygg') kor(); else bygg(); }
     uppdateraInfo();
 });
@@ -1100,12 +1130,12 @@ function narmasteBalk(wx, wy, max) {
     return bast;
 }
 
-// Närmaste knutpunkt inom `max` m (utan fästpunkterna), eller -1.
-function narmasteNod(wx, wy, max) {
+// Närmaste knutpunkt inom `max` m (utan fästpunkterna, om inte medFasten), eller -1.
+function narmasteNod(wx, wy, max, medFasten = false) {
     let bast = -1, bastD = max;
     ritning.noder.forEach((n, i) => {
         const d = Math.hypot(wx - n.x, wy - n.y);
-        if (!n.fast && d < bastD) { bastD = d; bast = i; }
+        if ((medFasten || !n.fast) && d < bastD) { bastD = d; bast = i; }
     });
     return bast;
 }
@@ -1166,9 +1196,26 @@ duk.addEventListener('pointerdown', e => {
         uppdateraInfo();
         return;
     }
-    const p = snappa(wx, wy);
+    // En ny balk som började i en ny punkt: startänden går att dra rätt en
+    // kort stund (det är den som är svår att träffa).
+    if (rattaAktiv()) {
+        const n = ritning.noder[ritning.balkar[ratta.balk].a];
+        if (Math.hypot(wx - n.x, wy - n.y) < nara) {
+            flytt = { balk: ratta.balk, ande: 'a', till: [n.x, n.y] };
+            ratta = null;
+            return;
+        }
+    }
+    ratta = null;
+    // Nära en knutpunkt eller ett fäste börjar balken där, annars i
+    // närmaste punkt (man bygger nästan alltid vidare på något).
+    const nod = narmasteNod(wx, wy, Math.max(RUTNAT / 2, START_NARA / kam.sk), true);
+    const p = nod >= 0 ? [ritning.noder[nod].x, ritning.noder[nod].y] : snappa(wx, wy);
     if (p) drag = { fran: p, till: p };
 });
+
+const rattaAktiv = () => ratta && lageNu === 'bygg' && verktyg === 'rita' && ritning.balkar[ratta.balk]
+    && performance.now() - ratta.t < RATTA_TID * 1000;
 
 duk.addEventListener('pointermove', e => {
     if (!pekare.has(e.pointerId)) return;
@@ -1200,6 +1247,7 @@ function slapp(e) {
         flytt = null;
         if (f.nod !== undefined) flyttaNod(f.nod, f.till);
         else flyttaAnde(f.balk, f.ande, f.till);
+        if (verktyg === 'rita') vald = -1;
         uppdateraInfo();
         return;
     }
@@ -1211,7 +1259,8 @@ function slapp(e) {
         const i = nodVid(fran[0], fran[1]);
         if (i >= 0) vaxlaForband(i);
     } else {
-        laggTillBalk(fran, till);
+        const nyPunkt = nodVid(fran[0], fran[1]) < 0;
+        if (laggTillBalk(fran, till) && nyPunkt) ratta = { balk: ritning.balkar.length - 1, t: performance.now() };
     }
 }
 duk.addEventListener('pointerup', slapp);
@@ -1325,6 +1374,7 @@ if (TEST) {
         get zoom() { return zoom; },
         get mitt() { return mitt; },
         get vald() { return vald; },
+        get ratta() { return ratta; },
         get ritMaterial() { return ritMaterial; },
         get verktyg() { return verktyg; },
         get banaNr() { return banaNr; },
