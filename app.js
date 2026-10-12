@@ -88,6 +88,10 @@ function uppgradera(r, b = bana) {
         const f = b.fasten.find(([x, y]) => x === n.x && y === n.y);
         if (f && f[2]) { n.lager = f[2]; n.styv = false; }
     }
+    // Fästen som kommit till sedan ritningen sparades (fästena på land).
+    for (const [x, y, lager] of b.fasten) {
+        if (!r.noder.some(n => n.fast && n.x === x && n.y === y)) r.noder.push(fastNod(x, y, lager));
+    }
     r.version = 3;
     return r;
 }
@@ -154,12 +158,12 @@ function nodVid(x, y) {
 }
 
 // Får man sätta en knutpunkt här? Fästpunkterna, luften över spannet och
-// luften rakt ovanför klippkanterna.
+// luften ovanför marken på båda sidor.
 function tillaten(x, y) {
     const o = bana.omrade;
     if (bana.fasten.some(([fx, fy]) => fx === x && fy === y)) return true;
     if (y < o.y0 || y > o.y1 || x < o.x0 || x > o.x1) return false;
-    if (x === o.x0 || x === o.x1) return y > 0;
+    if (x <= 0 || x >= bana.spann) return y > 0;
     return true;
 }
 
@@ -876,6 +880,7 @@ function bygg() {
         sattKamera();
     }
     rutaEl.style.top = '';
+    rutaEl.style.left = '';
     uppdateraInfo();
     laddaOmOmLugnt();
 }
@@ -906,7 +911,7 @@ kan vrida sig som ett gångjärn.</li>
 <li><b>Brons ändar vid vägen vilar på lager</b>, som på riktiga broar: det
 vänstra sitter fast, det högra står på rullar och kan glida i sidled. Då
 kan bron inte hänga som en lina mellan kanterna, utan måste bära själv.
-De andra fästena i berget sitter fast.</li>
+De andra fästena, i berget och på land bakom kanterna, sitter fast.</li>
 </ul>`;
 
 // Materialens egenskaper: [nyckel, rubrik, enhet, omräkning].
@@ -954,8 +959,8 @@ balkarna sitter fast i båda ändar.</li>
 Massan klumpas i knutpunkterna.</li>
 <li>Styvt förband: delad vridning, moment förs över. Ledat: fri vridning.
 Vägbanans fästen är brolager, alltid ledade: vänster fast (låser x och
-y), höger glidlager (låser bara y). Övriga fästpunkter låser x och y och
-kan vara styva eller ledade.</li>
+y), höger glidlager (låser bara y). Övriga fästpunkter (i berget och på
+land) låser x och y och kan vara styva eller ledade.</li>
 </ul>
 <h4>Laster</h4>
 <table class="tabell">
@@ -1065,15 +1070,23 @@ function visaResultat() {
 
 // Rutan ska inte skymma keIWs (som jublar på andra sidan): ligger han
 // under den flyttas den upp ovanför hans huvud, men inte upp i infotexten.
+// Räcker inte höjden (liggande mobil) flyttas den åt sidan i stället.
 function placeraRuta() {
     rutaEl.style.top = '';
+    rutaEl.style.left = '';
     const k = sim && sim.keiws;
     if (!k || k.lage === 'plask' || rutaEl.classList.contains('dold')) return;
     const fig = keiwsBild() * kam.sk, huvud = sy(k.y) - fig * 1.35;     // med plats för hoppen
     const b = rutaEl.getBoundingClientRect(), s = scen.getBoundingClientRect();
     const vanster = b.left - s.left, hoger = b.right - s.left, nere = b.bottom - s.top;
     if (sx(k.x) + fig / 2 < vanster || sx(k.x) - fig / 2 > hoger || nere < huvud) return;
-    rutaEl.style.top = Math.max(luftNu + 8, huvud - 10 - b.height) + b.height / 2 + 'px';
+    const topp = huvud - 10 - b.height;
+    if (topp >= luftNu + 8) { rutaEl.style.top = topp + b.height / 2 + 'px'; return; }
+    const kx = sx(k.x), bredd = scen.clientWidth;
+    const fore = kx - fig * 0.9 - b.width, efter = kx + fig * 0.9;   // med plats för konfettin
+    if (fore >= 8) rutaEl.style.left = fore + b.width / 2 + 'px';
+    else if (efter + b.width <= bredd - 8) rutaEl.style.left = efter + b.width / 2 + 'px';
+    else rutaEl.style.top = luftNu + 8 + b.height / 2 + 'px';
 }
 
 document.getElementById('verktyg').addEventListener('click', e => {
@@ -1188,9 +1201,11 @@ duk.addEventListener('pointerdown', e => {
     }
     const [wx, wy] = tillVarld(e);
     const nara = Math.max(0.45, 22 / kam.sk);
-    // Utanför rutnätet flyttar ett finger vyn (när man har zoomat in).
+    // Utanför rutnätet (även nere i berget) flyttar ett finger vyn (när man
+    // har zoomat in).
     const o = bana.omrade;
-    if (wx < o.x0 - nara || wx > o.x1 + nara || wy < o.y0 - nara || wy > o.y1 + nara) {
+    const iBerget = (wx < -nara || wx > bana.spann + nara) && wy < -nara;
+    if (iBerget || wx < o.x0 - nara || wx > o.x1 + nara || wy < o.y0 - nara || wy > o.y1 + nara) {
         panorera = { p: iDuken(e), mitt: vynsMitt() };
         return;
     }

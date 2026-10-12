@@ -5,12 +5,13 @@
 //           fästen är brolager (alltid ledade): 'fast' låser x och y,
 //           'glid' bara y (rör sig fritt i sidled, som på riktiga broar,
 //           så att en rak balk inte kan hänga som en lina). Övriga fästen
-//           låser x och y och kan vara styva eller ledade.
+//           låser x och y och kan vara styva eller ledade (två av dem
+//           ligger på land, 3 m bakom kanterna).
 //   vatten: vattenytan, keIWs som hamnar där har misslyckats
 //   budget: i $$ (spelets pengar); man får bygga över, men då blir det
 //           inga stjärnor
 //   keiws:  keIWs höjd i meter (bara utseendet, större på långa banor)
-//   omrade: där man får sätta knutpunkter
+//   omrade: där man får sätta knutpunkter (över land bara ovanför marken)
 //   vy:     det som syns utan zoom
 //   losning: en bro som håller (testerna kör den)
 
@@ -18,17 +19,17 @@ const BANOR = [
     {
         namn: 'Bäcken',
         spann: 12,
-        fasten: [[0, 0, 'fast'], [0, -3], [12, 0, 'glid'], [12, -3]],
+        fasten: [[0, 0, 'fast'], [0, -3], [12, 0, 'glid'], [12, -3], [-3, 0], [15, 0]],
         vatten: -6,
         budget: 12000,
         keiws: 2,
-        omrade: { x0: 0, x1: 12, y0: -5, y1: 4 },
-        vy: { x0: -4, x1: 16, y0: -6.5, y1: 4.5 },
+        omrade: { x0: -3, x1: 15, y0: -5, y1: 7 },
+        vy: { x0: -4, x1: 16, y0: -6.5, y1: 7.5 },
         losning: {
-            noder: [[0, 0], [0, -3], [12, 0], [12, -3], [4, 0], [8, 0], [4, -2], [8, -2]],
+            noder: [[0, 0], [0, -3], [12, 0], [12, -3], [-3, 0], [15, 0], [4, 0], [8, 0], [4, -2], [8, -2]],
             balkar: [
-                [0, 4, 1, true], [4, 5, 1, true], [5, 2, 1, true],
-                [1, 6, 1], [6, 4, 1], [3, 7, 1], [7, 5, 1], [6, 7, 1]
+                [0, 6, 1, true], [6, 7, 1, true], [7, 2, 1, true],
+                [1, 8, 1], [8, 6, 1], [3, 9, 1], [9, 7, 1], [8, 9, 1]
             ]
         }
     },
@@ -36,21 +37,21 @@ const BANOR = [
         // Som Bäcken, men dubbelt så långt spann.
         namn: 'Ån',
         spann: 24,
-        fasten: [[0, 0, 'fast'], [0, -3], [24, 0, 'glid'], [24, -3]],
+        fasten: [[0, 0, 'fast'], [0, -3], [24, 0, 'glid'], [24, -3], [-3, 0], [27, 0]],
         vatten: -6,
         budget: 26000,
         keiws: 3.5,
-        omrade: { x0: 0, x1: 24, y0: -5, y1: 6 },
-        vy: { x0: -7, x1: 31, y0: -6.5, y1: 6.5 },
+        omrade: { x0: -3, x1: 27, y0: -5, y1: 9 },
+        vy: { x0: -7, x1: 31, y0: -6.5, y1: 9.5 },
         losning: {
             // Fackverk av små balkar: väg överst, underram 3 m ner (24 830 $$).
-            noder: [[0, 0], [0, -3], [24, 0], [24, -3], [4, 0], [8, 0], [12, 0], [16, 0], [20, 0],
+            noder: [[0, 0], [0, -3], [24, 0], [24, -3], [-3, 0], [27, 0], [4, 0], [8, 0], [12, 0], [16, 0], [20, 0],
                     [4, -3], [8, -3], [12, -3], [16, -3], [20, -3]],
             balkar: [
-                [0, 4, 1, true], [4, 5, 1, true], [5, 6, 1, true], [6, 7, 1, true], [7, 8, 1, true], [8, 2, 1, true],
-                [1, 9, 1], [9, 10, 1], [10, 11, 1], [11, 12, 1], [12, 13, 1], [13, 3, 1],
-                [4, 9, 1], [5, 10, 1], [6, 11, 1], [7, 12, 1], [8, 13, 1],
-                [1, 4, 1], [9, 5, 1], [10, 6, 1], [6, 12, 1], [7, 13, 1], [8, 3, 1]
+                [0, 6, 1, true], [6, 7, 1, true], [7, 8, 1, true], [8, 9, 1, true], [9, 10, 1, true], [10, 2, 1, true],
+                [1, 11, 1], [11, 12, 1], [12, 13, 1], [13, 14, 1], [14, 15, 1], [15, 3, 1],
+                [6, 11, 1], [7, 12, 1], [8, 13, 1], [9, 14, 1], [10, 15, 1],
+                [1, 6, 1], [11, 7, 1], [12, 8, 1], [8, 14, 1], [9, 15, 1], [10, 3, 1]
             ]
         }
     }

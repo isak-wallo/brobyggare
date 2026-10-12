@@ -336,6 +336,23 @@ uppe under infotexten även i stående läge (annars skymde den bron).
 Glidlagret har stopp vid ±0,3 m (GLID_MAX i spel.js) och lagren ritas
 alltid på sin plats på berget, även när bron rasar.
 
+v21-test: rutnätet går 3 m högre (Bäcken till +7 m, Ån till +9 m) och 3 m
+bakåt över land på båda sidor (bara ovanför marken), och det finns ett
+fäste på land 3 m bakom varje kant (för höga bågar, stag bakåt osv.).
+Gamla sparade ritningar får de nya fästena. Inzoomad flyttar ett finger
+vyn även nere i berget (rutnätet tar nu nästan hela bilden). Resultatrutan
+flyttas åt sidan om höjden inte räcker för att lägga den ovanför keIWs.
+
+Priser trä/stål (sökt 2026-10-12, ungefärligt): limträ ca 11 000–14 000
+kr/m³ i butik (ca 25–30 kr/kg), HEA ca 17–25 kr/kg som material. Per kg
+ungefär lika, per m³ är stål 11–14 gånger dyrare. Spelet: trä 9 000 $$/m³
+(21 $$/kg), stål 118 000 $$/m³ (15 $$/kg), alltså 13 gånger – rimligt.
+Färdigt monterat stål (svetsat, rostskyddat) blir dyrare per kg, så stål
+får gärna vara lite dyrare än nu om det ska vänta till senare banor.
+Stål vinner i verkligheten när höjden är begränsad (fri höjd under bron,
+grund konstruktionshöjd) eller laster/spann är stora – idéer för senare
+banor.
+
 Att fundera på efter utkastet:
 - Vägbanan väger 200 kg/m (plankor + beläggning), så att egenvikten är
   det som styr. keIWs väger lite i jämförelse – tyngre last senare?

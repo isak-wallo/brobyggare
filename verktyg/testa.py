@@ -254,12 +254,13 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     kolla(f'{namn}: ett tryck till på Ändra går tillbaka till Rita',
           sida.evaluate('() => window.bro.verktyg') == 'rita' and not sida.locator('#valjare').is_visible())
 
-    # Inzoomad: ett finger utanför rutnätet flyttar vyn, bygger inget.
+    # Inzoomad: ett finger utanför rutnätet (här i berget) flyttar vyn,
+    # bygger inget.
     sida.mouse.move(*skarm(sida, (0, 0)))
     sida.mouse.wheel(0, -600)
     sida.wait_for_timeout(100)
     fore = skarm(sida, (6, 0))
-    dra(sida, (-1.5, 1), (-0.5, 1))
+    dra(sida, (-1.5, -1.5), (-0.5, -1.5))
     efter = skarm(sida, (6, 0))
     kolla(f'{namn}: inzoomad flyttar ett finger utanför rutnätet vyn',
           sida.evaluate('() => window.bro.zoom') > 1.2 and abs(efter[0] - fore[0]) > 20 and antal_balkar(sida) == 2,
@@ -387,9 +388,29 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     tryck(sida, b)
     sida.click('#valjare [data-t=rivallt]')
     kolla(f'{namn}: riv allt (bredvid Riv) tömmer banan',
-          antal_balkar(sida) == 0 and sida.evaluate('() => window.bro.ritning.noder.length') == 4)
+          antal_balkar(sida) == 0 and sida.evaluate('() => window.bro.ritning.noder.length')
+          == sida.evaluate('() => BANOR[window.bro.banaNr].fasten.length'))
+    # Rutnätet går bakåt över land (bara ovanför marken) och högre upp, och
+    # det finns ett fäste på land.
+    sida.click('#verktyg [data-v=rita]')
+    o = sida.evaluate('() => BANOR[window.bro.banaNr].omrade')
+    dra(sida, (-3, 0), (-1, 4))
+    dra(sida, (-1, 4), (2, o['y1']))
+    r = sida.evaluate('() => window.bro.ritning')
+    a = r['noder'][r['balkar'][0]['a']]
+    kolla(f'{namn}: balkar från fästet på land upp till rutnätets topp', len(r['balkar']) == 2
+          and a['fast'] and (a['x'], a['y']) == (-3, 0)
+          and any((n['x'], n['y']) == (2, o['y1']) for n in r['noder']), f"{len(r['balkar'])} balkar")
+    kolla(f'{namn}: inga knutpunkter i marken', sida.evaluate(
+        '() => tillaten(-2, 1) && !tillaten(-2, 0) && !tillaten(-2, -1) && tillaten(-3, 0) && !tillaten(-4, 1)'))
+    sida.click('#verktyg [data-v=angra]')
+    sida.click('#verktyg [data-v=angra]')
     sida.click('#verktyg [data-v=angra]')
     kolla(f'{namn}: ångra efter riv allt', antal_balkar(sida) > 1)
+    # En ritning sparad före fästena på land får dem.
+    kolla(f'{namn}: gamla ritningar får fästena på land', sida.evaluate('''() => { const b = BANOR[0];
+        const r = uppgradera({ version: 3, balkar: [], noder: b.fasten.slice(0, 4).map(([x, y, l]) => fastNod(x, y, l)) }, b);
+        return r.noder.length === b.fasten.length && r.noder.every(n => n.fast); }'''))
     sida.click('#menyknapp')
     sida.mouse.click(5, sida.viewport_size['height'] - 120)   # utanför panelen
     kolla(f'{namn}: ett tryck utanför stänger menyn', not sida.locator('#meny').is_visible())
