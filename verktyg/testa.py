@@ -375,7 +375,7 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     # Inzoomad: inget bygge, kameran följer keIWs, och Bygg ger tillbaka vyn.
     sida.click('#ruta [data-v=bygg]')
     sida.mouse.move(*skarm(sida, (0, 0)))
-    sida.mouse.wheel(0, -600)
+    sida.mouse.wheel(0, -3000)                    # full zoom
     sida.wait_for_timeout(100)
     fore = sida.evaluate('() => [window.bro.zoom, window.bro.mitt]')
     sida.click('#verktyg [data-v=kor]')
@@ -384,6 +384,15 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     x, k = sida.evaluate('() => [window.bro.mitt[0], window.bro.sim.keiws.x]')
     bild(sida, bilder, f'{namn}-5-folj')
     kolla(f'{namn}: kameran följer keIWs', abs(x - k) < 1.5, f'vyn {x:.1f} m, keIWs {k:.1f} m')
+    kk = sida.evaluate('() => window.bro.sim.keiws')
+    fy = skarm(sida, (kk['x'], kk['y']))[1]
+    fig = sida.evaluate('() => window.bro.keiwsPx')
+    duk = sida.locator('#duk').bounding_box()
+    topp = duk['y'] + sida.evaluate('() => luftNu')
+    botten = duk['y'] + duk['height']
+    mitten = fy - fig / 2
+    kolla(f'{namn}: keIWs står mitt i bild inzoomad', topp + (botten - topp) * 0.25 < mitten < botten - (botten - topp) * 0.25,
+          f'figurens mitt {mitten:.0f}, synligt {topp:.0f}–{botten:.0f}')
     vanta_resultat(sida)
     sida.click('#ruta [data-v=bygg]')
     efter = sida.evaluate('() => [window.bro.zoom, window.bro.mitt]')

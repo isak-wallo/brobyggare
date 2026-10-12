@@ -1386,7 +1386,9 @@ duk.addEventListener('wheel', e => {
 function foljKeiws(dt) {
     const k = sim.keiws, [cx, cy] = mitt || vynsMitt();
     const f = Math.min(1, dt * 4);
-    mitt = [cx + (k.x - cx) * f, cy + (k.y + keiwsHojd(bana) / 2 - cy) * f];
+    // Mitt på figuren som den ritas (den är lika stor på skärmen hur man
+    // än zoomar, så keiwsHojd i meter blir för högt när man zoomat in).
+    mitt = [cx + (k.x - cx) * f, cy + (k.y + keiwsBild() * 0.6 - cy) * f];
     sattKamera();
 }
 
