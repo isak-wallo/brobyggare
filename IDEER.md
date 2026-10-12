@@ -257,6 +257,9 @@ Med det håller på Bäcken t.ex. väg av Stor (11 420 $$), fackverk av Liten
 (7 340 $$, 80 %). Väg av Mellan rasar. På Ån håller fackverket av Liten
 (24 830 $$) och av Pytte (21 110 $$, 95 %).
 
+Inzoomad flyttar ett finger vyn om man drar utanför rutnätet. keIWs (och
+virveln) ritas lika stor på skärmen oavsett zoom.
+
 Att fundera på efter utkastet:
 - Fästpunkterna låser både x och y, så en balk mellan två fästen hänger
   delvis i drag som en lina och håller mer än en fritt upplagd balk.

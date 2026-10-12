@@ -14,6 +14,7 @@ läsa), stående och liggande. Kontrollerar att:
     långa balkar,
   - Flytta: välja en balk och dra ena änden (bara den balken flyttas),
     dra en knutpunkt (alla balkar följer med), byta storlek på vald balk,
+  - inzoomad flyttar ett finger utanför rutnätet vyn,
   - zoom med mushjulet och nyp med två fingrar (punkten under fingrarna
     står kvar, inget byggs), och att zoomen nollas vid byte av bana,
   - keIWs bygger bron först (virvelvind, 1–3 s) och ett tryck hoppar över
@@ -199,6 +200,20 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     sida.click('#verktyg [data-v=flytta]')
     kolla(f'{namn}: ett tryck till på Flytta väljer bort den (tillbaka till Balk)',
           sida.evaluate("() => document.querySelector('#verktyg [data-v=balk]').classList.contains('vald')"))
+
+    # Inzoomad: ett finger utanför rutnätet flyttar vyn, bygger inget.
+    sida.mouse.move(*skarm(sida, (0, 0)))
+    sida.mouse.wheel(0, -600)
+    sida.wait_for_timeout(100)
+    fore = skarm(sida, (6, 0))
+    dra(sida, (-1.5, 1), (-0.5, 1))
+    efter = skarm(sida, (6, 0))
+    kolla(f'{namn}: inzoomad flyttar ett finger utanför rutnätet vyn',
+          sida.evaluate('() => window.bro.zoom') > 1.2 and abs(efter[0] - fore[0]) > 20 and antal_balkar(sida) == 2,
+          f'{efter[0] - fore[0]:.0f} px')
+    bild(sida, bilder, f'{namn}-0-panorera')
+    sida.mouse.wheel(0, 3000)
+    sida.wait_for_timeout(100)
 
     # Zoom: mushjulet kring en punkt, sedan nyp med två fingrar.
     x, y = skarm(sida, (6, 0))

@@ -503,7 +503,7 @@ function ritaBygget() {
 // keIWs som virvelvind: en snurrande tratt i keIWs färger, med ögon som
 // skymtar fram, och damm som virvlar runt nertill.
 function ritaVirvel(x, y, t) {
-    const H = keiwsHojd(bana) * 1.3, s = kam.sk;
+    const H = keiwsBild() * 1.3, s = kam.sk;
     const cx = sx(x), botten = sy(y) + 0.25 * H * s;
     const farger = [FIG.farger.bla, FIG.farger.mellan, FIG.farger.ljus, FIG.farger.mork];
     const lager = 9;
@@ -547,7 +547,7 @@ function ritaVirvel(x, y, t) {
 
 // Damm som pyser ut när virveln blir keIWs igen.
 function ritaPoff(x, y, t) {
-    const H = keiwsHojd(bana), f = t / POFF_TID;
+    const H = keiwsBild(), f = t / POFF_TID;
     ctx.fillStyle = 'rgba(200, 192, 180, ' + (0.8 * (1 - f)) + ')';
     for (let k = 0; k < 8; k++) {
         const v = k / 8 * 6.28;
@@ -600,9 +600,13 @@ function ritaProv() {
 
 const FIG = FIGUR_DATA.keiws;
 
+// keIWs ritas lika stor på skärmen hur man än zoomar: hans höjd i meter
+// i bilden (fysiken bryr sig inte om storleken).
+const keiwsBild = () => keiwsHojd(bana) / zoom;
+
 // Rektanglar [x0, y0, x1, y1, färg, del] med fötternas mitt i (x, y).
 function ritaFigur(rekt, x, y, lyft) {
-    const s = keiwsHojd(bana) / 204 * kam.sk;     // figuren är 204 px hög
+    const s = keiwsBild() / 204 * kam.sk;         // figuren är 204 px hög
     const ox = sx(x) - 80 * s, oy = sy(y) - 204 * s;
     for (const [x0, y0, x1, y1, farg, del] of rekt) {
         const dy = lyft ? lyft(del) : 0;
@@ -996,6 +1000,12 @@ duk.addEventListener('pointerdown', e => {
     }
     const [wx, wy] = tillVarld(e);
     const nara = Math.max(0.45, 22 / kam.sk);
+    // Utanför rutnätet flyttar ett finger vyn (när man har zoomat in).
+    const o = bana.omrade;
+    if (wx < o.x0 - nara || wx > o.x1 + nara || wy < o.y0 - nara || wy > o.y1 + nara) {
+        panorera = { p: iDuken(e), mitt: vynsMitt() };
+        return;
+    }
     if (verktyg === 'riv') {
         const i = narmasteBalk(wx, wy, Math.max(0.4, 16 / kam.sk));
         if (i >= 0) rivBalk(i);
