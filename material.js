@@ -34,7 +34,7 @@ function rektangel(material, b, h) {
 const STORLEKAR = ['Liten', 'Mellan', 'Stor'];
 
 const PROFILER = {
-    limtra: [rektangel('limtra', 90, 225), rektangel('limtra', 140, 405), rektangel('limtra', 190, 630)]
+    limtra: [rektangel('limtra', 66, 180), rektangel('limtra', 140, 405), rektangel('limtra', 190, 630)]
 };
 
 // Vägbanan: plankor ovanpå balken som keIWs går på. Väger och kostar per

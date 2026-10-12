@@ -34,12 +34,12 @@ const BANOR = [
         spann: 24,
         fasten: [[0, 0], [0, -3], [24, 0], [24, -3]],
         vatten: -6,
-        budget: 32000,
+        budget: 26000,
         keiws: 3.5,
         omrade: { x0: 0, x1: 24, y0: -5, y1: 6 },
         vy: { x0: -7, x1: 31, y0: -6.5, y1: 6.5 },
         losning: {
-            // Fackverk av små balkar: väg överst, underram 3 m ner.
+            // Fackverk av små balkar: väg överst, underram 3 m ner (24 830 $$).
             noder: [[0, 0], [0, -3], [24, 0], [24, -3], [4, 0], [8, 0], [12, 0], [16, 0], [20, 0],
                     [4, -3], [8, -3], [12, -3], [16, -3], [20, -3]],
             balkar: [

@@ -262,6 +262,20 @@ html, body {
     margin: 0 0 8px;
 }
 
+#meny h4 {
+    margin: 10px 0 2px;
+    font-size: 14px;
+}
+
+#meny ul {
+    margin: 0 0 4px;
+    padding-left: 20px;
+}
+
+#meny li {
+    margin: 2px 0;
+}
+
 #meny summary {
     cursor: pointer;
     font-weight: 600;

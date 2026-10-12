@@ -49,13 +49,13 @@ Förslag (justeras när vi provar):
 
 | Material | Liten | Mellan | Stor |
 |----------|-------|--------|------|
-| Limträ | 90×225 | 140×405 | 190×630 |
+| Limträ | 66×180 | 140×405 | 190×630 |
 | Stål | IPE 200 | IPE 400 | HEB 500 |
 | Kabel | Ø 16 | Ø 32 | Ø 52 |
 
 **Ingenjörsläge: en handfull riktiga profiler** per material, med sina
 tabellvärden synliga, t.ex.:
-- Limträ: 90×225, 115×315, 140×405, 165×495, 190×630
+- Limträ: 66×180, 90×225, 115×315, 140×405, 165×495, 190×630
 - Stål: IPE 200, IPE 300, IPE 400, IPE 600, HEB 300, HEB 500, KKR 150×150×8
 - Kabel: Ø 16, Ø 24, Ø 32, Ø 40, Ø 52
 
@@ -232,6 +232,14 @@ tillbaka till det och var tionde minut, och laddar om när man bygger (ångra
 finns kvar). Versionen syns litet nere till vänster. Menyknapp uppe till
 höger: billigaste bron som höll på banan (kan hämtas) och en förklaring av
 beräkningen (FE-antagandena).
+
+Liten blev 66×180 (från 90×225), så att det finns mer att optimera på
+Bäcken: vägen av mellanbalkar kostar 11 420 $$, ett fackverk av små 9 910 $$
+och väg av små med två snedsträvor 8 100 $$ (92 %). Åns budget sänktes till
+26 000 $$ (fackverket av små kostar nu 24 830 $$). Bästa resultat i menyn
+visar bara kostnaden, och förklaringen är uppdelad i rubriker och listor.
+I menyn finns också "Riv allt och börja om" (går att ångra), och keIWs går
+20 % fortare (1,44 × sin höjd per sekund).
 
 Att fundera på efter utkastet:
 - Fästpunkterna låser både x och y, så en balk mellan två fästen hänger

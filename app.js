@@ -80,16 +80,16 @@ function sparaRitning() {
     try { localStorage.setItem(SPARA + banaNr, JSON.stringify(ritning)); } catch (e) { /* privat läge */ }
 }
 
-// Billigaste bron som höll på en bana: {kostnad, maxU, ritning}.
+// Billigaste bron som höll på en bana: {kostnad, ritning}.
 function lasBasta(nr) {
     try { return JSON.parse(localStorage.getItem(SPARA_BASTA + nr)); } catch (e) { return null; }
 }
 
-function sparaBasta(k, maxU) {
+function sparaBasta(k) {
     const b = lasBasta(banaNr);
     if (b && b.kostnad <= k) return false;
     try {
-        localStorage.setItem(SPARA_BASTA + banaNr, JSON.stringify({ kostnad: k, maxU, ritning }));
+        localStorage.setItem(SPARA_BASTA + banaNr, JSON.stringify({ kostnad: k, ritning }));
     } catch (e) { /* privat läge */ }
     return true;
 }
@@ -762,40 +762,74 @@ function bygg() {
 
 // ---------- Menyn ----------
 
-const FE_TEXT = `
-<p>Varje balk delas i små balkelement (ca 0,75 m) enligt Euler–Bernoullis
-balkteori: de tar drag, tryck, böjning och tvärkraft. Elementen är
-korotationella, så bron får röra sig och vrida sig mycket (till exempel när
-den rasar), medan själva träet töjs lite och är linjärt elastiskt. Därför
-kommer även linverkan med: en balk mellan två fästen bär delvis i drag.</p>
-<p><b>Förband:</b> styvt = balkarna delar vridningen i knutpunkten och
-moment förs över. Ledat = varje balkände vrider sig fritt. Fästpunkterna i
-berget låser både x och y.</p>
-<p><b>Tiden</b> stegas fram 120 gånger per sekund (Newmark) med
-Newton–Raphson i varje steg. Massan (balkar, vägbana 200 kg/m, förband)
-samlas i knutpunkterna, med lite dämpning. Tyngden läggs på under 1 s, sedan
-går keIWs (80 kg) över som en rörlig last.</p>
-<p><b>Brott:</b> ett element går sönder när N/(A·f) + M/(W·f<sub>m</sub>)
-eller skjuvningen 1,5·V/(A·f<sub>v</sub>) går över 100 %. En tryckt balk
-knäcks vid Euler-lasten π²·E<sub>05</sub>·I/L².</p>
-<p><b>Limträ GL30c:</b> E 13 000 MPa, f<sub>m</sub> 30, f<sub>t</sub> 19,5,
-f<sub>c</sub> 24,5, f<sub>v</sub> 3,5 MPa.</p>
-<p><b>Förenklingar:</b> ingen skjuvdeformation (Timoshenko), ingen vippning
-eller knäckning ut ur planet, inga partialkoefficienter eller
-lastkombinationer som i Eurokod.</p>`;
+// Förklaringen i menyn. Materialvärdena och profilerna hämtas ur material.js.
+function feText() {
+    const m = MATERIAL.limtra, MPa = v => (v / 1e6).toLocaleString('sv-SE') + ' MPa';
+    const profiler = PROFILER.limtra.map((p, i) => '<li>' + STORLEKAR[i] + ': ' + p.namn + ' mm, '
+        + p.massa.toLocaleString('sv-SE', { maximumFractionDigits: 1 }) + ' kg/m, ' + kr(p.pris) + '/m</li>').join('');
+    return `
+<h4>Modellen</h4>
+<ul>
+<li>Varje balk delas i balkelement på ca 0,75 m (Euler–Bernoulli): de tar
+drag, tryck, böjning och tvärkraft.</li>
+<li>Elementen är korotationella: bron får röra och vrida sig mycket (till
+exempel när den rasar), medan träet töjs lite och är linjärt elastiskt.
+Därför kommer linverkan med – en balk mellan två fästen bär delvis i drag.</li>
+</ul>
+<h4>Förband och fästen</h4>
+<ul>
+<li><b>Styvt:</b> balkarna delar vridningen i knutpunkten, moment förs över.</li>
+<li><b>Ledat:</b> varje balkände vrider sig fritt.</li>
+<li><b>Fästpunkterna</b> i berget låser både x och y.</li>
+</ul>
+<h4>Laster och tid</h4>
+<ul>
+<li>Egenvikt: balkarna, vägbanan ${VAG.massa} kg/m och förbanden ${FORBAND.massa} kg styck,
+samlade i knutpunkterna.</li>
+<li>Tyngden läggs på under 1 s, sedan går keIWs (80 kg) över som en rörlig last.</li>
+<li>Tiden stegas fram 120 gånger per sekund (Newmark) med Newton–Raphson i
+varje steg, och lite dämpning.</li>
+</ul>
+<h4>Brott</h4>
+<ul>
+<li>Normalkraft och böjning: N/(A·f<sub>t,c</sub>) + M/(W·f<sub>m</sub>) &gt; 100 %.</li>
+<li>Skjuvning: 1,5·V/(A·f<sub>v</sub>) &gt; 100 %.</li>
+<li>Knäckning: tryckkraften i en balk når π²·E<sub>05</sub>·I/L².</li>
+<li>Ett element som går sönder försvinner, en balk som knäcks går av på mitten.</li>
+</ul>
+<h4>Limträ GL30c</h4>
+<ul>
+<li>Elasticitetsmodul E: ${MPa(m.E)} (E<sub>05</sub> ${MPa(m.E05)})</li>
+<li>Böjhållfasthet f<sub>m</sub>: ${MPa(m.fm)}</li>
+<li>Draghållfasthet f<sub>t</sub>: ${MPa(m.ft)}</li>
+<li>Tryckhållfasthet f<sub>c</sub>: ${MPa(m.fc)}</li>
+<li>Skjuvhållfasthet f<sub>v</sub>: ${MPa(m.fv)}</li>
+<li>Densitet: ${m.densitet} kg/m³</li>
+</ul>
+<h4>Profiler</h4>
+<ul>${profiler}</ul>
+<h4>Förenklingar</h4>
+<ul>
+<li>Ingen skjuvdeformation (Timoshenko).</li>
+<li>Ingen vippning eller knäckning ut ur planet.</li>
+<li>Inga partialkoefficienter eller lastkombinationer som i Eurokod.</li>
+</ul>`;
+}
 
 function visaMeny() {
     const b = lasBasta(banaNr);
     const basta = b
         ? '<p>Billigaste bron som höll: <b>' + kr(b.kostnad) + '</b>'
-            + (b.kostnad > bana.budget ? ' (över budget)' : '')
-            + ', högsta utnyttjande ' + Math.round(b.maxU * 100) + ' %.</p>'
+            + (b.kostnad > bana.budget ? ' (över budget)' : '') + '.</p>'
             + '<button data-v="hamta"' + (lageNu === 'bygg' ? '' : ' disabled') + '>Hämta den ritningen</button>'
         : '<p>Ingen bro har hållit här än.</p>';
+    const tom = !ritning.balkar.length && ritning.noder.every(n => n.fast);
+    const rivAllt = '<p><button data-v="rivallt"' + (lageNu === 'bygg' && !tom ? '' : ' disabled')
+        + '>Riv allt och börja om</button></p>';
     menyEl.firstChild.innerHTML = '<button class="stang" data-v="stang">✕</button>'
         + '<h2>Brobyggare</h2>'
-        + '<h3>Bana ' + (banaNr + 1) + ' · ' + bana.namn + '</h3>' + basta
-        + '<details><summary>Hur räknas bron?</summary>' + FE_TEXT + '</details>'
+        + '<h3>Bana ' + (banaNr + 1) + ' · ' + bana.namn + '</h3>' + basta + rivAllt
+        + '<details><summary>Hur räknas bron?</summary>' + feText() + '</details>'
         + '<p class="liten">Version ' + (version || 'okänd') + '</p>';
     menyEl.classList.remove('dold');
 }
@@ -815,6 +849,9 @@ menyEl.addEventListener('click', e => {
     if (e.target === menyEl) { stangMeny(); return; }   // utanför panelen
     const b = e.target.closest('button');
     if (!b || b.disabled) return;
+    if (b.dataset.v === 'rivallt' && lageNu === 'bygg') {
+        andra(() => { ritning = nyRitning(bana); vald = -1; });   // går att ångra
+    }
     if (b.dataset.v === 'hamta') {
         const basta = lasBasta(banaNr);
         if (basta && lageNu === 'bygg') {
@@ -846,7 +883,7 @@ function lasHistorik() {
 function visaResultat() {
     const k = kostnad(), under = k <= bana.budget;
     if (sim.resultat === 'klarade') {
-        const basta = sparaBasta(k, sim.maxU);
+        const basta = sparaBasta(k);
         visaRuta('Bron höll!', 'keIWs kom över. Kostnad ' + kr(k) + (under ? ', under budget.' : ', över budget.')
             + '<br>Högsta utnyttjande ' + Math.round(sim.maxU * 100) + ' %.'
             + (basta ? '<br><b>Din billigaste bro hittills på den här banan!</b>' : ''),
