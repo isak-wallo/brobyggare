@@ -233,7 +233,7 @@ html, body {
 }
 
 #valjare .typ {
-    grid-template-columns: 1fr 1fr auto;
+    grid-template-columns: 1fr 1fr auto auto;
     margin-bottom: 6px;
 }
 

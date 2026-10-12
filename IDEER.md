@@ -269,6 +269,7 @@ Väljaren ligger nederst i spelytan när mobilen står och uppe till höger när
 den ligger. Material (stål, kablar) kan läggas till i samma väljare.
 
 keIWs går nu 1,8 × sin höjd per sekund (3,6 m/s på Bäcken, 6,3 m/s på Ån).
+Riv allt ligger nu bredvid Riv i väljaren (Ändra), inte i menyn.
 
 Att fundera på efter utkastet:
 - Fästpunkterna låser både x och y, så en balk mellan två fästen hänger

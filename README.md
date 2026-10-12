@@ -13,9 +13,9 @@ utnyttjad (grön → gul → röd). Över 100 % går den sönder.
   storlekar från Pytte till Jätte.
 - **Tryck på en knutpunkt:** växla mellan styvt (fyrkant) och ledat (ring).
 - **Ändra:** tryck på en balk och dra i dess ändar, byt storlek eller riv
-  den, eller dra en knutpunkt.
+  den (eller riv allt), eller dra en knutpunkt.
 - **Ångra**. Två fingrar zoomar, ett finger utanför rutnätet flyttar vyn.
-- **Menyn** (☰): billigaste bron som höll, riv allt och hur bron räknas.
+- **Menyn** (☰): billigaste bron som höll och hur bron räknas.
 
 Spelas i webbläsaren, stående eller liggande. Idéer och beslut finns i
 [IDEER.md](IDEER.md).

@@ -321,9 +321,12 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     sida.click('#meny [data-v=hamta]')
     kolla(f'{namn}: hämta ger den bästa ritningen och stänger menyn',
           antal_balkar(sida) > 1 and not sida.locator('#meny').is_visible())
-    sida.click('#menyknapp')
-    sida.click('#meny [data-v=rivallt]')
-    kolla(f'{namn}: riv allt tömmer banan, ångra tar tillbaka',
+    sida.click('#verktyg [data-v=andra]')
+    b = sida.evaluate('() => { const r = window.bro.ritning, b = r.balkar[0]; '
+                      'return [(r.noder[b.a].x + r.noder[b.b].x) / 2, (r.noder[b.a].y + r.noder[b.b].y) / 2]; }')
+    tryck(sida, b)
+    sida.click('#valjare [data-t=rivallt]')
+    kolla(f'{namn}: riv allt (bredvid Riv) tömmer banan',
           antal_balkar(sida) == 0 and sida.evaluate('() => window.bro.ritning.noder.length') == 4)
     sida.click('#verktyg [data-v=angra]')
     kolla(f'{namn}: ångra efter riv allt', antal_balkar(sida) > 1)

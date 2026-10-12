@@ -717,7 +717,8 @@ function visaValjare() {
     const vag = valdBalk ? valdBalk.vag : ritVag, st = valdBalk ? valdBalk.storlek : storlek;
     const knapp = (data, text, vald) => '<button ' + data + (vald ? ' class="vald"' : '') + '>' + text + '</button>';
     const html = '<div class="typ">' + knapp('data-t="vag"', 'Väg', vag) + knapp('data-t="balk"', 'Balk', !vag)
-        + (valdBalk ? '<button data-t="riv" class="riv">Riv</button>' : '') + '</div>'
+        + (valdBalk ? '<button data-t="riv" class="riv">Riv</button><button data-t="rivallt" class="riv">Riv allt</button>' : '')
+        + '</div>'
         + '<div class="storlekar">' + STORLEKAR.map((namn, i) => knapp('data-s="' + i + '"', '<b>' + namn + '</b><small>'
             + kr(PROFILER.limtra[i].pris + (vag ? VAG.pris : 0)) + '/m</small>', i === st)).join('') + '</div>';
     if (valjareEl.innerHTML !== html) valjareEl.innerHTML = html;
@@ -862,12 +863,9 @@ function visaMeny() {
             + (b.kostnad > bana.budget ? ' (över budget)' : '') + '.</p>'
             + '<button data-v="hamta"' + (lageNu === 'bygg' ? '' : ' disabled') + '>Hämta den ritningen</button>'
         : '<p>Ingen bro har hållit här än.</p>';
-    const tom = !ritning.balkar.length && ritning.noder.every(n => n.fast);
-    const rivAllt = '<p><button data-v="rivallt"' + (lageNu === 'bygg' && !tom ? '' : ' disabled')
-        + '>Riv allt och börja om</button></p>';
     menyEl.firstChild.innerHTML = '<button class="stang" data-v="stang">✕</button>'
         + '<h2>Brobyggare</h2>'
-        + '<h3>Bana ' + (banaNr + 1) + ' · ' + bana.namn + '</h3>' + basta + rivAllt
+        + '<h3>Bana ' + (banaNr + 1) + ' · ' + bana.namn + '</h3>' + basta
         + '<details><summary>Hur räknas bron?</summary>' + feText() + '</details>'
         + '<p class="liten">Version ' + (version || 'okänd') + '</p>';
     menyEl.classList.remove('dold');
@@ -888,9 +886,6 @@ menyEl.addEventListener('click', e => {
     if (e.target === menyEl) { stangMeny(); return; }   // utanför panelen
     const b = e.target.closest('button');
     if (!b || b.disabled) return;
-    if (b.dataset.v === 'rivallt' && lageNu === 'bygg') {
-        andra(() => { ritning = nyRitning(bana); vald = -1; });   // går att ångra
-    }
     if (b.dataset.v === 'hamta') {
         const basta = lasBasta(banaNr);
         if (basta && lageNu === 'bygg') {
@@ -959,6 +954,10 @@ valjareEl.addEventListener('click', e => {
     if (!b || lageNu !== 'bygg') return;
     const valdBalk = verktyg === 'andra' && vald >= 0 ? ritning.balkar[vald] : null;
     if (b.dataset.t === 'riv' && valdBalk) rivBalk(vald);
+    else if (b.dataset.t === 'rivallt') {
+        andra(() => { ritning = nyRitning(bana); });     // går att ångra
+        vald = -1;
+    }
     else if (b.dataset.t) {
         const vag = b.dataset.t === 'vag';
         if (valdBalk) { if (valdBalk.vag !== vag) andra(() => { valdBalk.vag = vag; }); }
