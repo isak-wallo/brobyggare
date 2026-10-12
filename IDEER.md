@@ -271,6 +271,14 @@ den ligger. Material (stål, kablar) kan läggas till i samma väljare.
 keIWs går nu 1,8 × sin höjd per sekund (3,6 m/s på Bäcken, 6,3 m/s på Ån).
 Riv allt ligger nu bredvid Riv i väljaren (Ändra), inte i menyn.
 
+Menyns förklaring i två delar: "Hur funkar det?" (vardagliga ord, inga
+formler) och "Förutsättningar – för nördar" (modell, laster, materialtabell,
+brottsregler per materialtyp, profiltabell, förenklingar). Tabellerna byggs
+ur material.js. Stål S355 och vajer finns med preliminära värden och
+profiler (IPE 100–400, Ø 8–32), gråade som "kommer". Brottsregeln väljs
+efter materialets typ (BROTT i fysik.js); vajern behöver också slakna i
+tryck innan den kan användas.
+
 Att fundera på efter utkastet:
 - Fästpunkterna låser både x och y, så en balk mellan två fästen hänger
   delvis i drag som en lina och håller mer än en fritt upplagd balk.

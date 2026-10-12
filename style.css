@@ -368,6 +368,46 @@ html, body {
     margin: 2px 0;
 }
 
+#meny .tabell {
+    border-collapse: collapse;
+    font-size: 13px;
+    margin: 2px 0 6px;
+}
+
+#meny .tabell th,
+#meny .tabell td {
+    padding: 2px 6px;
+    border-bottom: 1px solid rgba(47, 63, 76, 0.12);
+    vertical-align: top;
+}
+
+#meny .tabell th {
+    text-align: left;
+    font-weight: 600;
+}
+
+#meny .tabell td {
+    text-align: right;
+    white-space: nowrap;
+}
+
+#meny .tabell .v {
+    text-align: left;
+}
+
+#meny .tabell small {
+    font-weight: 400;
+    opacity: 0.7;
+}
+
+#meny .rulla {
+    overflow-x: auto;
+}
+
+#meny .kommer {
+    opacity: 0.45;
+}
+
 #meny summary {
     cursor: pointer;
     font-weight: 600;

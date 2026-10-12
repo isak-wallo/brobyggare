@@ -801,58 +801,101 @@ function bygg() {
 
 // ---------- Menyn ----------
 
-// Förklaringen i menyn. Materialvärdena och profilerna hämtas ur material.js.
-function feText() {
-    const m = MATERIAL.limtra, MPa = v => (v / 1e6).toLocaleString('sv-SE') + ' MPa';
-    const profiler = PROFILER.limtra.map((p, i) => '<li>' + STORLEKAR[i] + ': ' + p.namn + ' mm, '
-        + p.massa.toLocaleString('sv-SE', { maximumFractionDigits: 1 }) + ' kg/m, ' + kr(p.pris) + '/m</li>').join('');
+// Förklaringen i menyn, i två delar: med vardagliga ord, och
+// förutsättningarna för den som vill veta exakt. Tabellerna byggs ur
+// material.js, så nya material blir nya kolumner (gråade så länge de inte
+// finns i spelet).
+
+const LEKMAN_TEXT = `
+<ul>
+<li><b>Balkar böjer sig</b> när de bär. Större balk = styvare och starkare,
+men tyngre och dyrare.</li>
+<li><b>Bron bär först sig själv</b> (balkar och vägbana), sedan keIWs när
+han går över.</li>
+<li><b>Färgerna</b> visar hur hårt en bit jobbar: grön är lugnt, gul börjar
+bli mycket, röd är nära gränsen. Över gränsen går den sönder.</li>
+<li><b>Långa smala balkar som trycks ihop kan knäckas</b>, som ett sugrör
+man trycker på från båda ändarna.</li>
+<li><b>Trianglar är starka.</b> I ett fackverk dras eller trycks balkarna i
+stället för att böjas, och då räcker små balkar långt.</li>
+<li><b>Styv knut:</b> balkarna sitter fast i varandra. <b>Ledad knut:</b> de
+kan vrida sig som ett gångjärn.</li>
+<li><b>Fästena i berget</b> håller balkarna på plats, så en balk mellan två
+fästen kan hänga lite som en lina.</li>
+</ul>`;
+
+// Materialens egenskaper: [nyckel, rubrik, enhet, omräkning].
+const EGENSKAPER = [
+    ['E', 'E', 'MPa', v => v / 1e6],
+    ['E05', 'E<sub>05</sub>', 'MPa', v => v / 1e6],
+    ['fm', 'f<sub>m</sub> böjning', 'MPa', v => v / 1e6],
+    ['ft', 'f<sub>t</sub> drag', 'MPa', v => v / 1e6],
+    ['fc', 'f<sub>c</sub> tryck', 'MPa', v => v / 1e6],
+    ['fv', 'f<sub>v</sub> skjuvning', 'MPa', v => v / 1e6],
+    ['fy', 'f<sub>y</sub> sträckgräns', 'MPa', v => v / 1e6],
+    ['fu', 'f<sub>u</sub> brottgräns', 'MPa', v => v / 1e6],
+    ['densitet', 'Densitet', 'kg/m³', v => v],
+    ['prisM3', 'Pris', '$$/m³', v => v]
+];
+
+const tal = (v, d = 0) => v.toLocaleString('sv-SE', { maximumFractionDigits: d });
+const kommerKlass = mat => mat.kommer ? ' class="kommer"' : '';
+
+function nordText() {
+    const mats = Object.values(MATERIAL);
+    const huvud = mats.map(m => '<th' + kommerKlass(m) + '>' + m.namn + (m.kommer ? '<br><small>kommer</small>' : '') + '</th>').join('');
+    const egenskaper = EGENSKAPER.filter(([k]) => mats.some(m => m[k] !== undefined)).map(([k, rubrik, enhet, om]) =>
+        '<tr><th>' + rubrik + ' <small>' + enhet + '</small></th>'
+        + mats.map(m => '<td' + kommerKlass(m) + '>' + (m[k] !== undefined ? tal(om(m[k]), 1) : '–') + '</td>').join('') + '</tr>').join('');
+    const typer = [...new Set(mats.map(m => m.typ))];
+    const brott = typer.map(t => {
+        const m = mats.find(x => x.typ === t);
+        return '<p' + kommerKlass(m) + '><b>' + { tra: 'Trä', stal: 'Stål', vajer: 'Vajer' }[t] + '</b></p><ul'
+            + kommerKlass(m) + '>' + BROTTREGLER[t].map(r => '<li>' + r + '</li>').join('') + '</ul>';
+    }).join('');
+    const profiler = Object.entries(PROFILER).map(([nyckel, lista]) => lista.map((p, i) =>
+        '<tr' + kommerKlass(MATERIAL[nyckel]) + '>' + (i ? '' : '<th rowspan="' + lista.length + '">' + MATERIAL[nyckel].namn.split(' ')[0] + '</th>')
+        + '<td class="v">' + STORLEKAR[i] + '</td><td class="v">' + p.namn + '</td><td>' + tal(p.massa, 1) + '</td><td>' + tal(p.pris) + '</td></tr>'
+    ).join('')).join('');
     return `
 <h4>Modellen</h4>
 <ul>
 <li>Varje balk delas i balkelement på ca 0,75 m (Euler–Bernoulli): de tar
 drag, tryck, böjning och tvärkraft.</li>
-<li>Elementen är korotationella: bron får röra och vrida sig mycket (till
-exempel när den rasar), medan träet töjs lite och är linjärt elastiskt.
-Därför kommer linverkan med – en balk mellan två fästen bär delvis i drag.</li>
+<li>Korotationella element: stora rörelser och rotationer (bron får rasa),
+små töjningar, linjärt elastiskt material. Linverkan kommer med.</li>
+<li>Newmark (120 steg/s) med Newton–Raphson i varje steg, lite dämpning.
+Massan klumpas i knutpunkterna.</li>
+<li>Styvt förband: delad vridning, moment förs över. Ledat: fri vridning.
+Fästpunkterna låser x och y.</li>
 </ul>
-<h4>Förband och fästen</h4>
-<ul>
-<li><b>Styvt:</b> balkarna delar vridningen i knutpunkten, moment förs över.</li>
-<li><b>Ledat:</b> varje balkände vrider sig fritt.</li>
-<li><b>Fästpunkterna</b> i berget låser både x och y.</li>
-</ul>
-<h4>Laster och tid</h4>
-<ul>
-<li>Egenvikt: balkarna, vägbanan ${VAG.massa} kg/m och förbanden ${FORBAND.massa} kg styck,
-samlade i knutpunkterna.</li>
-<li>Tyngden läggs på under 1 s, sedan går keIWs (${KEIWS_MASSA} kg) över som en rörlig last.</li>
-<li>g = ${G} m/s² (avrundat).</li>
-<li>Tiden stegas fram 120 gånger per sekund (Newmark) med Newton–Raphson i
-varje steg, och lite dämpning.</li>
-</ul>
+<h4>Laster</h4>
+<table class="tabell">
+<tr><th>g</th><td>${G}</td><td class="v">m/s²</td></tr>
+<tr><th>Vägbana</th><td>${VAG.massa}</td><td class="v">kg/m</td></tr>
+<tr><th>Förband</th><td>${FORBAND.massa}</td><td class="v">kg/st</td></tr>
+<tr><th>keIWs</th><td>${KEIWS_MASSA}</td><td class="v">kg, rörlig last</td></tr>
+</table>
+<p>Tyngden läggs på under 1 s, sedan går keIWs över.</p>
+<h4>Material</h4>
+<div class="rulla"><table class="tabell">
+<tr><th></th>${huvud}</tr>
+${egenskaper}
+</table></div>
 <h4>Brott</h4>
-<ul>
-<li>Normalkraft och böjning: N/(A·f<sub>t,c</sub>) + M/(W·f<sub>m</sub>) &gt; 100 %.</li>
-<li>Skjuvning: 1,5·V/(A·f<sub>v</sub>) &gt; 100 %.</li>
-<li>Knäckning: tryckkraften i en balk når π²·E<sub>05</sub>·I/L².</li>
-<li>Ett element som går sönder försvinner, en balk som knäcks går av på mitten.</li>
-</ul>
-<h4>Limträ GL30c</h4>
-<ul>
-<li>Elasticitetsmodul E: ${MPa(m.E)} (E<sub>05</sub> ${MPa(m.E05)})</li>
-<li>Böjhållfasthet f<sub>m</sub>: ${MPa(m.fm)}</li>
-<li>Draghållfasthet f<sub>t</sub>: ${MPa(m.ft)}</li>
-<li>Tryckhållfasthet f<sub>c</sub>: ${MPa(m.fc)}</li>
-<li>Skjuvhållfasthet f<sub>v</sub>: ${MPa(m.fv)}</li>
-<li>Densitet: ${m.densitet} kg/m³</li>
-</ul>
+${brott}
+<p>Ett element som går sönder försvinner, en balk som knäcks går av på mitten.</p>
 <h4>Profiler</h4>
-<ul>${profiler}</ul>
+<div class="rulla"><table class="tabell">
+<tr><th></th><th class="v">Storlek</th><th class="v">Profil</th><th>kg/m</th><th>$$/m</th></tr>
+${profiler}
+</table></div>
 <h4>Förenklingar</h4>
 <ul>
 <li>Ingen skjuvdeformation (Timoshenko).</li>
 <li>Ingen vippning eller knäckning ut ur planet.</li>
 <li>Inga partialkoefficienter eller lastkombinationer som i Eurokod.</li>
+<li>Stål och vajer: preliminära värden, inte med i spelet än.</li>
 </ul>`;
 }
 
@@ -866,7 +909,8 @@ function visaMeny() {
     menyEl.firstChild.innerHTML = '<button class="stang" data-v="stang">✕</button>'
         + '<h2>Brobyggare</h2>'
         + '<h3>Bana ' + (banaNr + 1) + ' · ' + bana.namn + '</h3>' + basta
-        + '<details><summary>Hur räknas bron?</summary>' + feText() + '</details>'
+        + '<details><summary>Hur funkar det?</summary>' + LEKMAN_TEXT + '</details>'
+        + '<details><summary>Förutsättningar – för nördar</summary>' + nordText() + '</details>'
         + '<p class="liten">Version ' + (version || 'okänd') + '</p>';
     menyEl.classList.remove('dold');
 }

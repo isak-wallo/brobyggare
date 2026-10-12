@@ -315,8 +315,12 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     sida.click('#menyknapp')
     text = sida.locator('#meny').inner_text()
     kolla(f'{namn}: menyn visar billigaste bron och förklaringen',
-          'Billigaste bron som höll' in text and 'Hur räknas bron?' in text and 'Version v' in text)
-    sida.click('#meny summary')
+          'Billigaste bron som höll' in text and 'Hur funkar det?' in text
+          and 'Förutsättningar – för nördar' in text and 'Version v' in text)
+    sida.click('#meny details:nth-of-type(2) summary')
+    kolla(f'{namn}: materialtabellen har limträ, stål och vajer',
+          sida.locator('#meny .tabell th:has-text("Limträ GL30c")').count() == 1
+          and sida.locator('#meny .tabell th.kommer').count() == 2)
     bild(sida, bilder, f'{namn}-7-meny')
     sida.click('#meny [data-v=hamta]')
     kolla(f'{namn}: hämta ger den bästa ritningen och stänger menyn',

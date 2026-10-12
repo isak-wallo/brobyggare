@@ -61,7 +61,7 @@ function byggModell(ritning) {
 
         const balk = {
             L, prof, mat, vag: !!b.vag, element: [], uk: 0, knackt: false,
-            Pcr: Math.PI ** 2 * mat.E05 * prof.I / (L * L)
+            Pcr: Math.PI ** 2 * (mat.E05 || mat.E) * prof.I / (L * L)
         };
         for (let k = 0; k < n; k++) {
             balk.element.push(element.length);
@@ -346,20 +346,28 @@ function losStatiskt(m, lg = 1, ll = 1, delar = 10) {
     montera(m, false);
 }
 
+// Utnyttjandegraden i ett element (N, M, V) efter materialets typ, se
+// BROTTREGLER i material.js. Stål och vajer finns inte i spelet än; för
+// vajern behöver lösaren också få den att slakna i tryck.
+const BROTT = {
+    tra: (N, M, V, p, mat) => Math.max(
+        (N >= 0 ? N / (p.A * mat.ft) : -N / (p.A * mat.fc)) + M / (p.W * mat.fm),
+        1.5 * V / (p.A * mat.fv)),
+    stal: (N, M, V, p, mat) => Math.max(Math.abs(N) / (p.A * mat.fy) + M / (p.W * mat.fy), V / (p.Av * mat.fv)),
+    vajer: (N, M, V, p, mat) => Math.max(0, N) / (p.A * mat.fu)
+};
+
 // Utnyttjandegraden i varje element och knäckning i varje balk (efter
 // montera, så att N och M är aktuella).
-//   element: drag/tryck N/(A·f) + böjning M/(W·fm), eller skjuvning
-//            1,5·V/(A·fv), det som är störst
+//   element: BROTT efter materialet (trä: drag/tryck N/(A·f) + böjning
+//            M/(W·fm), eller skjuvning 1,5·V/(A·fv), det som är störst)
 //   balk:    tryck mot Eulers knäcklast π²·E05·I/L² (ledad–ledad)
 function utnyttjande(m) {
     for (const balk of m.balkar) balk.uk = 0;
     for (const e of m.element) {
         if (e.dod) { e.u = 0; continue; }
         const balk = m.balkar[e.balk], p = balk.prof, mat = balk.mat;
-        const n = e.N >= 0 ? e.N / (p.A * mat.ft) : -e.N / (p.A * mat.fc);
-        const b = Math.max(Math.abs(e.M1), Math.abs(e.M2)) / (p.W * mat.fm);
-        const v = 1.5 * Math.abs(e.V) / (p.A * mat.fv);
-        e.u = Math.max(n + b, v);
+        e.u = BROTT[mat.typ](e.N, Math.max(Math.abs(e.M1), Math.abs(e.M2)), Math.abs(e.V), p, mat);
         if (e.N < 0) balk.uk = Math.max(balk.uk, -e.N / balk.Pcr);
     }
 }
