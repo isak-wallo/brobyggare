@@ -307,6 +307,10 @@ gav svängningar (långa veka spann har ~1,5 s period). Nu:
 - Raka balkar stämmer nu med handräkning: Ån, HEA 180 rasar (qL²/8 ger
   163 %), HEA 240 håller (81 %).
 - Gamla "bästa resultat" nollställs (räknades med den gamla fysiken).
+- Linverkan i övrigt är riktig fysik (stora deformationer + stöd låsta i
+  sidled) och får vara kvar, t.ex. en underram mellan de nedre fästena
+  som dragband. Övervägt men inte valt: nedböjningskrav (L/200),
+  fjädrande stöd i sidled, första ordningens teori för brottet.
 - Kvar att fundera på: stål är segt, så ett moment över gränsen vid ett
   styvt stöd borde ge en plastisk led (omlagring) i stället för att
   elementet går av. Nu är allt sprött.
