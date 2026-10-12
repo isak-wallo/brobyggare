@@ -39,6 +39,7 @@ let bana = BANOR[banaNr];
 let ritning = lasRitning();
 let historik = [];
 let verktyg = 'vag';
+let ritverktyg = 'vag';       // senaste av Väg/Balk, dit Flytta och Riv går tillbaka
 let storlek = 1;
 let lageNu = 'bygg';
 let sim = null;
@@ -751,7 +752,12 @@ document.getElementById('verktyg').addEventListener('click', e => {
     const b = e.target.closest('button');
     if (!b || b.disabled) return;
     const v = b.dataset.v;
-    if (v === 'vag' || v === 'balk' || v === 'flytta' || v === 'riv') { verktyg = v; vald = -1; }
+    if (v === 'vag' || v === 'balk') { verktyg = ritverktyg = v; vald = -1; }
+    else if (v === 'flytta' || v === 'riv') {
+        // Ett tryck till på samma knapp väljer bort den (tillbaka till Väg/Balk).
+        verktyg = verktyg === v ? ritverktyg : v;
+        vald = -1;
+    }
     else if (v === 'storlek') {
         // Med en vald balk (Flytta) byter knappen storlek på den.
         const b = verktyg === 'flytta' && vald >= 0 ? ritning.balkar[vald] : null;

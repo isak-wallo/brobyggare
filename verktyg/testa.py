@@ -181,6 +181,11 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     sida.click('#verktyg [data-v=riv]')
     tryck(sida, (5, -1.5))
     kolla(f'{namn}: tillbaka till två vägbalkar', antal_balkar(sida) == 2)
+    sida.click('#verktyg [data-v=riv]')
+    sida.click('#verktyg [data-v=flytta]')
+    sida.click('#verktyg [data-v=flytta]')
+    kolla(f'{namn}: ett tryck till på Flytta väljer bort den (tillbaka till Balk)',
+          sida.evaluate("() => document.querySelector('#verktyg [data-v=balk]').classList.contains('vald')"))
 
     # Zoom: mushjulet kring en punkt, sedan nyp med två fingrar.
     x, y = skarm(sida, (6, 0))
