@@ -32,12 +32,12 @@ module.exports = function (S, kolla) {
         // Stål Stor räcker rakt över Ån men inte längre.
         sim = korSim(enBalk(bana, 3, 'stal'), bana);
         const raktStal = bana.spann <= 24;
-        kolla(namn + (raktStal ? ': en stålbalk Stor (HEA 240) håller' : ': en stålbalk Stor (HEA 240) räcker inte rakt'),
+        kolla(namn + (raktStal ? ': en stålbalk Stor (HEA 300) håller' : ': en stålbalk Stor (HEA 300) räcker inte rakt'),
               raktStal ? sim.resultat === 'klarade' && sim.brott === 0 : sim.resultat === 'vatten',
               sim.resultat + ', max ' + Math.round(sim.maxU * 100) + ' %');
         // Glidlagret: en klen balk kan inte hänga som en lina mellan fästena.
         sim = korSim(enBalk(bana, 0, 'stal'), bana);
-        kolla(namn + ': en stålbalk Pytte (HEA 100) går av, ingen linverkan', sim.resultat === 'vatten' && sim.brott > 0,
+        kolla(namn + ': en stålbalk Pytte (HEA 120) går av, ingen linverkan', sim.resultat === 'vatten' && sim.brott > 0,
               sim.resultat + ', brott ' + sim.brott);
         const glid = sim.m.punkter.findIndex(p => p.glid), u = sim.m.q[2 * glid];
         kolla(namn + ': glidlagret stannar vid stoppet när bron rasar', glid >= 0 && Math.abs(u) <= 0.3 + 1e-9,

@@ -399,6 +399,17 @@ v30-test: Ändra väljer pelare (tryck på den): pris och Riv. Med Ändra
 finns Riv och Riv allt alltid i väljaren, gråa när de inte gör något.
 Rivs en pelare som balkar sitter i blir knutpunkten kvar.
 
+v31-test: 15 steg per material: varje storlek har − och + (Pytte−,
+Pytte, Pytte+ … Jätte+), ca 1,35× styvare per steg, pris och styvhet
+ökar alltid. I ritningen storlek ± 0,25; gamla halvsteg (x,5) blir steget
+under nästa storlek (1,5 → Mellan−). Trä behåller sina fem
+grundstorlekar, mellanstegen 42×180, 56×200, 56×215, 78×230, 90×245,
+90×305, 90×345, 115×395, 115×435, 140×495. Stål blev HEA 100–400 i följd
+(Isak ville ha HEA/HEB/HEM, men HEB och HEM är tyngre för samma
+styvhet, så de blir dyrare och klenare än HEA-steget bredvid): Pytte
+HEA 120, Liten 180, Mellan 240, Stor 300, Jätte 360 (förut 100/140/180/
+240/300). Pelare får fortsatt gå ända upp (vägar med kullar).
+
 Beslut 2026-10-12: Kanalen med pelare från botten och farled. Älven
 (minst 100 m) blir sista vattendraget, senare.
 

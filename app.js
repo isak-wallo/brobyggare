@@ -98,6 +98,8 @@ function uppgradera(r, b = bana) {
     for (const [x, y, lager] of b.fasten) {
         if (!r.noder.some(n => n.fast && n.x === x && n.y === y)) r.noder.push(fastNod(x, y, lager));
     }
+    // Gamla halvsteg till de nya stegen (1,5 → Mellan−, 1,75).
+    for (const k of r.balkar) k.storlek = storlekAv(stegAv(k.storlek));
     r.version = 4;
     return r;
 }
@@ -839,7 +841,7 @@ const TIPS = {
     balk: 'Dra mellan två punkter: balk. Tryck på en knutpunkt: styv/ledad.',
     andra: 'Tryck på en balk eller pelare för att ändra eller riva den, eller dra en knutpunkt.',
     andraPelare: 'Riv tar bort pelaren (knutpunkten blir kvar om balkar sitter i den).',
-    andraVald: 'Dra i en ände, eller byt material, storlek (−/+ i halvsteg) eller riv i rutan.',
+    andraVald: 'Dra i en ände, eller byt material, storlek (−/+ för stegen emellan) eller riv i rutan.',
     pelare: 'Tryck på en punkt över vattnet: pelare från botten (inte i farleden). Tryck igen: bort.',
     fri: 'Inget verktyg valt: dra med ett finger för att flytta vyn (zooma in först). Välj Väg eller Ändra för att bygga.'
 };
@@ -913,10 +915,10 @@ function visaValjare() {
             knapp('data-m="' + nyckel + '"', m.kort, nyckel === mat)).join('') + '</div>'
         + '<div class="storlekar">' + STORLEKAR.map((namn, i) => knapp('data-s="' + i + '"', '<b>' + namn + '</b><small>'
             + PROFILER[mat][i].namn + '</small><small>' + kr(PROFILER[mat][i].pris + (vag ? VAG.pris : 0)) + '/m</small>',
-            i === Math.floor(st))).join('') + '</div>'
-        + '<div class="fin"><button data-f="-1"' + (gra || st <= 0 ? ' disabled' : '') + '>−</button><span><b>'
+            i === Math.round(st))).join('') + '</div>'
+        + '<div class="fin"><button data-f="-1"' + (gra || stegAv(st) <= 0 ? ' disabled' : '') + '>−</button><span><b>'
             + storleksNamn(st) + '</b> · ' + profil(mat, st).namn + ' · ' + kr(profil(mat, st).pris + (vag ? VAG.pris : 0))
-            + '/m</span><button data-f="1"' + (gra || st >= 4 ? ' disabled' : '') + '>+</button></div>';
+            + '/m</span><button data-f="1"' + (gra || stegAv(st) >= ANTAL_STEG - 1 ? ' disabled' : '') + '>+</button></div>';
     if (valjareEl.innerHTML !== html) valjareEl.innerHTML = html;
 }
 
@@ -1063,7 +1065,7 @@ function nordText() {
         return '<p' + kommerKlass(m) + '><b>' + { tra: 'Trä', stal: 'Stål', vajer: 'Vajer' }[t] + '</b></p><ul'
             + kommerKlass(m) + '>' + BROTTREGLER[t].map(r => '<li>' + r + '</li>').join('') + '</ul>';
     }).join('');
-    const steg = [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4];
+    const steg = Array.from({ length: ANTAL_STEG }, (_, k) => storlekAv(k));
     const profiler = Object.keys(PROFILER).map(nyckel => steg.map((s, i) => {
         const p = profil(nyckel, s);
         return '<tr' + kommerKlass(MATERIAL[nyckel]) + '>' + (i ? '' : '<th rowspan="' + steg.length + '">' + MATERIAL[nyckel].namn.split(' ')[0] + '</th>')
@@ -1283,8 +1285,9 @@ valjareEl.addEventListener('click', e => {
         if (valdBalk) { if ((valdBalk.material || 'limtra') !== m) andra(() => { valdBalk.material = m; }); }
         else ritMaterial = m;
     } else if (b.dataset.f) {
-        // Finjustering i halvsteg (Liten, Liten+, Mellan …).
-        const fore = valdBalk ? valdBalk.storlek : storlek, s = Math.max(0, Math.min(4, fore + 0.5 * b.dataset.f));
+        // Finjustering ett steg i taget (Liten−, Liten, Liten+, Mellan− …).
+        const fore = valdBalk ? valdBalk.storlek : storlek;
+        const s = storlekAv(Math.max(0, Math.min(ANTAL_STEG - 1, stegAv(fore) + +b.dataset.f)));
         if (valdBalk) { if (s !== fore) andra(() => { valdBalk.storlek = s; }); }
         else storlek = s;
     } else if (b.dataset.s !== undefined) {

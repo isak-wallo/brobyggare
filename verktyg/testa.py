@@ -252,11 +252,11 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     kolla(f'{namn}: och gör väg till balk', not sida.evaluate('() => window.bro.ritning.balkar[0].vag'))
     sida.click('#valjare [data-m=stal]')
     kolla(f'{namn}: och byter material till stål (HEA)', sida.evaluate('() => window.bro.ritning.balkar[0].material') == 'stal'
-          and 'HEA 300' in sida.inner_text('#valjare [data-s="4"]'))
+          and 'HEA 360' in sida.inner_text('#valjare [data-s="4"]'))
     bild(sida, bilder, f'{namn}-0-stal')
     sida.click('#valjare [data-f="-1"]')
-    kolla(f'{namn}: − ger ett halvsteg (Stor+, HEA 260)', sida.evaluate('() => window.bro.ritning.balkar[0].storlek') == 3.5
-          and 'Stor+' in sida.inner_text('#valjare .fin') and 'HEA 260' in sida.inner_text('#valjare .fin'))
+    kolla(f'{namn}: − ger steget under (Jätte−, HEA 340)', sida.evaluate('() => window.bro.ritning.balkar[0].storlek') == 3.75
+          and 'Jätte−' in sida.inner_text('#valjare .fin') and 'HEA 340' in sida.inner_text('#valjare .fin'))
     for _ in range(4):
         sida.click('#verktyg [data-v=angra]')
     tryck(sida, (3, 3))                           # tomt: ingen vald
@@ -460,6 +460,9 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     sida.click('#verktyg [data-v=angra]')
     kolla(f'{namn}: ångra efter riv allt', antal_balkar(sida) > 1)
     # En ritning sparad före fästena på land får dem.
+    kolla(f'{namn}: gamla halvsteg blir steget under nästa storlek (1,5 → Mellan−)', sida.evaluate('''() =>
+          uppgradera({ version: 4, noder: [], balkar: [{ storlek: 1.5 }, { storlek: 2 }, { storlek: 3.5 }] }).balkar
+          .map(b => storleksNamn(b.storlek)).join()''') == 'Mellan−,Mellan,Jätte−')
     kolla(f'{namn}: gamla ritningar får fästena på land', sida.evaluate('''() => { const b = BANOR[0];
         const r = uppgradera({ version: 3, balkar: [], noder: b.fasten.slice(0, 4).map(([x, y, l]) => fastNod(x, y, l)) }, b);
         return r.noder.length === b.fasten.length && r.noder.every(n => n.fast); }'''))

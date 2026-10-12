@@ -1,9 +1,9 @@
 // Material och tvärsnitt.
 //
-// Spelläget har fem storlekar per material (Pytte–Jätte) och ett halvsteg
-// efter var och en utom Jätte (Pytte+ … Stor+, storlek 0,5 … 3,5) som man
-// når med −/+ under knapparna. Var och en är en riktig profil, så att
-// lösaren räknar med verkliga A, I, W, vikt och pris.
+// Spelläget har fem storlekar per material (Pytte–Jätte), var och en med
+// ett steg under och ett över (Pytte−, Pytte, Pytte+ … Jätte+, 15 steg)
+// som man når med −/+ under knapparna. Var och en är en riktig profil, så
+// att lösaren räknar med verkliga A, I, W, vikt och pris.
 // Enheter: SI (m, kg, N, Pa). Priserna är i spelets pengar, $$ (ungefär som
 // kronor).
 //
@@ -94,31 +94,44 @@ function vajer(d) {
 
 const STORLEKAR = ['Pytte', 'Liten', 'Mellan', 'Stor', 'Jätte'];
 
-const PROFILER = {
-    // Ungefär 2,5 gånger styvare (I) för varje steg, så att knäckningen inte
-    // tar för stora kliv.
-    limtra: [rektangel('limtra', 56, 180), rektangel('limtra', 66, 225), rektangel('limtra', 90, 270),
-             rektangel('limtra', 115, 360), rektangel('limtra', 140, 450)],
-    // HEA, böjning kring den styva axeln (W elastiskt, A_v = livets area).
-    stal: [iprofil('HEA 100', 21.2, 349, 72.8, 7.56, 96), iprofil('HEA 140', 31.4, 1033, 155, 10.1, 133),
-           iprofil('HEA 180', 45.3, 2510, 294, 14.5, 171), iprofil('HEA 240', 76.8, 7763, 675, 25.2, 230),
-           iprofil('HEA 300', 112.5, 18260, 1260, 37.3, 290)],
+// De 15 stegen per material, från Pytte− till Jätte+. Varje steg är
+// ungefär 1,35 gånger styvare (I) än det förra, så att knäckningen inte tar
+// för stora kliv, och både pris och styvhet ökar för varje steg.
+const STEGEN = {
+    limtra: [[42, 180], [56, 180], [56, 200], [56, 215], [66, 225], [78, 230], [90, 245], [90, 270],
+             [90, 305], [90, 345], [115, 360], [115, 395], [115, 435], [140, 450], [140, 495]]
+        .map(([b, h]) => rektangel('limtra', b, h)),
+    // HEA 100–400 i följd, böjning kring den styva axeln (W elastiskt, A_v =
+    // livets area). HEB och HEM är tyngre för samma styvhet, så de skulle bli
+    // dyrare men klenare än ett HEA-steg bredvid.
+    stal: [iprofil('HEA 100', 21.2, 349, 72.8, 7.56, 96), iprofil('HEA 120', 25.3, 606, 106, 8.46, 114),
+           iprofil('HEA 140', 31.4, 1033, 155, 10.1, 133), iprofil('HEA 160', 38.8, 1673, 220, 13.2, 152),
+           iprofil('HEA 180', 45.3, 2510, 294, 14.5, 171), iprofil('HEA 200', 53.8, 3692, 389, 18.1, 190),
+           iprofil('HEA 220', 64.3, 5410, 515, 20.7, 210), iprofil('HEA 240', 76.8, 7763, 675, 25.2, 230),
+           iprofil('HEA 260', 86.8, 10450, 836, 28.8, 250), iprofil('HEA 280', 97.3, 13670, 1013, 31.7, 270),
+           iprofil('HEA 300', 112.5, 18260, 1260, 37.3, 290), iprofil('HEA 320', 124.4, 22930, 1479, 41.1, 310),
+           iprofil('HEA 340', 133.5, 27690, 1678, 45.0, 330), iprofil('HEA 360', 142.8, 33090, 1891, 49.0, 350),
+           iprofil('HEA 400', 159.0, 45070, 2311, 57.3, 390)],
     // Preliminär (vajern finns inte i spelet än).
-    vajer: [vajer(8), vajer(12), vajer(16), vajer(24), vajer(32)]
+    vajer: [7, 8, 9, 11, 12, 13, 14, 16, 18, 22, 24, 26, 29, 32, 36].map(vajer)
 };
 
-// Halvstegen: PLUS[material][i] ligger mellan storlek i och i + 1.
-const PLUS = {
-    limtra: [rektangel('limtra', 66, 200), rektangel('limtra', 78, 250), rektangel('limtra', 115, 300),
-             rektangel('limtra', 140, 405)],
-    stal: [iprofil('HEA 120', 25.3, 606, 106, 8.46, 114), iprofil('HEA 160', 38.8, 1673, 220, 13.2, 152),
-           iprofil('HEA 200', 53.8, 3692, 389, 18.1, 190), iprofil('HEA 260', 86.8, 10450, 836, 28.8, 250)],
-    vajer: [vajer(10), vajer(14), vajer(20), vajer(28)]
-};
+// I ritningen är storleken 0–4 (Pytte–Jätte), med − och + som ± 0,25
+// (Liten− = 0,75, Liten+ = 1,25). Gamla halvsteg (1,5) räknas som steget
+// under nästa storlek (Mellan−).
+const stegAv = s => 3 * Math.round(s) + Math.sign(s - Math.round(s)) + 1;     // 0–14
+const storlekAv = k => Math.floor(k / 3) + (k % 3 - 1) * 0.25;
+const ANTAL_STEG = 15;
 
-// Profilen för en storlek (0, 0,5, 1 … 4) och dess namn (Liten, Liten+ …).
-const profil = (material, s) => Number.isInteger(s) ? PROFILER[material][s] : PLUS[material][Math.floor(s)];
-const storleksNamn = s => STORLEKAR[Math.floor(s)] + (Number.isInteger(s) ? '' : '+');
+// Fem storlekar (knapparna) är mittensteget i varje grupp om tre.
+const PROFILER = Object.fromEntries(Object.entries(STEGEN).map(([m, lista]) => [m, lista.filter((p, k) => k % 3 === 1)]));
+
+// Profilen för en storlek och dess namn (Liten−, Liten, Liten+ …).
+const profil = (material, s) => STEGEN[material][stegAv(s)];
+const storleksNamn = s => {
+    const k = stegAv(s);
+    return STORLEKAR[Math.floor(k / 3)] + ['−', '', '+'][k % 3];
+};
 
 // Vägbanan: plankor ovanpå balken som keIWs går på. Väger och kostar per
 // meter, utöver balken under.
