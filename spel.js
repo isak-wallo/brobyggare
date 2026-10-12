@@ -3,7 +3,8 @@
 //
 // Först räknas bron statiskt under sin egen tyngd (som om den byggts
 // färdigt i lugn och ro), sedan går keIWs från vänster klippa. Går det
-// inte att räkna statiskt (en mekanism) läggs tyngden på gradvis i stället. keIWs är en rörlig last på vägbanan: tyngden fördelas på
+// inte att räkna statiskt (en mekanism, eller bron håller inte ens sin egen
+// tyngd) läggs tyngden på gradvis i stället. keIWs är en rörlig last på vägbanan: tyngden fördelas på
 // de två noderna i elementet under fötterna. Finns ingen vägbana under,
 // faller keIWs. Hamnar keIWs i vattnet har bron misslyckats, och kommer
 // keIWs fram till andra sidan har den klarat sig.
@@ -27,7 +28,7 @@ const keiwsFart = bana => 1.8 * keiwsHojd(bana);      // m/s
 
 function nySim(ritning, bana) {
     const m = byggModell(ritning);
-    const statisk = losStatiskt(m, 1, 0);
+    const statisk = losStatiskt(m, 1, 0) && staTyngden(m);
     if (!statisk) m.q.fill(0);
     m.v.fill(0);
     m.a.fill(0);
@@ -37,6 +38,16 @@ function nySim(ritning, bana) {
         keiws: { x: keiwsStart(bana), y: 0, vy: 0, lage: 'vantar', luft: 0, gatt: 0 },
         resultat: null      // 'klarade' eller 'vatten', med tiden i sim.slutTid
     };
+}
+
+// Klarar bron sin egen tyngd statiskt? Annars (något går av, knäcks eller
+// glidlagret glider förbi stoppet, som statiken inte vet om) läggs tyngden
+// på gradvis i stället, så att man ser bron sjunka och gå av där den är
+// svagast, i stället för att den börjar i ett läge som redan har rasat.
+function staTyngden(m) {
+    utnyttjande(m);
+    return m.element.every(e => e.u <= 1) && m.balkar.every(b => b.uk <= 1)
+        && m.punkter.every((p, i) => !p.glid || Math.abs(m.q[2 * i]) <= GLID_MAX);
 }
 
 // Den högsta vägbanan vid x som ligger högst ymax. Klipporna räknas också

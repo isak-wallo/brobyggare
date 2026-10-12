@@ -9,6 +9,9 @@
 // zoomar och flyttar vyn.
 
 const TEST = new URLSearchParams(location.search).has('test');
+// Testsidan (GitHub Pages och lokalt) har en knapp som delar konstruktionen
+// som text, för felsökning. Inte på den skarpa sidan.
+const FELSOK = TEST || /github\.io$|^localhost$|^127\./.test(location.hostname);
 const RUTNAT = 1;            // m mellan punkterna man bygger på
 const MAX_LANGD = 12;        // m, längsta balken
 const START_NARA = 24;       // px: så nära en knutpunkt börjar en ny balk i den
@@ -1005,6 +1008,7 @@ function visaMeny() {
     menyEl.firstChild.innerHTML = '<button class="stang" data-v="stang">✕</button>'
         + '<h2>Brobyggare</h2>'
         + '<h3>Bana ' + (banaNr + 1) + ' · ' + bana.namn + ' (budget ' + kr(bana.budget) + ')</h3>' + basta
+        + (FELSOK ? '<p><button data-v="dela">Dela konstruktionen (test)</button></p>' : '')
         + '<details><summary>Hur funkar det?</summary>' + LEKMAN_TEXT + '</details>'
         + '<details><summary>Förutsättningar – för nördar</summary>' + nordText() + '</details>'
         + '<p class="liten">Version ' + (version || 'okänd') + '</p>';
@@ -1012,6 +1016,29 @@ function visaMeny() {
 }
 
 const menyOppen = () => !menyEl.classList.contains('dold');
+
+// Felsökning: konstruktionen som text (version, bana, ritning och senaste
+// provkörningen) som kopieras och visas i menyn, så att den kan klistras in
+// i en chatt och återskapas exakt.
+function delaKonstruktion(knapp) {
+    const text = 'BROBYGGARE ' + JSON.stringify({
+        version, bana: banaNr, namn: bana.namn, kostnad: kostnad(), ritning,
+        prov: sim && sim.resultat ? { resultat: sim.resultat, brott: sim.brott, maxU: Math.round(sim.maxU * 100) / 100 } : null
+    });
+    let ruta = menyEl.querySelector('.dela');
+    if (!ruta) {
+        ruta = document.createElement('textarea');
+        ruta.className = 'dela';
+        ruta.readOnly = true;
+        knapp.parentNode.after(ruta);
+    }
+    ruta.value = text;
+    ruta.select();
+    const klart = () => { knapp.textContent = 'Kopierad – klistra in i chatten'; };
+    try {
+        navigator.clipboard.writeText(text).then(klart, () => { knapp.textContent = 'Markera och kopiera texten'; });
+    } catch (e) { knapp.textContent = 'Markera och kopiera texten'; }
+}
 
 function stangMeny() {
     menyEl.classList.add('dold');
@@ -1026,6 +1053,7 @@ menyEl.addEventListener('click', e => {
     if (e.target === menyEl) { stangMeny(); return; }   // utanför panelen
     const b = e.target.closest('button');
     if (!b || b.disabled) return;
+    if (b.dataset.v === 'dela') { delaKonstruktion(b); return; }
     if (b.dataset.v === 'hamta') {
         const basta = lasBasta(banaNr);
         if (basta && lageNu === 'bygg') {

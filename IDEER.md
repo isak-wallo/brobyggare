@@ -356,6 +356,17 @@ v22-test: inget verktyg valt. Ett tryck till på Ändra (eller på Väg när
 väljaren är öppen) väljer bort verktyget, och då flyttar ett finger vyn
 var man än trycker (när man har zoomat in). Väg eller Ändra väljer igen.
 
+v23-test: menyn visar banans budget i rubriken.
+
+v24-test: en bro som inte ens bär sin egen tyngd räknades förut statiskt
+till ett läge som redan hade rasat (en rak träbalk på Ån började 4 m ner,
+glidlagret förbi stoppet), och sedan gick den av snett. Nu läggs tyngden
+på gradvis när statiken ger brott, knäckning eller glidlager förbi stoppet,
+så bron sjunker och går av på mitten. Testsidan (github.io och lokalt, inte
+den skarpa) har "Dela konstruktionen (test)" i menyn: text som börjar med
+BROBYGGARE och JSON (version, bana, ritning, senaste provkörningen) som
+Claude kan återskapa exakt.
+
 Beslut 2026-10-12: stålpriset behålls (15 $$/kg). Plastiska leder i stål
 (moment begränsat till Mpl, brott först vid en vridgräns) väntar tills vi
 gör banor där stål ska löna sig.

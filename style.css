@@ -443,6 +443,12 @@ html, body {
     padding: 0 10px;
 }
 
+#meny .dela {
+    width: 100%;
+    height: 90px;
+    font: 11px/1.3 ui-monospace, monospace;
+}
+
 #meny .liten {
     margin-top: 12px;
     font-size: 11px;

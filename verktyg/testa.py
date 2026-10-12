@@ -39,6 +39,7 @@ Kräver node och Playwright för Python. Avslutas med kod 0 om allt gick bra.
 import argparse
 import functools
 import http.server
+import json
 import os
 import subprocess
 import sys
@@ -394,6 +395,10 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     kolla(f'{namn}: menyn visar billigaste bron och förklaringen',
           'Billigaste bron som höll' in text and '(budget 12 000 $$)' in text.replace(' ', ' ') and 'Hur funkar det?' in text
           and 'Förutsättningar – för nördar' in text and 'Version v' in text)
+    sida.click('#meny [data-v=dela]')
+    dela = sida.locator('#meny .dela').input_value()
+    kolla(f'{namn}: dela konstruktionen ger ritningen som text', dela.startswith('BROBYGGARE ')
+          and json.loads(dela[11:])['ritning'] == sida.evaluate('() => window.bro.ritning'))
     sida.click('#meny details:nth-of-type(2) summary')
     kolla(f'{namn}: materialtabellen har limträ, stål och vajer',
           sida.locator('#meny .tabell th:has-text("Limträ GL30c")').count() == 1
