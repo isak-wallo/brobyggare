@@ -392,7 +392,7 @@ den. Pelaren är en fast, ledad knutpunkt (tryck i Väg/Balk: styv). Pris
 3 000 $$ + 150 $$/m (4 500 $$ till vägen). Budget 55 000 $$. Provräknat:
 väg Mellan på två pelare 4 m ner med V-strävor Liten 53 040 $$ (lösningen,
 79 %); Pratt ovanpå h6 Liten ca 51 400 $$; rak väg Stor+ på två pelare vid
-vägen ca 54 000 $$ (102 %, går av); stål Liten+ på pelare ca 56 300 $$.
+vägen ca 53 600 $$ (102 %, går av); stål Liten+ på pelare ca 60 800 $$.
 Kostnaden räknas i ritningensKostnad (banor.js), samma i testerna.
 
 Beslut 2026-10-12: Kanalen med pelare från botten och farled. Älven
