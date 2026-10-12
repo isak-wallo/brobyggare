@@ -20,7 +20,7 @@ läsa), stående och liggande. Kontrollerar att:
   - zoom med mushjulet och nyp med två fingrar (punkten under fingrarna
     står kvar, inget byggs), och att zoomen nollas vid byte av bana,
   - keIWs bygger bron först (virvelvind, 1–3 s) och ett tryck hoppar över
-    bygget,
+    bygget; inzoomad hoppar han över bygget och kameran följer honom,
   - infotexten har samma höjd hur lång texten än är (banan står still),
   - versionen syns, menyn visar billigaste bron som höll (och kan hämta
     den) och förklarar beräkningen,
@@ -305,8 +305,26 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     bild(sida, bilder, f'{namn}-5-fackverk-prov')
     kolla(f'{namn}: fackverket håller', vanta_resultat(sida) == 'Bron höll!')
 
-    # En liten balk över hela spannet är för klen.
+    # Inzoomad: inget bygge, kameran följer keIWs, och Bygg ger tillbaka vyn.
     sida.click('#ruta [data-v=bygg]')
+    sida.mouse.move(*skarm(sida, (0, 0)))
+    sida.mouse.wheel(0, -600)
+    sida.wait_for_timeout(100)
+    fore = sida.evaluate('() => [window.bro.zoom, window.bro.mitt]')
+    sida.click('#verktyg [data-v=kor]')
+    kolla(f'{namn}: inzoomad hoppar keIWs över bygget', not sida.evaluate('() => window.bro.bygger'))
+    sida.wait_for_timeout(3000)
+    x, k = sida.evaluate('() => [window.bro.mitt[0], window.bro.sim.keiws.x]')
+    bild(sida, bilder, f'{namn}-5-folj')
+    kolla(f'{namn}: kameran följer keIWs', abs(x - k) < 1.5, f'vyn {x:.1f} m, keIWs {k:.1f} m')
+    vanta_resultat(sida)
+    sida.click('#ruta [data-v=bygg]')
+    efter = sida.evaluate('() => [window.bro.zoom, window.bro.mitt]')
+    kolla(f'{namn}: Bygg ger tillbaka vyn', fore == efter, str(efter))
+    sida.mouse.wheel(0, 3000)
+    sida.wait_for_timeout(100)
+
+    # En liten balk över hela spannet är för klen.
     sida.evaluate('() => { window.bro.ritning = { noder: window.bro.ritning.noder.filter(n => n.fast), '
                   'balkar: [{ a: 0, b: 2, storlek: 0, vag: true, material: "limtra" }] }; }')
     sida.click('#verktyg [data-v=kor]')

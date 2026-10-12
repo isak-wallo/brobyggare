@@ -58,6 +58,7 @@ let flytt = null;             // {balk, ande} eller {nod}, och {till: [x, y]}
 let kam = { sk: 30, ox: 0, oy: 0 };
 let bas = null;               // kameran utan zoom: {sk, cx, cy, B} (B = det som syns)
 let zoom = 1, mitt = null;    // användarens zoom och vyns mitt [x, y] i meter
+let byggVy = null;            // {zoom, mitt} när man tryckte Kör, tillbaka vid Bygg
 let dpr = 1;
 let version = '';             // appens version (service workerns cache), visas litet
 let laddaOmSen = false;       // ny version finns: ladda om när det passar
@@ -786,10 +787,13 @@ function byggLage(bygge) {
     };
 }
 
+// Inzoomad hoppar keIWs över bygget (virveln skulle flyga ur bild) och
+// kameran följer honom över bron.
 function kor() {
     doljRuta();
     sim = nySim(ritning, bana);
-    sim.bygge = nyttBygge();
+    byggVy = { zoom, mitt };
+    if (zoom === 1) sim.bygge = nyttBygge();
     lageNu = 'prov';
     uppdateraInfo();
 }
@@ -808,6 +812,11 @@ function bygg() {
     doljRuta();
     sim = null;
     lageNu = 'bygg';
+    if (byggVy) {
+        ({ zoom, mitt } = byggVy);
+        byggVy = null;
+        sattKamera();
+    }
     uppdateraInfo();
     laddaOmOmLugnt();
 }
@@ -1190,6 +1199,14 @@ duk.addEventListener('wheel', e => {
 
 // ---------- Spelloopen ----------
 
+// Inzoomad följer kameran keIWs mjukt (utom medan man håller i vyn).
+function foljKeiws(dt) {
+    const k = sim.keiws, [cx, cy] = mitt || vynsMitt();
+    const f = Math.min(1, dt * 4);
+    mitt = [cx + (k.x - cx) * f, cy + (k.y + keiwsHojd(bana) / 2 - cy) * f];
+    sattKamera();
+}
+
 let forra = performance.now(), ackumulerat = 0;
 
 function loop(nu) {
@@ -1205,6 +1222,7 @@ function loop(nu) {
         while (ackumulerat >= DT && n < MAX_STEG) { simSteg(sim); ackumulerat -= DT; n++; }
         if (n === MAX_STEG) ackumulerat = 0;
         if (sim.resultat && !sim.visad && sim.t - sim.slutTid > 1.2) { sim.visad = true; visaResultat(); }
+        if (zoom > 1 && !pekare.size) foljKeiws(dt);
         if (Math.round(nu / 250) !== Math.round((nu - dt * 1000) / 250)) uppdateraInfo();
     } else {
         ackumulerat = 0;
@@ -1274,6 +1292,7 @@ if (TEST) {
         get lage() { return lageNu; },
         get kam() { return kam; },
         get zoom() { return zoom; },
+        get mitt() { return mitt; },
         get vald() { return vald; },
         get ritMaterial() { return ritMaterial; },
         get verktyg() { return verktyg; },

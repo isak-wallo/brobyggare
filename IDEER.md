@@ -288,6 +288,11 @@ på Ån håller en rak väg av HEA 180 (22 820 $$) mot träfackverkets 21 110 $$
 Stål = enkla raka broar, trä = billiga fackverk. Knäckning bara kring
 den styva axeln (2D).
 
+Kör inzoomad (v15-test): keIWs hoppar över bygget (virveln flög ur bild)
+och kameran följer honom mjukt över bron. Håller man i vyn följer den inte
+just då. Bygg ger tillbaka vyn man hade när man tryckte Kör. Utan zoom är
+allt som förut, med virveln.
+
 Att fundera på efter utkastet:
 - Fästpunkterna låser både x och y, så en balk mellan två fästen hänger
   delvis i drag som en lina och håller mer än en fritt upplagd balk.
