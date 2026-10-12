@@ -35,6 +35,7 @@ const ctx = duk.getContext('2d');
 const scen = document.getElementById('scen');
 const infoEl = document.getElementById('info');
 const rutaEl = document.getElementById('ruta');
+const valjareEl = document.getElementById('valjare');
 const menyEl = document.getElementById('meny');
 const versionEl = document.getElementById('version');
 const knappar = Object.fromEntries([...document.querySelectorAll('#verktyg button')].map(b => [b.dataset.v, b]));
@@ -43,13 +44,14 @@ let banaNr = lasBanaNr();
 let bana = BANOR[banaNr];
 let ritning = lasRitning();
 let historik = [];
-let verktyg = 'vag';
-let ritverktyg = 'vag';       // senaste av Väg/Balk, dit Flytta och Riv går tillbaka
+let verktyg = 'rita';         // 'rita' (nya balkar) eller 'andra' (flytta, byta, riva)
+let ritVag = true;            // ritar väg (som keIWs går på) eller balk
+let valjareOppen = false;     // väljaren för väg/balk och storlek (verktyget Rita)
 let storlek = 2;              // Mellan
 let lageNu = 'bygg';
 let sim = null;
 let drag = null;              // {fran: [x, y], till: [x, y]} medan man drar
-let vald = -1;                // vald balk (verktyget Flytta)
+let vald = -1;                // vald balk (verktyget Ändra)
 let flytt = null;             // {balk, ande} eller {nod}, och {till: [x, y]}
 let kam = { sk: 30, ox: 0, oy: 0 };
 let bas = null;               // kameran utan zoom: {sk, cx, cy, B} (B = det som syns)
@@ -163,7 +165,7 @@ function laggTillBalk(p, q) {
         };
         const a = idx(p), b = idx(q);
         const fanns = ritning.balkar.findIndex(k => (k.a === a && k.b === b) || (k.a === b && k.b === a));
-        const balk = { a, b, storlek, vag: verktyg === 'vag', material: 'limtra' };
+        const balk = { a, b, storlek, vag: ritVag, material: 'limtra' };
         if (fanns >= 0) ritning.balkar[fanns] = balk;
         else ritning.balkar.push(balk);
     });
@@ -428,7 +430,7 @@ function ritaBygg() {
         const [x1, y1] = drag.fran, [x2, y2] = drag.till;
         const ok = Math.hypot(x2 - x1, y2 - y1) <= MAX_LANGD + 1e-6;
         ctx.globalAlpha = 0.6;
-        ritaBit(x1, y1, x2, y2, PROFILER.limtra[storlek], verktyg === 'vag', ok ? FARG.tra : FARG.fel, ok ? FARG.traMork : FARG.fel);
+        ritaBit(x1, y1, x2, y2, PROFILER.limtra[storlek], ritVag, ok ? FARG.tra : FARG.fel, ok ? FARG.traMork : FARG.fel);
         ctx.globalAlpha = 1;
         if (!ok) {
             ctx.fillStyle = FARG.fel;
@@ -439,7 +441,7 @@ function ritaBygg() {
     }
 }
 
-// Verktyget Flytta: den valda balken lyses upp och får handtag i ändarna.
+// Verktyget Ändra: den valda balken lyses upp och får handtag i ändarna.
 // Medan man drar visas var balkarna hamnar.
 function ritaVald() {
     const linje = (p, q) => {
@@ -600,9 +602,11 @@ function ritaProv() {
 
 const FIG = FIGUR_DATA.keiws;
 
-// keIWs ritas lika stor på skärmen hur man än zoomar: hans höjd i meter
-// i bilden (fysiken bryr sig inte om storleken).
-const keiwsBild = () => keiwsHojd(bana) / zoom;
+// keIWs ritas lika stor på skärmen hur man än zoomar, och lite större än
+// banans keiws-höjd: hans höjd i meter i bilden (fysiken bryr sig inte om
+// storleken).
+const KEIWS_BILD = 1.25;
+const keiwsBild = () => KEIWS_BILD * keiwsHojd(bana) / zoom;
 
 // Rektanglar [x0, y0, x1, y1, färg, del] med fötternas mitt i (x, y).
 function ritaFigur(rekt, x, y, lyft) {
@@ -668,9 +672,8 @@ function ritaPlask() {
 const TIPS = {
     vag: 'Dra mellan två punkter: väg som keIWs går på. Tryck på en knutpunkt: styv/ledad.',
     balk: 'Dra mellan två punkter: balk. Tryck på en knutpunkt: styv/ledad.',
-    flytta: 'Tryck på en balk och dra i dess ändar, eller dra en knutpunkt.',
-    flyttaVald: 'Dra en ände dit den ska. Storleksknappen byter storlek på balken.',
-    riv: 'Tryck på en balk för att riva den.'
+    andra: 'Tryck på en balk för att ändra eller riva den, eller dra en knutpunkt.',
+    andraVald: 'Dra i en ände, eller byt storlek eller riv i rutan.'
 };
 
 // Infotexten: bana, kostnad och en tredje rad (tips medan man bygger,
@@ -686,21 +689,38 @@ function uppdateraInfo() {
         tredje = sim.brott ? '<span class="over">Bron gick sönder</span>'
             : 'Högsta utnyttjande ' + Math.round(sim.maxU * 100) + ' %';
     } else {
-        tredje = TIPS[verktyg === 'flytta' && vald >= 0 ? 'flyttaVald' : verktyg];
+        tredje = TIPS[verktyg === 'andra' ? (vald >= 0 ? 'andraVald' : 'andra') : ritVag ? 'vag' : 'balk'];
     }
     infoEl.innerHTML = '<div class="rad">' + pil('forra', '‹', !bygger || banaNr === 0)
         + '<b>Bana ' + (banaNr + 1) + ' · ' + bana.namn + '</b>'
         + pil('nasta', '›', !bygger || banaNr === BANOR.length - 1) + '</div>'
         + '<div class="rad"><span class="' + (over ? 'over' : '') + '">' + kr(k) + '</span> av ' + kr(bana.budget) + '</div>'
         + '<div class="rad tredje' + (bygger ? ' tips' : '') + '">' + tredje + '</div>';
-    for (const v of ['vag', 'balk', 'flytta', 'riv']) knappar[v].classList.toggle('vald', verktyg === v);
-    const valdBalk = verktyg === 'flytta' && vald >= 0 ? ritning.balkar[vald] : null;
-    knappar.storlek.textContent = STORLEKAR[valdBalk ? valdBalk.storlek : storlek];
+    for (const v of ['rita', 'andra']) knappar[v].classList.toggle('vald', verktyg === v);
+    knappar.rita.innerHTML = '<span>' + (ritVag ? 'Väg' : 'Balk') + '</span><small>' + STORLEKAR[storlek] + ' ▴</small>';
     knappar.kor.textContent = lageNu === 'bygg' ? 'Kör' : 'Bygg';
     knappar.kor.classList.toggle('stopp', lageNu !== 'bygg');
-    for (const v of ['vag', 'balk', 'flytta', 'riv', 'storlek', 'angra']) knappar[v].disabled = lageNu !== 'bygg';
+    for (const v of ['rita', 'andra']) knappar[v].disabled = lageNu !== 'bygg';
     knappar.angra.disabled = lageNu !== 'bygg' || !historik.length;
+    visaValjare();
     if (infoLuft() !== luftNu) anpassa();
+}
+
+// Väljaren ovanför verktygen: väg eller balk och storlek (med pris per
+// meter). Med verktyget Rita gäller den det man ritar, med Ändra den valda
+// balken (och då går den att riva).
+function visaValjare() {
+    const valdBalk = verktyg === 'andra' && vald >= 0 ? ritning.balkar[vald] : null;
+    const synlig = lageNu === 'bygg' && (valdBalk || (verktyg === 'rita' && valjareOppen));
+    valjareEl.classList.toggle('dold', !synlig);
+    if (!synlig) return;
+    const vag = valdBalk ? valdBalk.vag : ritVag, st = valdBalk ? valdBalk.storlek : storlek;
+    const knapp = (data, text, vald) => '<button ' + data + (vald ? ' class="vald"' : '') + '>' + text + '</button>';
+    const html = '<div class="typ">' + knapp('data-t="vag"', 'Väg', vag) + knapp('data-t="balk"', 'Balk', !vag)
+        + (valdBalk ? '<button data-t="riv" class="riv">Riv</button>' : '') + '</div>'
+        + '<div class="storlekar">' + STORLEKAR.map((namn, i) => knapp('data-s="' + i + '"', '<b>' + namn + '</b><small>'
+            + kr(PROFILER.limtra[i].pris + (vag ? VAG.pris : 0)) + '/m</small>', i === st)).join('') + '</div>';
+    if (valjareEl.innerHTML !== html) valjareEl.innerHTML = html;
 }
 
 function visaRuta(rubrik, text, knapptext) {
@@ -917,20 +937,37 @@ document.getElementById('verktyg').addEventListener('click', e => {
     const b = e.target.closest('button');
     if (!b || b.disabled) return;
     const v = b.dataset.v;
-    if (v === 'vag' || v === 'balk') { verktyg = ritverktyg = v; vald = -1; }
-    else if (v === 'flytta' || v === 'riv') {
-        // Ett tryck till på samma knapp väljer bort den (tillbaka till Väg/Balk).
-        verktyg = verktyg === v ? ritverktyg : v;
+    if (v === 'rita') {
+        // Rita: ett tryck öppnar (eller stänger) väljaren för väg/balk och storlek.
+        valjareOppen = verktyg === 'rita' ? !valjareOppen : true;
+        verktyg = 'rita';
         vald = -1;
     }
-    else if (v === 'storlek') {
-        // Med en vald balk (Flytta) byter knappen storlek på den.
-        const b = verktyg === 'flytta' && vald >= 0 ? ritning.balkar[vald] : null;
-        if (b) andra(() => { b.storlek = (b.storlek + 1) % STORLEKAR.length; });
-        else storlek = (storlek + 1) % STORLEKAR.length;
+    else if (v === 'andra') {
+        // Ändra: ett tryck till går tillbaka till Rita.
+        verktyg = verktyg === 'andra' ? 'rita' : 'andra';
+        vald = -1;
+        valjareOppen = false;
     }
     else if (v === 'angra' && historik.length) { ritning = JSON.parse(historik.pop()); vald = -1; sparaRitning(); }
     else if (v === 'kor') { if (lageNu === 'bygg') kor(); else bygg(); }
+    uppdateraInfo();
+});
+
+valjareEl.addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if (!b || lageNu !== 'bygg') return;
+    const valdBalk = verktyg === 'andra' && vald >= 0 ? ritning.balkar[vald] : null;
+    if (b.dataset.t === 'riv' && valdBalk) rivBalk(vald);
+    else if (b.dataset.t) {
+        const vag = b.dataset.t === 'vag';
+        if (valdBalk) { if (valdBalk.vag !== vag) andra(() => { valdBalk.vag = vag; }); }
+        else ritVag = vag;
+    } else if (b.dataset.s !== undefined) {
+        const s = +b.dataset.s;
+        if (valdBalk) { if (valdBalk.storlek !== s) andra(() => { valdBalk.storlek = s; }); }
+        else { storlek = s; valjareOppen = false; }      // valt klart: tillbaka till ritandet
+    }
     uppdateraInfo();
 });
 
@@ -1006,12 +1043,8 @@ duk.addEventListener('pointerdown', e => {
         panorera = { p: iDuken(e), mitt: vynsMitt() };
         return;
     }
-    if (verktyg === 'riv') {
-        const i = narmasteBalk(wx, wy, Math.max(0.4, 16 / kam.sk));
-        if (i >= 0) rivBalk(i);
-        return;
-    }
-    if (verktyg === 'flytta') {
+    if (valjareOppen) { valjareOppen = false; uppdateraInfo(); }
+    if (verktyg === 'andra') {
         // Först handtagen på den valda balken, sedan knutpunkterna, annars
         // väljs balken man tryckte på.
         const b = vald >= 0 ? ritning.balkar[vald] : null;
@@ -1180,6 +1213,7 @@ if (TEST) {
         get kam() { return kam; },
         get zoom() { return zoom; },
         get vald() { return vald; },
+        get verktyg() { return verktyg; },
         get banaNr() { return banaNr; },
         get bygger() { return !!(sim && sim.bygge); },
         get version() { return version; },

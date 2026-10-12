@@ -154,6 +154,17 @@ html, body {
     cursor: pointer;
 }
 
+#verktyg button span,
+#verktyg button small {
+    display: block;
+}
+
+#verktyg button small {
+    font-size: 11px;
+    font-weight: 500;
+    opacity: 0.85;
+}
+
 #verktyg button.vald {
     background-color: #e8b062;
     color: #2f3f4c;
@@ -193,6 +204,87 @@ html, body {
 
     #verktyg button.kor {
         margin-top: auto;
+    }
+}
+
+/* Väljaren för väg/balk och storlek, nederst i spelytan (stående) eller
+   uppe till höger (liggande) */
+#valjare {
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    max-width: 460px;
+    margin: 0 auto;
+    padding: 8px;
+    border-radius: 14px;
+    background-color: rgba(47, 63, 76, 0.94);
+    box-shadow: 0 4px 16px rgba(47, 63, 76, 0.35);
+}
+
+#valjare.dold {
+    display: none;
+}
+
+#valjare .typ,
+#valjare .storlekar {
+    display: grid;
+    gap: 4px;
+}
+
+#valjare .typ {
+    grid-template-columns: 1fr 1fr auto;
+    margin-bottom: 6px;
+}
+
+#valjare .storlekar {
+    grid-template-columns: repeat(5, 1fr);
+}
+
+#valjare button {
+    min-width: 0;
+    min-height: 40px;
+    padding: 4px 2px;
+    border: none;
+    border-radius: 10px;
+    background-color: #4a5d6c;
+    color: #f2f4f5;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+#valjare button b,
+#valjare button small {
+    display: block;
+}
+
+#valjare button small {
+    font-size: 10px;
+    font-weight: 500;
+    opacity: 0.85;
+    white-space: nowrap;
+}
+
+#valjare button.vald {
+    background-color: #e8b062;
+    color: #2f3f4c;
+}
+
+#valjare button.riv {
+    padding: 0 16px;
+    background-color: #b5523f;
+}
+
+/* Liggande: uppe till höger under menyknappen, där det mest är himmel */
+@media (orientation: landscape) {
+    #valjare {
+        left: auto;
+        right: 10px;
+        bottom: auto;
+        top: calc(max(8px, env(safe-area-inset-top)) + 40px);
+        width: min(400px, calc(100% - 20px));
     }
 }
 

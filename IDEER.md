@@ -260,6 +260,14 @@ Med det håller på Bäcken t.ex. väg av Stor (11 420 $$), fackverk av Liten
 Inzoomad flyttar ett finger vyn om man drar utanför rutnätet. keIWs (och
 virveln) ritas lika stor på skärmen oavsett zoom.
 
+Sedan: keIWs 25 % större i bild. Verktygsraden har bara fyra knappar:
+**Rita** (visar t.ex. "Väg · Mellan"; ett tryck öppnar väljaren med
+väg/balk och de fem storlekarna med pris per meter), **Ändra** (ersätter
+Flytta och Riv: tryck på en balk, dra i ändarna eller knutpunkterna, och
+väljaren byter storlek/väg-balk eller river den), **Ångra** och **Kör**.
+Väljaren ligger nederst i spelytan när mobilen står och uppe till höger när
+den ligger. Material (stål, kablar) kan läggas till i samma väljare.
+
 Att fundera på efter utkastet:
 - Fästpunkterna låser både x och y, så en balk mellan två fästen hänger
   delvis i drag som en lina och håller mer än en fritt upplagd balk.

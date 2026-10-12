@@ -12,7 +12,8 @@ läsa), stående och liggande. Kontrollerar att:
   - man kan bygga en väg genom att dra mellan punkterna, trycka på en
     knutpunkt (styvt/ledat), riva en balk och ångra, men inte bygga för
     långa balkar,
-  - Flytta: välja en balk och dra ena änden (bara den balken flyttas),
+  - Rita: väljaren för väg/balk och storlek öppnas och stängs,
+  - Ändra: välja en balk (väljaren byter storlek och väg/balk, eller river) och dra ena änden (bara den balken flyttas),
     dra en knutpunkt (alla balkar följer med), byta storlek på vald balk,
   - inzoomad flyttar ett finger utanför rutnätet vyn,
   - zoom med mushjulet och nyp med två fingrar (punkten under fingrarna
@@ -88,6 +89,14 @@ def tryck(sida, punkt):
     sida.mouse.click(x, y)
 
 
+def valj(sida, typ, storlek):
+    """Verktyget Rita med väg/balk och storlek (0–4), via väljaren."""
+    if not (sida.evaluate('() => window.bro.verktyg') == 'rita' and sida.locator('#valjare').is_visible()):
+        sida.click('#verktyg [data-v=rita]')
+    sida.click(f'#valjare [data-t={typ}]')
+    sida.click(f'#valjare [data-s="{storlek}"]')
+
+
 def antal_balkar(sida):
     return sida.evaluate('() => window.bro.ritning.balkar.length')
 
@@ -125,31 +134,42 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
           x0 >= duk['x'] - 1 and x1 <= duk['x'] + duk['width'] + 1
           and y0 >= duk['y'] - 1 and y1 <= duk['y'] + duk['height'] + 1)
 
-    # Bygg en väg i två delar (Stor) genom att dra med musen.
-    sida.click('#verktyg [data-v=vag]')
-    kolla(f'{namn}: fem storlekar, Mellan från början', sida.inner_text('#verktyg [data-v=storlek]') == 'Mellan'
-          and sida.evaluate('() => STORLEKAR.length') == 5)
-    sida.click('#verktyg [data-v=storlek]')
+    # Rita börjar med väg av Mellan. Väljaren har fem storlekar och stängs
+    # när man valt. Bygg en väg i två delar (Stor) genom att dra med musen.
+    text = sida.inner_text('#verktyg [data-v=rita]')
+    kolla(f'{namn}: Rita börjar med väg, Mellan', text.startswith('Väg') and 'Mellan' in text, text.replace('\n', ' '))
+    sida.click('#verktyg [data-v=rita]')
+    kolla(f'{namn}: väljaren öppnas med fem storlekar', sida.locator('#valjare').is_visible()
+          and sida.locator('#valjare [data-s]').count() == 5)
+    bild(sida, bilder, f'{namn}-0-valjare')
+    sida.click('#valjare [data-s="3"]')
+    kolla(f'{namn}: väljaren stängs när man valt storlek', not sida.locator('#valjare').is_visible()
+          and 'Stor' in sida.inner_text('#verktyg [data-v=rita]'))
     dra(sida, (0, 0), (6, 0))
     dra(sida, (6, 0), (12, 0))
     r = sida.evaluate('() => window.bro.ritning')
     kolla(f'{namn}: två vägbalkar byggda', len(r['balkar']) == 2 and all(b['vag'] for b in r['balkar']),
           f"{len(r['balkar'])} balkar")
-    sida.click('#verktyg [data-v=balk]')
+    valj(sida, 'balk', 3)
     dra(sida, (6, 0), (6, 4))
     tryck(sida, (6, 0))
     mitt = next(n for n in sida.evaluate('() => window.bro.ritning.noder') if n['x'] == 6 and n['y'] == 0)
     kolla(f'{namn}: tryck på knutpunkten gör den ledad', not mitt['styv'])
     tryck(sida, (6, 0))
-    sida.click('#verktyg [data-v=riv]')
+    sida.click('#verktyg [data-v=andra]')
     tryck(sida, (6, 2))
+    kolla(f'{namn}: Ändra väljer balken och visar väljaren med Riv', sida.evaluate('() => window.bro.vald') == 2
+          and sida.locator('#valjare [data-t=riv]').is_visible())
+    bild(sida, bilder, f'{namn}-0-andra')
+    sida.click('#valjare [data-t=riv]')
     r = sida.evaluate('() => window.bro.ritning')
     kolla(f'{namn}: riv tar bort balken (och den lösa knutpunkten)',
           len(r['balkar']) == 2 and not any(n['y'] == 4 for n in r['noder']))
     sida.click('#verktyg [data-v=angra]')
     kolla(f'{namn}: ångra tar tillbaka den', antal_balkar(sida) == 3)
     tryck(sida, (6, 2))
-    sida.click('#verktyg [data-v=vag]')
+    sida.click('#valjare [data-t=riv]')
+    valj(sida, 'vag', 3)
     dra(sida, (0, 0), (11, -5))                   # 12,1 m
     kolla(f'{namn}: för lång balk går inte', antal_balkar(sida) == 2)
     if bredd < hojd:
@@ -166,12 +186,12 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     v = sida.evaluate("() => document.getElementById('version').textContent")
     kolla(f'{namn}: versionen syns', bool(__import__('re').fullmatch(r'v\d+-test', v)), v)
 
-    # Flytta: en snedbalk som hamnade fel flyttas i ena änden.
-    sida.click('#verktyg [data-v=balk]')
+    # Ändra: en snedbalk som hamnade fel flyttas i ena änden.
+    valj(sida, 'balk', 3)
     dra(sida, (6, 0), (3, -3))
-    sida.click('#verktyg [data-v=flytta]')
+    sida.click('#verktyg [data-v=andra]')
     tryck(sida, (4.5, -1.5))
-    kolla(f'{namn}: Flytta väljer balken man trycker på', sida.evaluate('() => window.bro.vald') == 2)
+    kolla(f'{namn}: Ändra väljer balken man trycker på', sida.evaluate('() => window.bro.vald') == 2)
     hojder.append(info_h())
     dra(sida, (3, -3), (4, -3))
     r = sida.evaluate('() => window.bro.ritning')
@@ -180,10 +200,13 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     kolla(f'{namn}: änden flyttas, den gamla punkten försvinner',
           andar == [(4, -3), (6, 0)] and not any(n['x'] == 3 and n['y'] == -3 for n in r['noder']), str(andar))
     tryck(sida, (3, 0))                           # välj vägen till vänster
-    sida.click('#verktyg [data-v=storlek]')
-    kolla(f'{namn}: storleksknappen byter storlek på vald balk',
+    sida.click('#valjare [data-s="4"]')
+    kolla(f'{namn}: väljaren byter storlek på vald balk',
           sida.evaluate('() => window.bro.ritning.balkar[0].storlek') == 4
           and sida.evaluate('() => window.bro.ritning.balkar[1].storlek') == 3)
+    sida.click('#valjare [data-t=balk]')
+    kolla(f'{namn}: och gör väg till balk', not sida.evaluate('() => window.bro.ritning.balkar[0].vag'))
+    sida.click('#verktyg [data-v=angra]')
     sida.click('#verktyg [data-v=angra]')
     tryck(sida, (3, 3))                           # tomt: ingen vald
     dra(sida, (6, 0), (6, 1))                     # knutpunkten med alla balkar
@@ -192,14 +215,13 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     kolla(f'{namn}: knutpunkten flyttas med alla tre balkarna',
           sum(1 for b in r['balkar'] if i in (b['a'], b['b'])) == 3)
     sida.click('#verktyg [data-v=angra]')
-    sida.click('#verktyg [data-v=riv]')
     tryck(sida, (5, -1.5))
-    kolla(f'{namn}: tillbaka till två vägbalkar', antal_balkar(sida) == 2)
-    sida.click('#verktyg [data-v=riv]')
-    sida.click('#verktyg [data-v=flytta]')
-    sida.click('#verktyg [data-v=flytta]')
-    kolla(f'{namn}: ett tryck till på Flytta väljer bort den (tillbaka till Balk)',
-          sida.evaluate("() => document.querySelector('#verktyg [data-v=balk]').classList.contains('vald')"))
+    sida.click('#valjare [data-t=riv]')
+    kolla(f'{namn}: tillbaka till två vägbalkar', antal_balkar(sida) == 2
+          and all(b['vag'] and b['storlek'] == 3 for b in sida.evaluate('() => window.bro.ritning.balkar')))
+    sida.click('#verktyg [data-v=andra]')
+    kolla(f'{namn}: ett tryck till på Ändra går tillbaka till Rita',
+          sida.evaluate('() => window.bro.verktyg') == 'rita' and not sida.locator('#valjare').is_visible())
 
     # Inzoomad: ett finger utanför rutnätet flyttar vyn, bygger inget.
     sida.mouse.move(*skarm(sida, (0, 0)))
@@ -245,7 +267,7 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     bild(sida, bilder, f'{namn}-0-zoom')
     sida.mouse.wheel(0, 3000)
     sida.wait_for_timeout(100)
-    sida.click('#verktyg [data-v=vag]')
+    valj(sida, 'vag', 3)
     bild(sida, bilder, f'{namn}-1-bygg')
 
     sida.click('#verktyg [data-v=kor]')
@@ -334,7 +356,7 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     kolla(f'{namn}: hela bana 2 syns, under infotexten',
           x0 >= duk['x'] - 1 and x1 <= duk['x'] + duk['width'] + 1
           and y0 >= info['y'] + info['height'] - 1 and y1 <= duk['y'] + duk['height'] + 1)
-    sida.click('#verktyg [data-v=vag]')
+    valj(sida, 'vag', 3)
     dra(sida, (0, 0), (12, 0))
     kolla(f'{namn}: en 12 m balk går att bygga', antal_balkar(sida) == 1)
     sida.evaluate('() => { window.bro.ritning = window.bro.losningsRitning(); }')
