@@ -20,6 +20,9 @@ const BYGG_HEM = 0.35;       // s, tillbaka till startplatsen efteråt
 const POFF_TID = 0.35;       // s, dammet när virveln blir keIWs igen
 const SPARA = 'brobyggare-ritning-';   // + banans nummer
 const SPARA_BANA = 'brobyggare-bana';
+const SPARA_BASTA = 'brobyggare-basta-';  // + banans nummer: billigaste bron som höll
+const SPARA_HISTORIK = 'brobyggare-historik';  // ångra-listan över en omladdning
+const UPPDATERA_VAR = 10 * 60 * 1000;     // ms, leta efter en ny version
 
 const FARG = {
     himmel: ['#9fcbe0', '#d8ecf2'], berg: '#8b7a66', bergMork: '#6f604f', gras: '#7cae5c',
@@ -32,6 +35,8 @@ const ctx = duk.getContext('2d');
 const scen = document.getElementById('scen');
 const infoEl = document.getElementById('info');
 const rutaEl = document.getElementById('ruta');
+const menyEl = document.getElementById('meny');
+const versionEl = document.getElementById('version');
 const knappar = Object.fromEntries([...document.querySelectorAll('#verktyg button')].map(b => [b.dataset.v, b]));
 
 let banaNr = lasBanaNr();
@@ -50,6 +55,8 @@ let kam = { sk: 30, ox: 0, oy: 0 };
 let bas = null;               // kameran utan zoom: {sk, cx, cy, B} (B = det som syns)
 let zoom = 1, mitt = null;    // användarens zoom och vyns mitt [x, y] i meter
 let dpr = 1;
+let version = '';             // appens version (service workerns cache), visas litet
+let laddaOmSen = false;       // ny version finns: ladda om när det passar
 
 // ---------- Ritningen (det man bygger) ----------
 
@@ -73,6 +80,20 @@ function sparaRitning() {
     try { localStorage.setItem(SPARA + banaNr, JSON.stringify(ritning)); } catch (e) { /* privat läge */ }
 }
 
+// Billigaste bron som höll på en bana: {kostnad, maxU, ritning}.
+function lasBasta(nr) {
+    try { return JSON.parse(localStorage.getItem(SPARA_BASTA + nr)); } catch (e) { return null; }
+}
+
+function sparaBasta(k, maxU) {
+    const b = lasBasta(banaNr);
+    if (b && b.kostnad <= k) return false;
+    try {
+        localStorage.setItem(SPARA_BASTA + banaNr, JSON.stringify({ kostnad: k, maxU, ritning }));
+    } catch (e) { /* privat läge */ }
+    return true;
+}
+
 function bytBana(nr) {
     if (lageNu !== 'bygg' || nr < 0 || nr >= BANOR.length) return;
     banaNr = nr;
@@ -86,6 +107,7 @@ function bytBana(nr) {
     try { localStorage.setItem(SPARA_BANA, nr); } catch (e) { /* privat läge */ }
     anpassa();
     uppdateraInfo();
+    laddaOmOmLugnt();
 }
 
 function andra(f) {
@@ -652,7 +674,7 @@ function uppdateraInfo() {
         + '<b>Bana ' + (banaNr + 1) + ' · ' + bana.namn + '</b>'
         + pil('nasta', '›', !bygger || banaNr === BANOR.length - 1) + '</div>'
         + '<div class="rad"><span class="' + (over ? 'over' : '') + '">' + kr(k) + '</span> av ' + kr(bana.budget) + '</div>'
-        + '<div class="rad' + (bygger ? ' tips' : '') + '">' + tredje + '</div>';
+        + '<div class="rad tredje' + (bygger ? ' tips' : '') + '">' + tredje + '</div>';
     for (const v of ['vag', 'balk', 'flytta', 'riv']) knappar[v].classList.toggle('vald', verktyg === v);
     const valdBalk = verktyg === 'flytta' && vald >= 0 ? ritning.balkar[vald] : null;
     knappar.storlek.textContent = STORLEKAR[valdBalk ? valdBalk.storlek : storlek];
@@ -735,13 +757,100 @@ function bygg() {
     sim = null;
     lageNu = 'bygg';
     uppdateraInfo();
+    laddaOmOmLugnt();
+}
+
+// ---------- Menyn ----------
+
+const FE_TEXT = `
+<p>Varje balk delas i små balkelement (ca 0,75 m) enligt Euler–Bernoullis
+balkteori: de tar drag, tryck, böjning och tvärkraft. Elementen är
+korotationella, så bron får röra sig och vrida sig mycket (till exempel när
+den rasar), medan själva träet töjs lite och är linjärt elastiskt. Därför
+kommer även linverkan med: en balk mellan två fästen bär delvis i drag.</p>
+<p><b>Förband:</b> styvt = balkarna delar vridningen i knutpunkten och
+moment förs över. Ledat = varje balkände vrider sig fritt. Fästpunkterna i
+berget låser både x och y.</p>
+<p><b>Tiden</b> stegas fram 120 gånger per sekund (Newmark) med
+Newton–Raphson i varje steg. Massan (balkar, vägbana 200 kg/m, förband)
+samlas i knutpunkterna, med lite dämpning. Tyngden läggs på under 1 s, sedan
+går keIWs (80 kg) över som en rörlig last.</p>
+<p><b>Brott:</b> ett element går sönder när N/(A·f) + M/(W·f<sub>m</sub>)
+eller skjuvningen 1,5·V/(A·f<sub>v</sub>) går över 100 %. En tryckt balk
+knäcks vid Euler-lasten π²·E<sub>05</sub>·I/L².</p>
+<p><b>Limträ GL30c:</b> E 13 000 MPa, f<sub>m</sub> 30, f<sub>t</sub> 19,5,
+f<sub>c</sub> 24,5, f<sub>v</sub> 3,5 MPa.</p>
+<p><b>Förenklingar:</b> ingen skjuvdeformation (Timoshenko), ingen vippning
+eller knäckning ut ur planet, inga partialkoefficienter eller
+lastkombinationer som i Eurokod.</p>`;
+
+function visaMeny() {
+    const b = lasBasta(banaNr);
+    const basta = b
+        ? '<p>Billigaste bron som höll: <b>' + kr(b.kostnad) + '</b>'
+            + (b.kostnad > bana.budget ? ' (över budget)' : '')
+            + ', högsta utnyttjande ' + Math.round(b.maxU * 100) + ' %.</p>'
+            + '<button data-v="hamta"' + (lageNu === 'bygg' ? '' : ' disabled') + '>Hämta den ritningen</button>'
+        : '<p>Ingen bro har hållit här än.</p>';
+    menyEl.firstChild.innerHTML = '<button class="stang" data-v="stang">✕</button>'
+        + '<h2>Brobyggare</h2>'
+        + '<h3>Bana ' + (banaNr + 1) + ' · ' + bana.namn + '</h3>' + basta
+        + '<details><summary>Hur räknas bron?</summary>' + FE_TEXT + '</details>'
+        + '<p class="liten">Version ' + (version || 'okänd') + '</p>';
+    menyEl.classList.remove('dold');
+}
+
+const menyOppen = () => !menyEl.classList.contains('dold');
+
+function stangMeny() {
+    menyEl.classList.add('dold');
+    laddaOmOmLugnt();
+}
+
+document.getElementById('menyknapp').addEventListener('click', () => {
+    if (menyOppen()) stangMeny(); else visaMeny();
+});
+
+menyEl.addEventListener('click', e => {
+    if (e.target === menyEl) { stangMeny(); return; }   // utanför panelen
+    const b = e.target.closest('button');
+    if (!b || b.disabled) return;
+    if (b.dataset.v === 'hamta') {
+        const basta = lasBasta(banaNr);
+        if (basta && lageNu === 'bygg') {
+            andra(() => { ritning = JSON.parse(JSON.stringify(basta.ritning)); vald = -1; });
+        }
+    }
+    stangMeny();
+});
+
+// ---------- Ny version ----------
+
+// En ny version laddas in när det passar: man bygger, drar inget och har
+// inte menyn öppen. Ångra-listan sparas över omladdningen (ritningen är
+// redan sparad).
+function laddaOmOmLugnt() {
+    if (!laddaOmSen || lageNu !== 'bygg' || drag || flytt || menyOppen()) return;
+    try { sessionStorage.setItem(SPARA_HISTORIK, JSON.stringify({ bana: banaNr, historik })); } catch (e) { /* privat läge */ }
+    location.reload();
+}
+
+function lasHistorik() {
+    try {
+        const h = JSON.parse(sessionStorage.getItem(SPARA_HISTORIK));
+        sessionStorage.removeItem(SPARA_HISTORIK);
+        if (h && h.bana === banaNr && Array.isArray(h.historik)) historik = h.historik;
+    } catch (e) { /* ingen sparad */ }
 }
 
 function visaResultat() {
     const k = kostnad(), under = k <= bana.budget;
     if (sim.resultat === 'klarade') {
+        const basta = sparaBasta(k, sim.maxU);
         visaRuta('Bron höll!', 'keIWs kom över. Kostnad ' + kr(k) + (under ? ', under budget.' : ', över budget.')
-            + '<br>Högsta utnyttjande ' + Math.round(sim.maxU * 100) + ' %.', [['bygg', 'Bygg vidare'], ['kor', 'Kör igen']]);
+            + '<br>Högsta utnyttjande ' + Math.round(sim.maxU * 100) + ' %.'
+            + (basta ? '<br><b>Din billigaste bro hittills på den här banan!</b>' : ''),
+            [['bygg', 'Bygg vidare'], ['kor', 'Kör igen']]);
     } else {
         visaRuta('Plask!', sim.brott ? 'Bron gick sönder och keIWs ramlade i vattnet.' : 'keIWs ramlade i vattnet.',
             [['bygg', 'Bygg om'], ['kor', 'Kör igen']]);
@@ -953,12 +1062,50 @@ function loop(nu) {
 }
 
 new ResizeObserver(anpassa).observe(scen);
+lasHistorik();
 anpassa();
 uppdateraInfo();
 requestAnimationFrame(loop);
 
+// Versionen = namnet på service workerns cache (brobyggare-v6-test -> v6-test).
+// Gamla cacher tas bort när en ny version tar över, så den högsta körs.
+// Utan cache (första besöket, testerna) läses den ur sw.js.
+function visaVersion(v) {
+    version = v;
+    versionEl.textContent = v;
+}
+(async () => {
+    try {
+        const namn = 'caches' in window ? await caches.keys() : [];
+        const v = namn.map(n => /^brobyggare-v(\d+)(-test)?$/.exec(n)).filter(Boolean).sort((a, b) => b[1] - a[1])[0];
+        if (v) { visaVersion('v' + v[1] + (v[2] || '')); return; }
+        const m = /VERSION = '([^']+)'/.exec(await (await fetch('sw.js')).text());
+        if (m) visaVersion(m[1]);
+    } catch (e) { /* ingen version att visa */ }
+})();
+
+// Service worker: webbläsaren letar själv efter en ny version bara när
+// sidan öppnas, så spelet letar också när man kommer tillbaka till det och
+// var tionde minut medan det är öppet. Den nya versionen laddas in direkt om
+// det passar, annars vid nästa byte av bana eller tillbaka från provkörningen.
 if ('serviceWorker' in navigator && !TEST) {
-    navigator.serviceWorker.register('sw.js').catch(() => {});
+    navigator.serviceWorker.register('sw.js').then(reg => {
+        const leta = () => reg.update().catch(() => {});
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') leta();
+        });
+        setInterval(leta, UPPDATERA_VAR);
+        reg.addEventListener('updatefound', () => {
+            const nw = reg.installing;
+            if (!nw) return;
+            nw.addEventListener('statechange', () => {
+                if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+                    laddaOmSen = true;
+                    laddaOmOmLugnt();
+                }
+            });
+        });
+    }).catch(() => {});
 }
 
 // Testerna kommer åt spelet här (bara med ?test).
@@ -973,6 +1120,9 @@ if (TEST) {
         get vald() { return vald; },
         get banaNr() { return banaNr; },
         get bygger() { return !!(sim && sim.bygge); },
+        get version() { return version; },
+        get historik() { return historik.length; },
+        nyVersion() { laddaOmSen = true; laddaOmOmLugnt(); },
         kostnad, kor, bygg, bytBana, byggKlart, losningsRitning: () => losningsRitning(bana)
     };
 }

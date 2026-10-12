@@ -226,6 +226,13 @@ bygger bron balk för balk från vänster (1–3 s, bara animering, balkarna
 får hänga i luften), sedan pyser han ihop till keIWs igen och går över.
 Ett tryck på skärmen hoppar över bygget.
 
+Sedan: Flytta och Riv väljs bort med ett tryck till. Infotexten har fast
+höjd (banan hoppar inte). Spelet letar efter ny version när man kommer
+tillbaka till det och var tionde minut, och laddar om när man bygger (ångra
+finns kvar). Versionen syns litet nere till vänster. Menyknapp uppe till
+höger: billigaste bron som höll på banan (kan hämtas) och en förklaring av
+beräkningen (FE-antagandena).
+
 Att fundera på efter utkastet:
 - Fästpunkterna låser både x och y, så en balk mellan två fästen hänger
   delvis i drag som en lina och håller mer än en fritt upplagd balk.

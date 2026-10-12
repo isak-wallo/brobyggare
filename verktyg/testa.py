@@ -18,6 +18,10 @@ läsa), stående och liggande. Kontrollerar att:
     står kvar, inget byggs), och att zoomen nollas vid byte av bana,
   - keIWs bygger bron först (virvelvind, 1–3 s) och ett tryck hoppar över
     bygget,
+  - infotexten har samma höjd hur lång texten än är (banan står still),
+  - versionen syns, menyn visar billigaste bron som höll (och kan hämta
+    den) och förklarar beräkningen,
+  - en ny version laddas in utan att ångra-listan försvinner,
   - provkörningar slutar med "Bron höll!" för broar som håller och
     "Plask!" för en som är för klen.
 
@@ -153,12 +157,18 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
               len(rader) == 3 and all(r['synlig'] for r in rader)
               and rader[0]['y'] < rader[1]['y'] < rader[2]['y'] and not any(r['kapad'] for r in rader[:2]))
 
+    info_h = lambda: sida.evaluate("() => document.getElementById('info').offsetHeight")
+    hojder = [info_h()]
+    v = sida.evaluate("() => document.getElementById('version').textContent")
+    kolla(f'{namn}: versionen syns', bool(__import__('re').fullmatch(r'v\d+-test', v)), v)
+
     # Flytta: en snedbalk som hamnade fel flyttas i ena änden.
     sida.click('#verktyg [data-v=balk]')
     dra(sida, (6, 0), (3, -3))
     sida.click('#verktyg [data-v=flytta]')
     tryck(sida, (4.5, -1.5))
     kolla(f'{namn}: Flytta väljer balken man trycker på', sida.evaluate('() => window.bro.vald') == 2)
+    hojder.append(info_h())
     dra(sida, (3, -3), (4, -3))
     r = sida.evaluate('() => window.bro.ritning')
     b = r['balkar'][2]
@@ -225,11 +235,14 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     kolla(f'{namn}: keIWs bygger först', sida.evaluate('() => window.bro.bygger'))
     sida.wait_for_timeout(450)
     bild(sida, bilder, f'{namn}-2-virvel')
+    hojder.append(info_h())
     sida.wait_for_function('() => !window.bro.bygger', timeout=6000)
     tid = time.time() - t0
     kolla(f'{namn}: bygget tar 1–3 s', 0.9 < tid < 3.6, f'{tid:.1f} s')
     sida.wait_for_timeout(2500)
     bild(sida, bilder, f'{namn}-2-prov')
+    hojder.append(info_h())
+    kolla(f'{namn}: infotexten har samma höjd hela tiden', len(set(hojder)) == 1, str(hojder))
     rubrik = vanta_resultat(sida)
     kolla(f'{namn}: vägen av mellanbalkar håller', rubrik == 'Bron höll!', rubrik)
     bild(sida, bilder, f'{namn}-3-holl')
@@ -257,9 +270,33 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     kolla(f'{namn}: en för klen bro rasar', vanta_resultat(sida) == 'Plask!')
     bild(sida, bilder, f'{namn}-7-plask')
 
+    # Menyn: billigaste bron som höll, hämta den, förklaringen och versionen.
+    sida.click('#ruta [data-v=bygg]')
+    sida.click('#menyknapp')
+    text = sida.locator('#meny').inner_text()
+    kolla(f'{namn}: menyn visar billigaste bron och förklaringen',
+          'Billigaste bron som höll' in text and 'Hur räknas bron?' in text and 'Version v' in text)
+    sida.click('#meny summary')
+    bild(sida, bilder, f'{namn}-7-meny')
+    sida.click('#meny [data-v=hamta]')
+    kolla(f'{namn}: hämta ger den bästa ritningen och stänger menyn',
+          antal_balkar(sida) > 1 and not sida.locator('#meny').is_visible())
+    sida.click('#menyknapp')
+    sida.mouse.click(5, sida.viewport_size['height'] - 120)   # utanför panelen
+    kolla(f'{namn}: ett tryck utanför stänger menyn', not sida.locator('#meny').is_visible())
+
+    # Ny version: sidan laddas om, ritningen och ångra-listan finns kvar.
+    n = antal_balkar(sida)
+    with sida.expect_navigation():
+        sida.evaluate('() => window.bro.nyVersion()')
+    sida.wait_for_function('() => window.bro')
+    kolla(f'{namn}: ny version laddas om med ritning och ångra kvar',
+          antal_balkar(sida) == n and sida.evaluate('() => window.bro.historik') > 0)
+    sida.click('#verktyg [data-v=angra]')
+    kolla(f'{namn}: ångra efter omladdningen', antal_balkar(sida) == 1)
+
     # Bana 2: dubbelt så långt spann. Pilen byter bana, ritningen sparas
     # per bana, och den sparade lösningen (fackverk) håller.
-    sida.click('#ruta [data-v=bygg]')
     sida.mouse.move(*skarm(sida, (6, 0)))
     sida.mouse.wheel(0, -400)
     sida.click('#info [data-v=nasta]')
