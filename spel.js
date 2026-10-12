@@ -20,7 +20,7 @@ const LUFT_TID = 0.15;       // s i luften innan det räknas som att falla
 const keiwsHojd = bana => bana.keiws || 2;
 const keiwsStart = bana => -1.25 * keiwsHojd(bana);
 const keiwsMal = bana => bana.spann + 1.25 * keiwsHojd(bana);
-const keiwsFart = bana => 1.44 * keiwsHojd(bana);     // m/s
+const keiwsFart = bana => 1.8 * keiwsHojd(bana);      // m/s
 
 function nySim(ritning, bana) {
     return {
