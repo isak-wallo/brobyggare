@@ -325,6 +325,11 @@ slutpunkten:
   att dra rätt (bara då, så att man kan bygga flera balkar från samma
   knutpunkt i följd).
 
+Resultatrutan (v18-test): rubriken är "Bron höll! keIWs kom över." (eller
+"Plask! keIWs ramlade i vattnet."), sedan kostnaden och under/över budget
+på en rad, utnyttjandet och ev. billigaste bron. Rutan flyttas upp ovanför
+keIWs om den annars skulle skymma honom när han jublar.
+
 Att fundera på efter utkastet:
 - Vägbanan väger 200 kg/m (plankor + beläggning), så att egenvikten är
   det som styr. keIWs väger lite i jämförelse – tyngre last senare?

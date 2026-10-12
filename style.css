@@ -469,8 +469,14 @@ html, body {
 }
 
 #ruta h1 {
-    margin: 0 0 6px;
-    font-size: 24px;
+    margin: 0 0 8px;
+    font-size: 22px;
+    line-height: 1.25;
+}
+
+#ruta .over {
+    color: #d0503c;
+    font-weight: 600;
 }
 
 #ruta p {

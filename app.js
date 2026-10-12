@@ -872,6 +872,7 @@ function bygg() {
         byggVy = null;
         sattKamera();
     }
+    rutaEl.style.top = '';
     uppdateraInfo();
     laddaOmOmLugnt();
 }
@@ -1047,14 +1048,29 @@ function visaResultat() {
     const k = kostnad(), under = k <= bana.budget;
     if (sim.resultat === 'klarade') {
         const basta = sparaBasta(k);
-        visaRuta('Bron höll!', 'keIWs kom över. Kostnad ' + kr(k) + (under ? ', under budget.' : ', över budget.')
-            + '<br>Högsta utnyttjande ' + Math.round(sim.maxU * 100) + ' %.'
+        visaRuta('Bron höll!<br>keIWs kom över.',
+            'Kostnad ' + kr(k) + ' – ' + (under ? 'under' : '<span class="over">över</span>') + ' budget'
+            + '<br>Högsta utnyttjande ' + Math.round(sim.maxU * 100) + ' %'
             + (basta ? '<br><b>Din billigaste bro hittills på den här banan!</b>' : ''),
             [['bygg', 'Bygg vidare'], ['kor', 'Kör igen']]);
     } else {
-        visaRuta('Plask!', sim.brott ? 'Bron gick sönder och keIWs ramlade i vattnet.' : 'keIWs ramlade i vattnet.',
+        visaRuta('Plask!<br>keIWs ramlade i vattnet.', sim.brott ? 'Bron gick sönder.' : 'Vägen räckte inte hela vägen över.',
             [['bygg', 'Bygg om'], ['kor', 'Kör igen']]);
     }
+    placeraRuta();
+}
+
+// Rutan ska inte skymma keIWs (som jublar på andra sidan): ligger han
+// under den flyttas den upp ovanför hans huvud, men inte upp i infotexten.
+function placeraRuta() {
+    rutaEl.style.top = '';
+    const k = sim && sim.keiws;
+    if (!k || k.lage === 'plask' || rutaEl.classList.contains('dold')) return;
+    const fig = keiwsBild() * kam.sk, huvud = sy(k.y) - fig * 1.35;     // med plats för hoppen
+    const b = rutaEl.getBoundingClientRect(), s = scen.getBoundingClientRect();
+    const vanster = b.left - s.left, hoger = b.right - s.left, nere = b.bottom - s.top;
+    if (sx(k.x) + fig / 2 < vanster || sx(k.x) - fig / 2 > hoger || nere < huvud) return;
+    rutaEl.style.top = Math.max(luftNu + 8, huvud - 10 - b.height) + b.height / 2 + 'px';
 }
 
 document.getElementById('verktyg').addEventListener('click', e => {
@@ -1375,6 +1391,7 @@ if (TEST) {
         get mitt() { return mitt; },
         get vald() { return vald; },
         get ratta() { return ratta; },
+        get keiwsPx() { return keiwsBild() * kam.sk; },
         get ritMaterial() { return ritMaterial; },
         get verktyg() { return verktyg; },
         get banaNr() { return banaNr; },

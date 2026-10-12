@@ -315,7 +315,14 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     hojder.append(info_h())
     kolla(f'{namn}: infotexten har samma höjd hela tiden', len(set(hojder)) == 1, str(hojder))
     rubrik = vanta_resultat(sida)
-    kolla(f'{namn}: vägen av stora balkar håller', rubrik == 'Bron höll!', rubrik)
+    kolla(f'{namn}: vägen av stora balkar håller', rubrik.startswith('Bron höll!'), rubrik)
+    k = sida.evaluate('() => window.bro.sim.keiws')
+    fx, fy = skarm(sida, (k['x'], k['y']))
+    fig = sida.evaluate('() => window.bro.keiwsPx')
+    rb = sida.locator('#ruta').bounding_box()
+    kolla(f'{namn}: rutan skymmer inte keIWs',
+          fx + fig / 2 < rb['x'] or fx - fig / 2 > rb['x'] + rb['width'] or rb['y'] + rb['height'] < fy - fig,
+          f"ruta {rb['y']:.0f}–{rb['y'] + rb['height']:.0f}, keIWs {fy - fig:.0f}–{fy:.0f}")
     bild(sida, bilder, f'{namn}-3-holl')
 
     # Den sparade lösningen (fackverk av små balkar).
@@ -329,7 +336,7 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     kolla(f'{namn}: ett tryck hoppar över bygget', not sida.evaluate('() => window.bro.bygger'))
     sida.wait_for_timeout(4000)
     bild(sida, bilder, f'{namn}-5-fackverk-prov')
-    kolla(f'{namn}: fackverket håller', vanta_resultat(sida) == 'Bron höll!')
+    kolla(f'{namn}: fackverket håller', vanta_resultat(sida).startswith('Bron höll!'))
 
     # Inzoomad: inget bygge, kameran följer keIWs, och Bygg ger tillbaka vyn.
     sida.click('#ruta [data-v=bygg]')
@@ -356,7 +363,7 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     sida.click('#verktyg [data-v=kor]')
     sida.wait_for_timeout(3300)
     bild(sida, bilder, f'{namn}-6-ras')
-    kolla(f'{namn}: en för klen bro rasar', vanta_resultat(sida) == 'Plask!')
+    kolla(f'{namn}: en för klen bro rasar', vanta_resultat(sida).startswith('Plask!'))
     bild(sida, bilder, f'{namn}-7-plask')
 
     # Menyn: billigaste bron som höll, hämta den, förklaringen och versionen.
@@ -420,7 +427,7 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     sida.click('#verktyg [data-v=kor]')
     sida.wait_for_timeout(9000)
     bild(sida, bilder, f'{namn}-9-bana2-prov')
-    kolla(f'{namn}: fackverket på bana 2 håller', vanta_resultat(sida, 60) == 'Bron höll!')
+    kolla(f'{namn}: fackverket på bana 2 håller', vanta_resultat(sida, 60).startswith('Bron höll!'))
     sida.click('#ruta [data-v=bygg]')
     sida.click('#info [data-v=forra]')
     kolla(f'{namn}: bana 1 har kvar sin ritning', sida.evaluate('() => window.bro.banaNr') == 0
