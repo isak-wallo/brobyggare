@@ -352,6 +352,9 @@ får gärna vara lite dyrare än nu om det ska vänta till senare banor.
 Stål vinner i verkligheten när höjden är begränsad (fri höjd under bron,
 grund konstruktionshöjd) eller laster/spann är stora – idéer för senare
 banor.
+Beslut 2026-10-12: stålpriset behålls (15 $$/kg). Plastiska leder i stål
+(moment begränsat till Mpl, brott först vid en vridgräns) väntar tills vi
+gör banor där stål ska löna sig.
 
 Att fundera på efter utkastet:
 - Vägbanan väger 200 kg/m (plankor + beläggning), så att egenvikten är
