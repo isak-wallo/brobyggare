@@ -91,6 +91,8 @@ function uppgradera(r, b = bana) {
     }
     for (const n of r.noder) {
         if (!n.fast) continue;
+        // Pelarna har glidlager (från v32).
+        if (n.pelare) { n.lager = 'glid'; n.styv = false; }
         const f = b.fasten.find(([x, y]) => x === n.x && y === n.y);
         if (f && f[2]) { n.lager = f[2]; n.styv = false; }
     }
@@ -198,14 +200,16 @@ function pelareTillaten(x, y) {
 }
 
 // Sätter en pelare i punkten (en knutpunkt som redan finns blir pelare),
-// eller tar bort den som står där.
+// eller tar bort den som står där. Pelaren har ett glidlager överst, som
+// brolagren: annars låser två pelare balken emellan i sidled och den kan
+// hänga som en lina.
 function vaxlaPelare(x, y) {
     const i = nodVid(x, y), n = ritning.noder[i];
     if ((n && n.fast && !n.pelare) || !pelareTillaten(x, y)) return false;
     andra(() => {
-        if (!n) ritning.noder.push({ x, y, fast: true, styv: false, pelare: true });
-        else if (n.pelare) { n.fast = false; n.styv = true; delete n.pelare; stada(); }
-        else { n.fast = true; n.pelare = true; }
+        if (!n) ritning.noder.push({ x, y, fast: true, styv: false, pelare: true, lager: 'glid' });
+        else if (n.pelare) { n.fast = false; n.styv = true; delete n.pelare; delete n.lager; stada(); }
+        else Object.assign(n, { fast: true, styv: false, pelare: true, lager: 'glid' });
     });
     vald = -1; valdPelare = null;
     return true;
@@ -842,7 +846,7 @@ const TIPS = {
     andra: 'Tryck på en balk eller pelare för att ändra eller riva den, eller dra en knutpunkt.',
     andraPelare: 'Riv tar bort pelaren (knutpunkten blir kvar om balkar sitter i den).',
     andraVald: 'Dra i en ände, eller byt material, storlek (−/+ för stegen emellan) eller riv i rutan.',
-    pelare: 'Tryck på en punkt över vattnet: pelare från botten (inte i farleden). Tryck igen: bort.',
+    pelare: 'Tryck på en punkt över vattnet: pelare från botten med glidlager (inte i farleden). Tryck igen: bort.',
     fri: 'Inget verktyg valt: dra med ett finger för att flytta vyn (zooma in först). Välj Väg eller Ändra för att bygga.'
 };
 
@@ -906,7 +910,7 @@ function visaValjare() {
         const p = bana.pelare, html = typ + '<p class="pelarinfo">' + (valdP
             ? 'Pelare ' + (valdP.y - p.botten) + ' m från botten: ' + kr(pelarensPris(bana, valdP.y)) + '. Riv tar bort den.'
             : 'Betongpelare från botten: ' + kr(p.pris) + ' + ' + kr(p.perMeter) + '/m (' + kr(pelarensPris(bana, 0))
-              + ' upp till vägen). Över vattnet, inte i farleden.') + '</p>';
+              + ' upp till vägen), glidlager överst. Över vattnet, inte i farleden.') + '</p>';
         if (valjareEl.innerHTML !== html) valjareEl.innerHTML = html;
         return;
     }

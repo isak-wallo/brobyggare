@@ -39,7 +39,7 @@ vridningen, ledat = egen vridning per ände. Fästpunkterna låser x och y
 `fasten` [x, y, 'fast'|'glid']): alltid ledade, glidlagret låser bara y.
 Nya fästen läggs sist i `fasten` (lösningarnas nodindex och gamla
 ritningar, se `uppgradera` i app.js).
-Pelare (banor med `pelare`) är fasta, ledade knutpunkter med `pelare: true`
+Pelare (banor med `pelare`) är fasta knutpunkter med glidlager (`lager: 'glid'`, `pelare: true`)
 i ritningen; de kostar efter höjden över botten (`ritningensKostnad`).
 Farleden (`farled`) stoppar knutpunkter och balkar i app.js, inte i fysiken.
 Massan klumpas i noderna. Egentyngden räknas statiskt (losStatiskt; går

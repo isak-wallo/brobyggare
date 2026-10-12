@@ -16,7 +16,7 @@
 //   vy:     det som syns utan zoom
 //   farled: {x0, x1, y}: under y mellan x0 och x1 får inget byggas (båtarna)
 //   pelare: {botten, pris, perMeter}: här får man bygga pelare över vattnet,
-//           från botten upp till en knutpunkt
+//           från botten upp till en knutpunkt (med glidlager överst)
 //   losning: en bro som håller (testerna kör den); en nod [x, y, 'pelare']
 //           är en pelare
 
@@ -127,7 +127,7 @@ function losningsRitning(bana) {
     return {
         version: 4,
         noder: l.noder.map(([x, y, typ], i) => i < bana.fasten.length ? fastNod(x, y, bana.fasten[i][2])
-            : typ === 'pelare' ? { x, y, fast: true, styv: false, pelare: true } : { x, y, fast: false, styv: true }),
+            : typ === 'pelare' ? { x, y, fast: true, styv: false, pelare: true, lager: 'glid' } : { x, y, fast: false, styv: true }),
         balkar: l.balkar.map(([a, b, storlek, vag]) => ({ a, b, storlek, vag: !!vag, material: 'limtra' }))
     };
 }

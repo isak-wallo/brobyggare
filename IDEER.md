@@ -410,6 +410,11 @@ styvhet, så de blir dyrare och klenare än HEA-steget bredvid): Pytte
 HEA 120, Liten 180, Mellan 240, Stor 300, Jätte 360 (förut 100/140/180/
 240/300). Pelare får fortsatt gå ända upp (vägar med kullar).
 
+v32-test: pelarna har glidlager överst (låser bara y, glider högst
+0,3 m som brolagret). Förut låste de x också, så en HEA 100 över 24 m
+mellan två pelare höll som en lina (73 %); nu går den av (Mellan, HEA
+240, håller med 82 %). Kanalens lösning håller fortfarande (78 %).
+
 Beslut 2026-10-12: Kanalen med pelare från botten och farled. Älven
 (minst 100 m) blir sista vattendraget, senare.
 

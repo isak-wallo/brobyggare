@@ -39,6 +39,17 @@ module.exports = function (S, kolla) {
         sim = korSim(enBalk(bana, 0, 'stal'), bana);
         kolla(namn + ': en stålbalk Pytte (HEA 120) går av, ingen linverkan', sim.resultat === 'vatten' && sim.brott > 0,
               sim.resultat + ', brott ' + sim.brott);
+        // Pelarna har glidlager: en klen väg mellan två pelare hänger inte
+        // som en lina (Isaks HEA 100 över 24 m höll när pelarna låste x).
+        if (bana.pelare) {
+            const r = nyRitning(bana), L = bana.spann, xs = [0, L / 4, L / 2, 3 * L / 4, L];
+            const nod = x => { let i = r.noder.findIndex(n => n.x === x && n.y === 0); if (i < 0) { r.noder.push({ x, y: 0, fast: false, styv: true }); i = r.noder.length - 1; } return i; };
+            xs.forEach(x => nod(x));
+            for (const x of [L / 4, 3 * L / 4]) Object.assign(r.noder[nod(x)], { fast: true, styv: false, pelare: true, lager: 'glid' });
+            for (let i = 0; i < 4; i++) r.balkar.push({ a: nod(xs[i]), b: nod(xs[i + 1]), storlek: -0.25, vag: true, material: 'stal' });
+            const p = korSim(r, bana);
+            kolla(namn + ': HEA 100 mellan två pelare går av', p.resultat === 'vatten' && p.brott > 0, p.resultat + ', brott ' + p.brott);
+        }
         const glid = sim.m.punkter.findIndex(p => p.glid), u = sim.m.q[2 * glid];
         kolla(namn + ': glidlagret stannar vid stoppet när bron rasar', glid >= 0 && Math.abs(u) <= 0.3 + 1e-9,
               (u * 1000).toFixed(0) + ' mm');
