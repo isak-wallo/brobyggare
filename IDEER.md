@@ -279,13 +279,22 @@ profiler (IPE 100–400, Ø 8–32), gråade som "kommer". Brottsregeln väljs
 efter materialets typ (BROTT i fysik.js); vajern behöver också slakna i
 tryck innan den kan användas.
 
+Stål med i spelet (v14-test, att prova): väljaren har en rad Trä/Stål
+mellan väg/balk och storlekarna, och storleksknapparna visar profilen.
+Stål S355 som HEA (Pytte–Jätte = HEA 100, 140, 180, 240, 300), 15 $$/kg
+(118 000 $$/m³), grå i bild. Provkört: på Bäcken håller en rak väg av
+HEA 100 (8 300 $$) men träfackverket med strävor är billigare (7 340 $$);
+på Ån håller en rak väg av HEA 180 (22 820 $$) mot träfackverkets 21 110 $$.
+Stål = enkla raka broar, trä = billiga fackverk. Knäckning bara kring
+den styva axeln (2D).
+
 Att fundera på efter utkastet:
 - Fästpunkterna låser både x och y, så en balk mellan två fästen hänger
   delvis i drag som en lina och håller mer än en fritt upplagd balk.
   Fysikaliskt riktigt, men ska en fästpunkt kunna vara glidlager?
 - Vägbanan väger 200 kg/m (plankor + beläggning), så att egenvikten är
   det som styr. keIWs väger lite i jämförelse – tyngre last senare?
-- Stjärnor efter kostnad, fler banor, kablar och stål.
+- Stjärnor efter kostnad, fler banor, kablar.
 
 ## Öppna frågor
 

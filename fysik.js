@@ -347,8 +347,8 @@ function losStatiskt(m, lg = 1, ll = 1, delar = 10) {
 }
 
 // Utnyttjandegraden i ett element (N, M, V) efter materialets typ, se
-// BROTTREGLER i material.js. Stål och vajer finns inte i spelet än; för
-// vajern behöver lösaren också få den att slakna i tryck.
+// BROTTREGLER i material.js. Vajern finns inte i spelet än; den behöver
+// också få slakna i tryck i lösaren.
 const BROTT = {
     tra: (N, M, V, p, mat) => Math.max(
         (N >= 0 ? N / (p.A * mat.ft) : -N / (p.A * mat.fc)) + M / (p.W * mat.fm),

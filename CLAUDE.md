@@ -17,7 +17,8 @@ Idéer och beslut i `IDEER.md` (läs den först).
 
 ## Filer
 
-- `material.js` – material (limträ GL30c) och de fem profilerna (Pytte–Jätte),
+- `material.js` – material (limträ GL30c, stål S355 med HEA; vajer kommer) och de fem
+  profilerna per material (Pytte–Jätte),
   vägbanan och förbanden (vikt och pris).
 - `fysik.js` – FE-lösaren: korotationella Euler–Bernoulli-element, Newmark
   + Newton–Raphson, bandad Cholesky med Cuthill–McKee, brott (spänning,

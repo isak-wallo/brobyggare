@@ -227,6 +227,7 @@ html, body {
 }
 
 #valjare .typ,
+#valjare .material,
 #valjare .storlekar {
     display: grid;
     gap: 4px;
@@ -234,6 +235,11 @@ html, body {
 
 #valjare .typ {
     grid-template-columns: 1fr 1fr auto auto;
+    margin-bottom: 6px;
+}
+
+#valjare .material {
+    grid-template-columns: 1fr 1fr;
     margin-bottom: 6px;
 }
 

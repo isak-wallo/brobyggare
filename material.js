@@ -13,6 +13,7 @@
 const MATERIAL = {
     limtra: {
         namn: 'Limträ GL30c',
+        kort: 'Trä',
         typ: 'tra',
         E: 13000e6,        // elasticitetsmodul, medelvärde (styvheten)
         E05: 10800e6,      // 5 %-fraktil (knäckning)
@@ -25,16 +26,17 @@ const MATERIAL = {
     },
     stal: {
         namn: 'Stål S355',
+        kort: 'Stål',
         typ: 'stal',
-        kommer: true,
         E: 210000e6,
         densitet: 7850,
         fy: 355e6,         // sträckgräns (drag, tryck, böjning)
         fv: 205e6,         // skjuvning, fy/√3
-        prisM3: 200000     // ca 25 $$/kg
+        prisM3: 118000     // 15 $$/kg
     },
     vajer: {
         namn: 'Vajer',
+        kort: 'Vajer',
         typ: 'vajer',
         kommer: true,
         E: 160000e6,       // lägre än stål: trådarna ligger i spiral
@@ -93,10 +95,11 @@ const STORLEKAR = ['Pytte', 'Liten', 'Mellan', 'Stor', 'Jätte'];
 const PROFILER = {
     limtra: [rektangel('limtra', 56, 135), rektangel('limtra', 66, 180), rektangel('limtra', 90, 270),
              rektangel('limtra', 140, 405), rektangel('limtra', 190, 630)],
-    // Preliminära (stål och vajer finns inte i spelet än).
-    stal: [iprofil('IPE 100', 10.3, 171, 34.2, 5.08, 100), iprofil('IPE 140', 16.4, 541, 77.3, 7.64, 140),
-           iprofil('IPE 200', 28.5, 1943, 194, 14.0, 200), iprofil('IPE 300', 53.8, 8356, 557, 25.7, 300),
-           iprofil('IPE 400', 84.5, 23130, 1156, 42.7, 400)],
+    // HEA, böjning kring den styva axeln (W elastiskt, A_v = livets area).
+    stal: [iprofil('HEA 100', 21.2, 349, 72.8, 7.56, 96), iprofil('HEA 140', 31.4, 1033, 155, 10.1, 133),
+           iprofil('HEA 180', 45.3, 2510, 294, 14.5, 171), iprofil('HEA 240', 76.8, 7763, 675, 25.2, 230),
+           iprofil('HEA 300', 112.5, 18260, 1260, 37.3, 290)],
+    // Preliminär (vajern finns inte i spelet än).
     vajer: [vajer(8), vajer(12), vajer(16), vajer(24), vajer(32)]
 };
 

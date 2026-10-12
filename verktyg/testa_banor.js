@@ -1,12 +1,12 @@
 // Provkör banorna utan webbläsare (anropas från testa_fysik.js):
 // den sparade lösningen ska klara sig, en tom bana och en för klen bro ska
-// sluta i vattnet, och en rejäl balk ska hålla.
+// sluta i vattnet, och en rejäl balk (trä eller stål) ska hålla.
 'use strict';
 module.exports = function (S, kolla) {
     const BANOR = S('BANOR'), korSim = S('korSim'), nyRitning = S('nyRitning'), losningsRitning = S('losningsRitning');
-    const enBalk = (bana, storlek) => {
+    const enBalk = (bana, storlek, material = 'limtra') => {
         const r = nyRitning(bana);
-        r.balkar.push({ a: 0, b: 2, storlek, vag: true, material: 'limtra' });
+        r.balkar.push({ a: 0, b: 2, storlek, vag: true, material });
         return r;
     };
     BANOR.forEach((bana, i) => {
@@ -21,6 +21,9 @@ module.exports = function (S, kolla) {
         kolla(namn + ': en liten balk går av', sim.resultat === 'vatten' && sim.brott > 0,
               sim.resultat + ', brott ' + sim.brott);
         sim = korSim(enBalk(bana, 4), bana);
+        sim = korSim(enBalk(bana, 2, 'stal'), bana);
+        kolla(namn + ': en stålbalk Mellan (HEA 180) håller', sim.resultat === 'klarade' && sim.brott === 0,
+              sim.resultat + ', max ' + Math.round(sim.maxU * 100) + ' %');
         kolla(namn + ': en jättebalk håller', sim.resultat === 'klarade' && sim.brott === 0,
               sim.resultat + ', max ' + Math.round(sim.maxU * 100) + ' %');
     });

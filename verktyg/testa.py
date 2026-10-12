@@ -12,8 +12,9 @@ läsa), stående och liggande. Kontrollerar att:
   - man kan bygga en väg genom att dra mellan punkterna, trycka på en
     knutpunkt (styvt/ledat), riva en balk och ångra, men inte bygga för
     långa balkar,
-  - Rita: väljaren för väg/balk och storlek öppnas och stängs,
-  - Ändra: välja en balk (väljaren byter storlek och väg/balk, eller river) och dra ena änden (bara den balken flyttas),
+  - Rita: väljaren för väg/balk, trä/stål och storlek öppnas och stängs,
+    och man kan rita i stål,
+  - Ändra: välja en balk (väljaren byter storlek, väg/balk och trä/stål, eller river) och dra ena änden (bara den balken flyttas),
     dra en knutpunkt (alla balkar följer med), byta storlek på vald balk,
   - inzoomad flyttar ett finger utanför rutnätet vyn,
   - zoom med mushjulet och nyp med två fingrar (punkten under fingrarna
@@ -206,8 +207,12 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
           and sida.evaluate('() => window.bro.ritning.balkar[1].storlek') == 3)
     sida.click('#valjare [data-t=balk]')
     kolla(f'{namn}: och gör väg till balk', not sida.evaluate('() => window.bro.ritning.balkar[0].vag'))
-    sida.click('#verktyg [data-v=angra]')
-    sida.click('#verktyg [data-v=angra]')
+    sida.click('#valjare [data-m=stal]')
+    kolla(f'{namn}: och byter material till stål (HEA)', sida.evaluate('() => window.bro.ritning.balkar[0].material') == 'stal'
+          and 'HEA 300' in sida.inner_text('#valjare [data-s="4"]'))
+    bild(sida, bilder, f'{namn}-0-stal')
+    for _ in range(3):
+        sida.click('#verktyg [data-v=angra]')
     tryck(sida, (3, 3))                           # tomt: ingen vald
     dra(sida, (6, 0), (6, 1))                     # knutpunkten med alla balkar
     r = sida.evaluate('() => window.bro.ritning')
@@ -320,7 +325,7 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     sida.click('#meny details:nth-of-type(2) summary')
     kolla(f'{namn}: materialtabellen har limträ, stål och vajer',
           sida.locator('#meny .tabell th:has-text("Limträ GL30c")').count() == 1
-          and sida.locator('#meny .tabell th.kommer').count() == 2)
+          and sida.locator('#meny .tabell th.kommer').count() == 1)
     bild(sida, bilder, f'{namn}-7-meny')
     sida.click('#meny [data-v=hamta]')
     kolla(f'{namn}: hämta ger den bästa ritningen och stänger menyn',

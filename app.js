@@ -26,7 +26,8 @@ const UPPDATERA_VAR = 10 * 60 * 1000;     // ms, leta efter en ny version
 
 const FARG = {
     himmel: ['#9fcbe0', '#d8ecf2'], berg: '#8b7a66', bergMork: '#6f604f', gras: '#7cae5c',
-    vatten: 'rgba(63, 120, 160, 0.82)', vag: '#5d6670', tra: '#c9975b', traMork: '#8a6438',
+    vatten: 'rgba(63, 120, 160, 0.82)', vag: '#5d6670',
+    material: { limtra: ['#c9975b', '#8a6438'], stal: ['#8d9aa6', '#4f5b66'], vajer: ['#b7bec4', '#6d767e'] },
     nod: '#2f3f4c', punkt: 'rgba(47, 63, 76, 0.28)', fel: '#d0503c', text: '#2f3f4c'
 };
 
@@ -48,6 +49,7 @@ let verktyg = 'rita';         // 'rita' (nya balkar) eller 'andra' (flytta, byta
 let ritVag = true;            // ritar väg (som keIWs går på) eller balk
 let valjareOppen = false;     // väljaren för väg/balk och storlek (verktyget Rita)
 let storlek = 2;              // Mellan
+let ritMaterial = 'limtra';   // materialet man ritar med
 let lageNu = 'bygg';
 let sim = null;
 let drag = null;              // {fran: [x, y], till: [x, y]} medan man drar
@@ -165,7 +167,7 @@ function laggTillBalk(p, q) {
         };
         const a = idx(p), b = idx(q);
         const fanns = ritning.balkar.findIndex(k => (k.a === a && k.b === b) || (k.a === b && k.b === a));
-        const balk = { a, b, storlek, vag: ritVag, material: 'limtra' };
+        const balk = { a, b, storlek, vag: ritVag, material: ritMaterial };
         if (fanns >= 0) ritning.balkar[fanns] = balk;
         else ritning.balkar.push(balk);
     });
@@ -362,6 +364,12 @@ function utnyttjandeFarg(u) {
 
 // En balkbit från (x1, y1) till (x2, y2): tjocklek efter profilens höjd.
 // Utan kant: bara fyllningen, med raka ändar (elementen i provkörningen).
+// En balk i byggläget, i materialets färger.
+function ritaBalk(x1, y1, x2, y2, material, storlek, vag) {
+    const [farg, kant] = FARG.material[material];
+    ritaBit(x1, y1, x2, y2, PROFILER[material][storlek], vag, farg, kant);
+}
+
 function ritaBit(x1, y1, x2, y2, prof, vag, farg, kant) {
     const bredd = Math.max(3, prof.h * kam.sk);
     ctx.beginPath(); ctx.moveTo(sx(x1), sy(y1)); ctx.lineTo(sx(x2), sy(y2));
@@ -422,7 +430,7 @@ function ritaBygg() {
     }
     for (const b of ritning.balkar) {
         const na = ritning.noder[b.a], nb = ritning.noder[b.b];
-        ritaBit(na.x, na.y, nb.x, nb.y, PROFILER[b.material || 'limtra'][b.storlek], b.vag, FARG.tra, FARG.traMork);
+        ritaBalk(na.x, na.y, nb.x, nb.y, b.material || 'limtra', b.storlek, b.vag);
     }
     for (const n of ritning.noder) ritaNod(n.x, n.y, n.fast, n.styv);
     ritaVald();
@@ -430,7 +438,8 @@ function ritaBygg() {
         const [x1, y1] = drag.fran, [x2, y2] = drag.till;
         const ok = Math.hypot(x2 - x1, y2 - y1) <= MAX_LANGD + 1e-6;
         ctx.globalAlpha = 0.6;
-        ritaBit(x1, y1, x2, y2, PROFILER.limtra[storlek], ritVag, ok ? FARG.tra : FARG.fel, ok ? FARG.traMork : FARG.fel);
+        if (ok) ritaBalk(x1, y1, x2, y2, ritMaterial, storlek, ritVag);
+        else ritaBit(x1, y1, x2, y2, PROFILER[ritMaterial][storlek], ritVag, FARG.fel, FARG.fel);
         ctx.globalAlpha = 1;
         if (!ok) {
             ctx.fillStyle = FARG.fel;
@@ -451,7 +460,7 @@ function ritaVald() {
     if (vald >= 0 && ritning.balkar[vald]) {
         const b = ritning.balkar[vald], na = ritning.noder[b.a], nb = ritning.noder[b.b];
         ctx.strokeStyle = 'rgba(61, 139, 253, 0.45)';
-        ctx.lineWidth = Math.max(3, PROFILER.limtra[b.storlek].h * kam.sk) + 10;
+        ctx.lineWidth = Math.max(3, PROFILER[b.material || 'limtra'][b.storlek].h * kam.sk) + 10;
         linje(na, nb);
         const r = Math.max(9, 0.3 * kam.sk);
         for (const n of [na, nb]) {
@@ -489,11 +498,11 @@ function ritaBygget() {
     ritning.balkar.forEach((b, i) => {
         if (!sim.bygge.klara.has(i)) return;
         const na = ritning.noder[b.a], nb = ritning.noder[b.b];
-        ritaBit(na.x, na.y, nb.x, nb.y, PROFILER.limtra[b.storlek], b.vag, FARG.tra, FARG.traMork);
+        ritaBalk(na.x, na.y, nb.x, nb.y, b.material || 'limtra', b.storlek, b.vag);
     });
     if (lage.vaxer) {
         const b = ritning.balkar[lage.vaxer.balk], [x1, y1] = lage.vaxer.fran;
-        ritaBit(x1, y1, x1 + (lage.x - x1), y1 + (lage.y - y1), PROFILER.limtra[b.storlek], b.vag, FARG.tra, FARG.traMork);
+        ritaBalk(x1, y1, x1 + (lage.x - x1), y1 + (lage.y - y1), b.material || 'limtra', b.storlek, b.vag);
     }
     ritning.noder.forEach(n => {
         if (n.fast || ritning.balkar.some((b, i) => sim.bygge.klara.has(i) && (ritning.noder[b.a] === n || ritning.noder[b.b] === n))) {
@@ -673,7 +682,7 @@ const TIPS = {
     vag: 'Dra mellan två punkter: väg som keIWs går på. Tryck på en knutpunkt: styv/ledad.',
     balk: 'Dra mellan två punkter: balk. Tryck på en knutpunkt: styv/ledad.',
     andra: 'Tryck på en balk för att ändra eller riva den, eller dra en knutpunkt.',
-    andraVald: 'Dra i en ände, eller byt storlek eller riv i rutan.'
+    andraVald: 'Dra i en ände, eller byt material, storlek eller riv i rutan.'
 };
 
 // Infotexten: bana, kostnad och en tredje rad (tips medan man bygger,
@@ -697,7 +706,7 @@ function uppdateraInfo() {
         + '<div class="rad"><span class="' + (over ? 'over' : '') + '">' + kr(k) + '</span> av ' + kr(bana.budget) + '</div>'
         + '<div class="rad tredje' + (bygger ? ' tips' : '') + '">' + tredje + '</div>';
     for (const v of ['rita', 'andra']) knappar[v].classList.toggle('vald', verktyg === v);
-    knappar.rita.innerHTML = '<span>' + (ritVag ? 'Väg' : 'Balk') + '</span><small>' + STORLEKAR[storlek] + ' ▴</small>';
+    knappar.rita.innerHTML = '<span>' + (ritVag ? 'Väg' : 'Balk') + '</span><small>' + MATERIAL[ritMaterial].kort + ' · ' + STORLEKAR[storlek] + ' ▴</small>';
     knappar.kor.textContent = lageNu === 'bygg' ? 'Kör' : 'Bygg';
     knappar.kor.classList.toggle('stopp', lageNu !== 'bygg');
     for (const v of ['rita', 'andra']) knappar[v].disabled = lageNu !== 'bygg';
@@ -706,8 +715,8 @@ function uppdateraInfo() {
     if (infoLuft() !== luftNu) anpassa();
 }
 
-// Väljaren ovanför verktygen: väg eller balk och storlek (med pris per
-// meter). Med verktyget Rita gäller den det man ritar, med Ändra den valda
+// Väljaren ovanför verktygen: väg eller balk, material och storlek (med
+// profil och pris per meter). Med verktyget Rita gäller den det man ritar, med Ändra den valda
 // balken (och då går den att riva).
 function visaValjare() {
     const valdBalk = verktyg === 'andra' && vald >= 0 ? ritning.balkar[vald] : null;
@@ -715,12 +724,16 @@ function visaValjare() {
     valjareEl.classList.toggle('dold', !synlig);
     if (!synlig) return;
     const vag = valdBalk ? valdBalk.vag : ritVag, st = valdBalk ? valdBalk.storlek : storlek;
+    const mat = valdBalk ? valdBalk.material || 'limtra' : ritMaterial;
     const knapp = (data, text, vald) => '<button ' + data + (vald ? ' class="vald"' : '') + '>' + text + '</button>';
     const html = '<div class="typ">' + knapp('data-t="vag"', 'Väg', vag) + knapp('data-t="balk"', 'Balk', !vag)
         + (valdBalk ? '<button data-t="riv" class="riv">Riv</button><button data-t="rivallt" class="riv">Riv allt</button>' : '')
         + '</div>'
+        + '<div class="material">' + Object.entries(MATERIAL).filter(([, m]) => !m.kommer).map(([nyckel, m]) =>
+            knapp('data-m="' + nyckel + '"', m.kort, nyckel === mat)).join('') + '</div>'
         + '<div class="storlekar">' + STORLEKAR.map((namn, i) => knapp('data-s="' + i + '"', '<b>' + namn + '</b><small>'
-            + kr(PROFILER.limtra[i].pris + (vag ? VAG.pris : 0)) + '/m</small>', i === st)).join('') + '</div>';
+            + PROFILER[mat][i].namn + '</small><small>' + kr(PROFILER[mat][i].pris + (vag ? VAG.pris : 0)) + '/m</small>',
+            i === st)).join('') + '</div>';
     if (valjareEl.innerHTML !== html) valjareEl.innerHTML = html;
 }
 
@@ -810,6 +823,8 @@ const LEKMAN_TEXT = `
 <ul>
 <li><b>Balkar böjer sig</b> när de bär. Större balk = styvare och starkare,
 men tyngre och dyrare.</li>
+<li><b>Trä eller stål?</b> Trä är billigt och lätt. Stål är dyrare men mycket
+starkare, så en enda stålbalk kan bära där trä behöver hjälp.</li>
 <li><b>Bron bär först sig själv</b> (balkar och vägbana), sedan keIWs när
 han går över.</li>
 <li><b>Färgerna</b> visar hur hårt en bit jobbar: grön är lugnt, gul börjar
@@ -893,9 +908,9 @@ ${profiler}
 <h4>Förenklingar</h4>
 <ul>
 <li>Ingen skjuvdeformation (Timoshenko).</li>
-<li>Ingen vippning eller knäckning ut ur planet.</li>
+<li>Ingen vippning eller knäckning ut ur planet (stålets HEA-balkar knäcks bara kring den styva axeln).</li>
 <li>Inga partialkoefficienter eller lastkombinationer som i Eurokod.</li>
-<li>Stål och vajer: preliminära värden, inte med i spelet än.</li>
+<li>Vajer: preliminära värden, inte med i spelet än.</li>
 </ul>`;
 }
 
@@ -1006,6 +1021,10 @@ valjareEl.addEventListener('click', e => {
         const vag = b.dataset.t === 'vag';
         if (valdBalk) { if (valdBalk.vag !== vag) andra(() => { valdBalk.vag = vag; }); }
         else ritVag = vag;
+    } else if (b.dataset.m) {
+        const m = b.dataset.m;
+        if (valdBalk) { if ((valdBalk.material || 'limtra') !== m) andra(() => { valdBalk.material = m; }); }
+        else ritMaterial = m;
     } else if (b.dataset.s !== undefined) {
         const s = +b.dataset.s;
         if (valdBalk) { if (valdBalk.storlek !== s) andra(() => { valdBalk.storlek = s; }); }
@@ -1256,6 +1275,7 @@ if (TEST) {
         get kam() { return kam; },
         get zoom() { return zoom; },
         get vald() { return vald; },
+        get ritMaterial() { return ritMaterial; },
         get verktyg() { return verktyg; },
         get banaNr() { return banaNr; },
         get bygger() { return !!(sim && sim.bygge); },
