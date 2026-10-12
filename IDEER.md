@@ -395,6 +395,10 @@ väg Mellan på två pelare 4 m ner med V-strävor Liten 53 040 $$ (lösningen,
 vägen ca 53 600 $$ (102 %, går av); stål Liten+ på pelare ca 60 800 $$.
 Kostnaden räknas i ritningensKostnad (banor.js), samma i testerna.
 
+v30-test: Ändra väljer pelare (tryck på den): pris och Riv. Med Ändra
+finns Riv och Riv allt alltid i väljaren, gråa när de inte gör något.
+Rivs en pelare som balkar sitter i blir knutpunkten kvar.
+
 Beslut 2026-10-12: Kanalen med pelare från botten och farled. Älven
 (minst 100 m) blir sista vattendraget, senare.
 

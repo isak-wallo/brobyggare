@@ -530,9 +530,19 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     n = sida.evaluate('() => window.bro.ritning.noder.find(n => n.x === 10 && n.y === -2)')
     kolla(f'{namn}: ett tryck sätter en pelare (3 000 + 8 m × 150 $$)', n and n.get('pelare') and n['fast']
           and sida.evaluate('() => window.bro.kostnad()') == fore + 4200)
-    tryck(sida, (10, -2))
     tryck(sida, (24, 0))
     tryck(sida, (-2, 2))
+    sida.click('#verktyg [data-v=andra]')
+    if bredd < hojd:      # stående är väljaren framme även utan val
+        kolla(f'{namn}: Ändra har Riv (grå) och Riv allt utan val', sida.locator('#valjare [data-t=riv]').is_disabled()
+              and sida.locator('#valjare [data-t=rivallt]').is_enabled())
+    tryck(sida, (10, -2))
+    kolla(f'{namn}: Ändra väljer en pelare', '4 200' in sida.inner_text('#valjare').replace('\xa0', ' ')
+          and sida.locator('#valjare [data-t=riv]').is_enabled(), sida.inner_text('#valjare'))
+    sida.click('#valjare [data-t=riv]')
+    sida.click('#verktyg [data-v=rita]')
+    oppna_valjaren(sida)
+    sida.click('#valjare [data-t=pelare]')
     kolla(f'{namn}: pelaren tas bort igen, och går inte i farleden eller på land',
           not sida.evaluate('() => window.bro.ritning.noder.some(n => n.pelare)')
           and sida.evaluate('() => window.bro.kostnad()') == fore)

@@ -61,6 +61,7 @@ let lageNu = 'bygg';
 let sim = null;
 let drag = null;              // {fran: [x, y], till: [x, y]} medan man drar
 let vald = -1;                // vald balk (verktyget Ändra)
+let valdPelare = null;        // eller vald pelare (knutpunkten)
 let flytt = null;             // {balk, ande} eller {nod}, och {till: [x, y]}
 let ratta = null;             // {balk, t}: ny balk som började i en ny punkt
 let kam = { sk: 30, ox: 0, oy: 0 };
@@ -140,7 +141,7 @@ function bytBana(nr) {
     ritning = lasRitning();
     historik = [];
     drag = flytt = null;
-    vald = -1;
+    vald = -1; valdPelare = null;
     ratta = null;
     zoom = 1;
     mitt = null;
@@ -204,7 +205,7 @@ function vaxlaPelare(x, y) {
         else if (n.pelare) { n.fast = false; n.styv = true; delete n.pelare; stada(); }
         else { n.fast = true; n.pelare = true; }
     });
-    vald = -1;
+    vald = -1; valdPelare = null;
     return true;
 }
 
@@ -240,7 +241,7 @@ function rivBalk(i) {
         ritning.balkar.splice(i, 1);
         stada();
     });
-    vald = -1;
+    vald = -1; valdPelare = null;
 }
 
 // Tar bort balkar som blivit noll långa eller dubbla, och knutpunkter som
@@ -609,6 +610,13 @@ function ritaVald() {
             ctx.beginPath(); ctx.arc(sx(n.x), sy(n.y), r, 0, 7); ctx.stroke();
         }
     }
+    if (verktyg === 'andra' && ritning.noder.includes(valdPelare)) {
+        const n = valdPelare, r = Math.max(11, 0.4 * kam.sk);
+        ctx.fillStyle = 'rgba(61, 139, 253, 0.35)';
+        ctx.beginPath(); ctx.arc(sx(n.x), sy(n.y), r, 0, 7); ctx.fill();
+        ctx.strokeStyle = '#3d8bfd'; ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.arc(sx(n.x), sy(n.y), r, 0, 7); ctx.stroke();
+    }
     if (!flytt) return;
     const till = { x: flytt.till[0], y: flytt.till[1] };
     const andar = [];
@@ -829,7 +837,8 @@ function ritaPlask() {
 const TIPS = {
     vag: 'Dra mellan två punkter: väg som keIWs går på. Tryck på en knutpunkt: styv/ledad.',
     balk: 'Dra mellan två punkter: balk. Tryck på en knutpunkt: styv/ledad.',
-    andra: 'Tryck på en balk för att ändra eller riva den, eller dra en knutpunkt.',
+    andra: 'Tryck på en balk eller pelare för att ändra eller riva den, eller dra en knutpunkt.',
+    andraPelare: 'Riv tar bort pelaren (knutpunkten blir kvar om balkar sitter i den).',
     andraVald: 'Dra i en ände, eller byt material, storlek (−/+ i halvsteg) eller riv i rutan.',
     pelare: 'Tryck på en punkt över vattnet: pelare från botten (inte i farleden). Tryck igen: bort.',
     fri: 'Inget verktyg valt: dra med ett finger för att flytta vyn (zooma in först). Välj Väg eller Ändra för att bygga.'
@@ -848,7 +857,7 @@ function uppdateraInfo() {
         tredje = sim.brott ? '<span class="over">Bron gick sönder</span>'
             : 'Högsta utnyttjande ' + Math.round(sim.maxU * 100) + ' %';
     } else {
-        tredje = TIPS[!verktyg ? 'fri' : verktyg === 'andra' ? (vald >= 0 ? 'andraVald' : 'andra') : ritPelare ? 'pelare' : ritVag ? 'vag' : 'balk'];
+        tredje = TIPS[!verktyg ? 'fri' : verktyg === 'andra' ? (vald >= 0 ? 'andraVald' : ritning.noder.includes(valdPelare) ? 'andraPelare' : 'andra') : ritPelare ? 'pelare' : ritVag ? 'vag' : 'balk'];
     }
     infoEl.innerHTML = '<div class="rad">' + pil('forra', '‹', !bygger || banaNr === 0)
         + '<b>Bana ' + (banaNr + 1) + ' · ' + bana.namn + '</b>'
@@ -873,8 +882,9 @@ function uppdateraInfo() {
 // den ligger öppnas den med Väg-knappen och stängs när man valt.
 function visaValjare() {
     const valdBalk = verktyg === 'andra' && vald >= 0 ? ritning.balkar[vald] : null;
+    const valdP = verktyg === 'andra' && ritning.noder.includes(valdPelare) ? valdPelare : null;
     const fast = staende() && !!verktyg;
-    const synlig = lageNu === 'bygg' && (valdBalk || fast || (verktyg === 'rita' && valjareOppen));
+    const synlig = lageNu === 'bygg' && (valdBalk || valdP || fast || (verktyg === 'rita' && valjareOppen));
     valjareEl.classList.toggle('dold', !synlig);
     const gra = synlig && verktyg === 'andra' && !valdBalk;
     valjareEl.classList.toggle('gra', gra);
@@ -885,11 +895,16 @@ function visaValjare() {
     const pelare = !valdBalk && ritPelare, medPelare = bana.pelare && !valdBalk && verktyg === 'rita';
     const typ = '<div class="typ' + (medPelare ? ' tre' : '') + '">' + knapp('data-t="vag"', 'Väg', vag && !pelare)
         + knapp('data-t="balk"', 'Balk', !vag && !pelare) + (medPelare ? knapp('data-t="pelare"', 'Pelare', pelare) : '')
-        + (valdBalk ? '<button data-t="riv" class="riv">Riv</button><button data-t="rivallt" class="riv">Riv allt</button>' : '')
+        // Med Ändra finns Riv och Riv allt alltid, gråa när det inte finns något att riva.
+        + (verktyg === 'andra' ? '<button data-t="riv" class="riv"' + (valdBalk || valdP ? '' : ' disabled') + '>Riv</button>'
+            + '<button data-t="rivallt" class="riv"' + (ritning.balkar.length || ritning.noder.some(n => n.pelare) ? '' : ' disabled')
+            + '>Riv allt</button>' : '')
         + '</div>';
-    if (pelare) {
-        const p = bana.pelare, html = typ + '<p class="pelarinfo">Betongpelare från botten: ' + kr(p.pris) + ' + '
-            + kr(p.perMeter) + '/m (' + kr(pelarensPris(bana, 0)) + ' upp till vägen). Över vattnet, inte i farleden.</p>';
+    if (pelare || valdP) {
+        const p = bana.pelare, html = typ + '<p class="pelarinfo">' + (valdP
+            ? 'Pelare ' + (valdP.y - p.botten) + ' m från botten: ' + kr(pelarensPris(bana, valdP.y)) + '. Riv tar bort den.'
+            : 'Betongpelare från botten: ' + kr(p.pris) + ' + ' + kr(p.perMeter) + '/m (' + kr(pelarensPris(bana, 0))
+              + ' upp till vägen). Över vattnet, inte i farleden.') + '</p>';
         if (valjareEl.innerHTML !== html) valjareEl.innerHTML = html;
         return;
     }
@@ -1159,7 +1174,7 @@ menyEl.addEventListener('click', e => {
     if (b.dataset.v === 'hamta') {
         const basta = lasBasta(banaNr);
         if (basta && lageNu === 'bygg') {
-            andra(() => { ritning = JSON.parse(JSON.stringify(basta.ritning)); vald = -1; });
+            andra(() => { ritning = JSON.parse(JSON.stringify(basta.ritning)); vald = -1; valdPelare = null; });
         }
     }
     stangMeny();
@@ -1231,15 +1246,15 @@ document.getElementById('verktyg').addEventListener('click', e => {
         // till (med väljaren öppen) väljer bort verktyget.
         if (verktyg === 'rita' && (valjareOppen || staende())) { verktyg = null; valjareOppen = false; }
         else { verktyg = 'rita'; valjareOppen = true; }
-        vald = -1;
+        vald = -1; valdPelare = null;
     }
     else if (v === 'andra') {
         // Ändra: ett tryck till väljer bort verktyget.
         verktyg = verktyg === 'andra' ? null : 'andra';
-        vald = -1;
+        vald = -1; valdPelare = null;
         valjareOppen = false;
     }
-    else if (v === 'angra' && historik.length) { ritning = uppgradera(JSON.parse(historik.pop())); vald = -1; ratta = null; sparaRitning(); }
+    else if (v === 'angra' && historik.length) { ritning = uppgradera(JSON.parse(historik.pop())); vald = -1; valdPelare = null; ratta = null; sparaRitning(); }
     else if (v === 'kor') { if (lageNu === 'bygg') kor(); else bygg(); }
     uppdateraInfo();
 });
@@ -1248,10 +1263,14 @@ valjareEl.addEventListener('click', e => {
     const b = e.target.closest('button');
     if (!b || lageNu !== 'bygg') return;
     const valdBalk = verktyg === 'andra' && vald >= 0 ? ritning.balkar[vald] : null;
-    if (b.dataset.t === 'riv' && valdBalk) rivBalk(vald);
+    const valdP = verktyg === 'andra' && ritning.noder.includes(valdPelare) ? valdPelare : null;
+    if (b.dataset.t === 'riv') {
+        if (valdBalk) rivBalk(vald);
+        else if (valdP) vaxlaPelare(valdP.x, valdP.y);      // knutpunkten blir kvar om balkar sitter i den
+    }
     else if (b.dataset.t === 'rivallt') {
         andra(() => { ritning = nyRitning(bana); });     // går att ångra
-        vald = -1;
+        vald = -1; valdPelare = null;
     }
     else if (b.dataset.t === 'pelare') ritPelare = true;
     else if (b.dataset.t) {
@@ -1372,7 +1391,8 @@ duk.addEventListener('pointerdown', e => {
             flytt = { nod, till: [ritning.noder[nod].x, ritning.noder[nod].y] };
             return;
         }
-        vald = narmasteBalk(wx, wy, Math.max(0.4, 16 / kam.sk));
+        valdPelare = ritning.noder.find(n => n.pelare && Math.hypot(wx - n.x, wy - n.y) < nara * 0.8) || null;
+        vald = valdPelare ? -1 : narmasteBalk(wx, wy, Math.max(0.4, 16 / kam.sk));
         uppdateraInfo();
         return;
     }
@@ -1433,7 +1453,7 @@ function slapp(e) {
         flytt = null;
         if (f.nod !== undefined) flyttaNod(f.nod, f.till);
         else flyttaAnde(f.balk, f.ande, f.till);
-        if (verktyg === 'rita') vald = -1;
+        if (verktyg === 'rita') vald = -1; valdPelare = null;
         uppdateraInfo();
         return;
     }
