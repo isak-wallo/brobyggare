@@ -288,11 +288,23 @@ const kr = v => v.toLocaleString('sv-SE') + ' $$';
 // ---------- Skärmen ----------
 
 const infoLuft = () => infoEl.offsetTop + infoEl.offsetHeight + 4;
+const staende = () => !matchMedia('(orientation: landscape)').matches;
 let luftNu = 0;
+let valjareHojd = 0;          // stående: platsen som hålls för väljaren
+
+// Luften ovanför banan: infotexten, och när mobilen står även väljaren
+// (som då alltid är framme medan man bygger). Platsen hålls även när den är
+// stängd, så att banan inte hoppar.
+function beraknaLuft() {
+    const info = infoLuft();
+    if (!staende()) return info;
+    if (valjareEl.offsetHeight) valjareHojd = valjareEl.offsetHeight;
+    return info + (valjareHojd ? valjareHojd + 8 : 0);
+}
 
 function anpassa() {
-    luftNu = infoLuft();
-    scen.style.setProperty('--luft', luftNu + 'px');
+    scen.style.setProperty('--info', infoLuft() + 'px');
+    luftNu = beraknaLuft();
     dpr = window.devicePixelRatio || 1;
     const w = scen.clientWidth, h = scen.clientHeight;
     duk.width = Math.round(w * dpr);
@@ -682,7 +694,11 @@ const FIG = FIGUR_DATA.keiws;
 // banans keiws-höjd: hans höjd i meter i bilden (fysiken bryr sig inte om
 // storleken).
 const KEIWS_BILD = 1.25;
-const keiwsBild = () => KEIWS_BILD * keiwsHojd(bana) / zoom;
+const KEIWS_UTZOOMAD = 0.7;  // så stor som inzoomad (MAX_ZOOM) när man ser hela banan
+// keIWs ritas nästan lika stor på skärmen vid alla zoomnivåer: full storlek
+// inzoomad, lite mindre utzoomad (jämnt emellan, räknat på log-zoom).
+const keiwsBild = () => KEIWS_BILD * keiwsHojd(bana) / zoom
+    * (KEIWS_UTZOOMAD + (1 - KEIWS_UTZOOMAD) * Math.log(zoom) / Math.log(MAX_ZOOM));
 
 // Rektanglar [x0, y0, x1, y1, färg, del] med fötternas mitt i (x, y).
 function ritaFigur(rekt, x, y, lyft) {
@@ -780,20 +796,25 @@ function uppdateraInfo() {
     for (const v of ['rita', 'andra']) knappar[v].disabled = lageNu !== 'bygg';
     knappar.angra.disabled = lageNu !== 'bygg' || !historik.length;
     visaValjare();
-    if (infoLuft() !== luftNu) anpassa();
+    if (beraknaLuft() !== luftNu) anpassa();
 }
 
-// Väljaren ovanför verktygen: väg eller balk, material och storlek (med
-// profil och pris per meter). Med verktyget Rita gäller den det man ritar, med Ändra den valda
-// balken (och då går den att riva).
+// Väljaren: väg eller balk, material och storlek (med profil och pris per
+// meter). Med verktyget Rita gäller den det man ritar, med Ändra den valda
+// balken (och då går den att riva). När mobilen står är den alltid framme
+// medan Rita eller Ändra är valt (grå med Ändra tills man valt en balk); när
+// den ligger öppnas den med Väg-knappen och stängs när man valt.
 function visaValjare() {
     const valdBalk = verktyg === 'andra' && vald >= 0 ? ritning.balkar[vald] : null;
-    const synlig = lageNu === 'bygg' && (valdBalk || (verktyg === 'rita' && valjareOppen));
+    const fast = staende() && !!verktyg;
+    const synlig = lageNu === 'bygg' && (valdBalk || fast || (verktyg === 'rita' && valjareOppen));
     valjareEl.classList.toggle('dold', !synlig);
+    const gra = synlig && verktyg === 'andra' && !valdBalk;
+    valjareEl.classList.toggle('gra', gra);
     if (!synlig) return;
     const vag = valdBalk ? valdBalk.vag : ritVag, st = valdBalk ? valdBalk.storlek : storlek;
     const mat = valdBalk ? valdBalk.material || 'limtra' : ritMaterial;
-    const knapp = (data, text, vald) => '<button ' + data + (vald ? ' class="vald"' : '') + '>' + text + '</button>';
+    const knapp = (data, text, vald) => '<button ' + data + (vald ? ' class="vald"' : '') + (gra ? ' disabled' : '') + '>' + text + '</button>';
     const html = '<div class="typ">' + knapp('data-t="vag"', 'Väg', vag) + knapp('data-t="balk"', 'Balk', !vag)
         + (valdBalk ? '<button data-t="riv" class="riv">Riv</button><button data-t="rivallt" class="riv">Riv allt</button>' : '')
         + '</div>'
@@ -1111,12 +1132,13 @@ function placeraRuta() {
     const vanster = b.left - s.left, hoger = b.right - s.left, nere = b.bottom - s.top;
     if (sx(k.x) + fig / 2 < vanster || sx(k.x) - fig / 2 > hoger || nere < huvud) return;
     const topp = huvud - 10 - b.height;
-    if (topp >= luftNu + 8) { rutaEl.style.top = topp + b.height / 2 + 'px'; return; }
+    const info = infoLuft();
+    if (topp >= info + 8) { rutaEl.style.top = topp + b.height / 2 + 'px'; return; }
     const kx = sx(k.x), bredd = scen.clientWidth;
     const fore = kx - fig * 0.9 - b.width, efter = kx + fig * 0.9;   // med plats för konfettin
     if (fore >= 8) rutaEl.style.left = fore + b.width / 2 + 'px';
     else if (efter + b.width <= bredd - 8) rutaEl.style.left = efter + b.width / 2 + 'px';
-    else rutaEl.style.top = luftNu + 8 + b.height / 2 + 'px';
+    else rutaEl.style.top = info + 8 + b.height / 2 + 'px';
 }
 
 document.getElementById('verktyg').addEventListener('click', e => {
@@ -1126,7 +1148,7 @@ document.getElementById('verktyg').addEventListener('click', e => {
     if (v === 'rita') {
         // Rita: ett tryck öppnar väljaren för väg/balk och storlek, ett tryck
         // till (med väljaren öppen) väljer bort verktyget.
-        if (verktyg === 'rita' && valjareOppen) { verktyg = null; valjareOppen = false; }
+        if (verktyg === 'rita' && (valjareOppen || staende())) { verktyg = null; valjareOppen = false; }
         else { verktyg = 'rita'; valjareOppen = true; }
         vald = -1;
     }

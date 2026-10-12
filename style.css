@@ -207,14 +207,14 @@ html, body {
     }
 }
 
-/* Väljaren för väg/balk och storlek, uppe i himlen under infotexten
-   (stående; --luft sätts i app.js) eller uppe till höger (liggande), så
-   att den inte skymmer bron */
+/* Väljaren för väg/balk och storlek: under infotexten (stående; --info
+   sätts i app.js, och banan står under väljaren) eller uppe till höger
+   (liggande) */
 #valjare {
     position: absolute;
     left: 8px;
     right: 8px;
-    top: calc(var(--luft, 110px) + 4px);
+    top: calc(var(--info, 110px) + 4px);
     max-width: 460px;
     margin: 0 auto;
     padding: 8px;
@@ -225,6 +225,11 @@ html, body {
 
 #valjare.dold {
     display: none;
+}
+
+#valjare.gra button {
+    opacity: 0.45;
+    cursor: default;
 }
 
 #valjare .typ,

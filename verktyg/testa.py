@@ -142,12 +142,21 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     # när man valt. Bygg en väg i två delar (Stor) genom att dra med musen.
     text = sida.inner_text('#verktyg [data-v=rita]')
     kolla(f'{namn}: Rita börjar med väg, Mellan', text.startswith('Väg') and 'Mellan' in text, text.replace('\n', ' '))
-    sida.click('#verktyg [data-v=rita]')
-    kolla(f'{namn}: väljaren öppnas med fem storlekar', sida.locator('#valjare').is_visible()
-          and sida.locator('#valjare [data-s]').count() == 5)
+    if bredd < hojd:
+        # Stående: väljaren är alltid framme medan man bygger, banan under.
+        vb = sida.locator('#valjare').bounding_box()
+        topp = skarm(sida, (0, sida.evaluate('() => BANOR[0].vy.y1')))[1]
+        kolla(f'{namn}: väljaren är framme från start, med fem storlekar, ovanför banan',
+              sida.locator('#valjare').is_visible() and sida.locator('#valjare [data-s]').count() == 5
+              and vb['y'] + vb['height'] <= topp + 1, f"väljaren slutar {vb['y'] + vb['height']:.0f}, banan börjar {topp:.0f}")
+    else:
+        sida.click('#verktyg [data-v=rita]')
+        kolla(f'{namn}: väljaren öppnas med fem storlekar', sida.locator('#valjare').is_visible()
+              and sida.locator('#valjare [data-s]').count() == 5)
     bild(sida, bilder, f'{namn}-0-valjare')
     sida.click('#valjare [data-s="3"]')
-    kolla(f'{namn}: väljaren stängs när man valt storlek', not sida.locator('#valjare').is_visible()
+    kolla(f'{namn}: väljaren ' + ('är kvar' if bredd < hojd else 'stängs') + ' när man valt storlek',
+          sida.locator('#valjare').is_visible() == (bredd < hojd)
           and 'Stor' in sida.inner_text('#verktyg [data-v=rita]'))
     dra(sida, (0, 0), (6, 0))
     dra(sida, (6, 0), (12, 0))
