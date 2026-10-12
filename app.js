@@ -284,6 +284,7 @@ let luftNu = 0;
 
 function anpassa() {
     luftNu = infoLuft();
+    scen.style.setProperty('--luft', luftNu + 'px');
     dpr = window.devicePixelRatio || 1;
     const w = scen.clientWidth, h = scen.clientHeight;
     duk.width = Math.round(w * dpr);
@@ -291,11 +292,12 @@ function anpassa() {
     duk.style.width = w + 'px';
     duk.style.height = h + 'px';
     // Luft för infotexten upptill. Hela bana.vy ska synas, och blir det
-    // höjd över (mobilen står) går det mesta till himlen.
+    // höjd över (mobilen står) går allt till himlen: banan står längst ner
+    // med bara lite vatten under, och rutor och text får plats ovanför.
     const vy = bana.vy, luft = luftNu;
     const sk = Math.min(w / (vy.x1 - vy.x0), (h - luft) / (vy.y1 - vy.y0));
     const over = h - luft - sk * (vy.y1 - vy.y0);
-    const oy = luft + over * 0.7 + sk * vy.y1, cy = (oy - (luft + h) / 2) / sk;
+    const oy = luft + over + sk * vy.y1, cy = (oy - (luft + h) / 2) / sk;
     const cx = (vy.x0 + vy.x1) / 2;
     const hw = w / 2 / sk, hh = (h - luft) / 2 / sk;
     bas = { sk, cx, cy, B: { x0: cx - hw, x1: cx + hw, y0: cy - hh, y1: cy + hh } };
@@ -658,7 +660,8 @@ function ritaProv() {
         ritaBit(x1, y1, x2, y2, balk.prof, e.vag, utnyttjandeFarg(Math.max(e.u, balk.uk)), null);
     }
     ritning.noder.forEach((n, i) => {
-        const [x, y] = lage(m, m.nodPunkt[i]);
+        // Lagren står kvar på berget (glidlagret rör sig bara några dm).
+        const [x, y] = n.lager ? [n.x, n.y] : lage(m, m.nodPunkt[i]);
         ritaNod(x, y, n);
     });
 }

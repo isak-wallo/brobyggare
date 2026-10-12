@@ -330,6 +330,12 @@ Resultatrutan (v18-test): rubriken är "Bron höll! keIWs kom över." (eller
 på en rad, utnyttjandet och ev. billigaste bron. Rutan flyttas upp ovanför
 keIWs om den annars skulle skymma honom när han jublar.
 
+v19-test: banan står längst ner (all extra höjd går till himlen, bara lite
+vatten syns), så rutor och text får plats ovanför. Väljaren ligger därför
+uppe under infotexten även i stående läge (annars skymde den bron).
+Glidlagret har stopp vid ±0,3 m (GLID_MAX i spel.js) och lagren ritas
+alltid på sin plats på berget, även när bron rasar.
+
 Att fundera på efter utkastet:
 - Vägbanan väger 200 kg/m (plankor + beläggning), så att egenvikten är
   det som styr. keIWs väger lite i jämförelse – tyngre last senare?

@@ -30,5 +30,8 @@ module.exports = function (S, kolla) {
         sim = korSim(enBalk(bana, 0, 'stal'), bana);
         kolla(namn + ': en stålbalk Pytte (HEA 100) går av, ingen linverkan', sim.resultat === 'vatten' && sim.brott > 0,
               sim.resultat + ', brott ' + sim.brott);
+        const glid = sim.m.punkter.findIndex(p => p.glid), u = sim.m.q[2 * glid];
+        kolla(namn + ': glidlagret stannar vid stoppet när bron rasar', glid >= 0 && Math.abs(u) <= 0.3 + 1e-9,
+              (u * 1000).toFixed(0) + ' mm');
     });
 };

@@ -207,13 +207,14 @@ html, body {
     }
 }
 
-/* Väljaren för väg/balk och storlek, nederst i spelytan (stående) eller
-   uppe till höger (liggande) */
+/* Väljaren för väg/balk och storlek, uppe i himlen under infotexten
+   (stående; --luft sätts i app.js) eller uppe till höger (liggande), så
+   att den inte skymmer bron */
 #valjare {
     position: absolute;
     left: 8px;
     right: 8px;
-    bottom: 8px;
+    top: calc(var(--luft, 110px) + 4px);
     max-width: 460px;
     margin: 0 auto;
     padding: 8px;
@@ -288,7 +289,6 @@ html, body {
     #valjare {
         left: auto;
         right: 10px;
-        bottom: auto;
         top: calc(max(8px, env(safe-area-inset-top)) + 40px);
         width: min(400px, calc(100% - 20px));
     }

@@ -15,6 +15,7 @@ const START_TID = 1.4;       // s, då börjar keIWs gå
 const KEIWS_MASSA = 100;     // kg
 const KLIV_UPP = 0.25;       // m, så högt kliver keIWs upp utan att hoppa
 const LUFT_TID = 0.15;       // s i luften innan det räknas som att falla
+const GLID_MAX = 0.3;        // m, så långt glidlagret kan glida åt varje håll
 
 // keIWs storlek (m, fötter till huvud) beror på banan, så att han syns lika
 // bra på långa banor. Vikten är densamma. Startpunkten, målet och farten
@@ -96,6 +97,19 @@ function keiwsSteg(sim, dt) {
 
 // Bitar som faller in i klipporna stannar på ytan (enkelt: noden flyttas
 // ut till närmaste yta och tappar farten in i berget).
+// Glidlagret har stopp: det rör sig bara några dm (även när bron rasar).
+function lagerStopp(sim) {
+    const m = sim.m;
+    for (let p = 0; p < m.np; p++) {
+        if (!m.punkter[p].glid) continue;
+        const ix = 2 * p, u = m.q[ix];
+        if (Math.abs(u) <= GLID_MAX) continue;
+        m.q[ix] = Math.sign(u) * GLID_MAX;
+        if (m.v[ix] * u > 0) m.v[ix] = 0;
+        m.a[ix] = 0;
+    }
+}
+
 function berget(sim) {
     const m = sim.m, L = sim.bana.spann;
     for (let p = 0; p < m.np; p++) {
@@ -119,6 +133,7 @@ function simSteg(sim, dt = DT) {
     sim.m.tyngd = s * s * (3 - 2 * s);
     keiwsSteg(sim, dt);
     steg(sim.m, dt);
+    lagerStopp(sim);
     berget(sim);
     sim.brott += brott(sim.m);
     for (const e of sim.m.element) if (!e.dod) sim.maxU = Math.max(sim.maxU, e.u, sim.m.balkar[e.balk].uk);
