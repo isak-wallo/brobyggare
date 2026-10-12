@@ -12,7 +12,6 @@ const TEST = new URLSearchParams(location.search).has('test');
 // Testsidan (GitHub Pages och lokalt) har en knapp som delar konstruktionen
 // som text, för felsökning. Inte på den skarpa sidan.
 const FELSOK = TEST || /github\.io$|^localhost$|^127\./.test(location.hostname);
-const RUTNAT = 1;            // m mellan punkterna man bygger på
 const MAX_LANGD = 12;        // m, längsta balken
 const START_NARA = 24;       // px: så nära en knutpunkt börjar en ny balk i den
 const RATTA_TID = 2.5;       // s som en ny balks startände går att dra rätt
@@ -33,6 +32,7 @@ const FARG = {
     himmel: ['#9fcbe0', '#d8ecf2'], berg: '#8b7a66', bergMork: '#6f604f', gras: '#7cae5c',
     vatten: 'rgba(63, 120, 160, 0.82)', vag: '#5d6670',
     material: { limtra: ['#c9975b', '#8a6438'], stal: ['#8d9aa6', '#4f5b66'], vajer: ['#b7bec4', '#6d767e'] },
+    betong: '#b4afa5', betongMork: '#948f86',
     nod: '#2f3f4c', punkt: 'rgba(47, 63, 76, 0.28)', fel: '#d0503c', text: '#2f3f4c'
 };
 
@@ -53,6 +53,7 @@ let historik = [];
 let verktyg = 'rita';         // 'rita' (nya balkar), 'andra' (flytta, byta, riva) eller
                              // null (inget valt: ett finger flyttar vyn)
 let ritVag = true;            // ritar väg (som keIWs går på) eller balk
+let ritPelare = false;       // sätter pelare i stället (banor med pelare)
 let valjareOppen = false;     // väljaren för väg/balk och storlek (verktyget Rita)
 let storlek = 2;              // Mellan
 let ritMaterial = 'limtra';   // materialet man ritar med
@@ -143,6 +144,7 @@ function bytBana(nr) {
     ratta = null;
     zoom = 1;
     mitt = null;
+    if (!bana.pelare) ritPelare = false;
     try { localStorage.setItem(SPARA_BANA, nr); } catch (e) { /* privat läge */ }
     anpassa();
     uppdateraInfo();
@@ -167,20 +169,56 @@ function nodVid(x, y) {
 function tillaten(x, y) {
     const o = bana.omrade;
     if (bana.fasten.some(([fx, fy]) => fx === x && fy === y)) return true;
-    if (y < o.y0 || y > o.y1 || x < o.x0 || x > o.x1) return false;
+    if (y < o.y0 || y > o.y1 || x < o.x0 || x > o.x1 || iFarleden(x, y)) return false;
     if (x <= 0 || x >= bana.spann) return y > 0;
     return true;
 }
 
+// Farleden (en del banor): under farled.y mellan x0 och x1 får inget byggas,
+// varken knutpunkter eller balkar som går igenom.
+const iFarleden = (x, y) => !!bana.farled && x >= bana.farled.x0 && x <= bana.farled.x1 && y < bana.farled.y - 1e-9;
+
+function genomFarleden([x1, y1], [x2, y2]) {
+    const f = bana.farled;
+    if (!f) return false;
+    const fran = Math.max(f.x0, Math.min(x1, x2)), till = Math.min(f.x1, Math.max(x1, x2));
+    if (fran > till) return false;
+    // Lägsta punkten på den del av balken som ligger över farleden.
+    const yVid = x => Math.abs(x2 - x1) < 1e-9 ? Math.min(y1, y2) : y1 + (y2 - y1) * (x - x1) / (x2 - x1);
+    return Math.min(yVid(fran), yVid(till)) < f.y - 1e-9;
+}
+
+// Pelare står över vattnet (inte på land och inte i farleden).
+function pelareTillaten(x, y) {
+    const f = bana.farled;
+    return !!bana.pelare && x > 0 && x < bana.spann && tillaten(x, y) && !(f && x >= f.x0 && x <= f.x1);
+}
+
+// Sätter en pelare i punkten (en knutpunkt som redan finns blir pelare),
+// eller tar bort den som står där.
+function vaxlaPelare(x, y) {
+    const i = nodVid(x, y), n = ritning.noder[i];
+    if ((n && n.fast && !n.pelare) || !pelareTillaten(x, y)) return false;
+    andra(() => {
+        if (!n) ritning.noder.push({ x, y, fast: true, styv: false, pelare: true });
+        else if (n.pelare) { n.fast = false; n.styv = true; delete n.pelare; stada(); }
+        else { n.fast = true; n.pelare = true; }
+    });
+    vald = -1;
+    return true;
+}
+
+const rutnat = () => bana.rutnat || 1;   // m mellan punkterna man bygger på
+
 // Närmaste tillåtna rutnätspunkt, eller null.
 function snappa(wx, wy) {
-    const x = Math.round(wx / RUTNAT) * RUTNAT, y = Math.round(wy / RUTNAT) * RUTNAT;
+    const s = rutnat(), x = Math.round(wx / s) * s, y = Math.round(wy / s) * s;
     return tillaten(x, y) ? [x, y] : null;
 }
 
 function laggTillBalk(p, q) {
     const L = Math.hypot(q[0] - p[0], q[1] - p[1]);
-    if (L < 1e-6 || L > MAX_LANGD + 1e-6) return false;
+    if (L < 1e-6 || L > MAX_LANGD + 1e-6 || genomFarleden(p, q)) return false;
     andra(() => {
         const idx = ([x, y]) => {
             let i = nodVid(x, y);
@@ -234,7 +272,7 @@ const langd = (p, q) => Math.hypot(q.x - p.x, q.y - p.y);
 function flyttaAnde(i, ande, [x, y]) {
     const b = ritning.balkar[i], annan = ritning.noder[ande === 'a' ? b.b : b.a];
     const L = Math.hypot(x - annan.x, y - annan.y);
-    if (L < 1e-6 || L > MAX_LANGD + 1e-6) return false;
+    if (L < 1e-6 || L > MAX_LANGD + 1e-6 || genomFarleden([x, y], [annan.x, annan.y])) return false;
     andra(() => {
         let t = nodVid(x, y);
         if (t < 0) { ritning.noder.push({ x, y, fast: false, styv: true }); t = ritning.noder.length - 1; }
@@ -254,7 +292,8 @@ function flyttaNod(i, [x, y]) {
     if (t === i) return false;
     for (const b of ritning.balkar) {
         if (b.a !== i && b.b !== i) continue;
-        if (langd({ x, y }, ritning.noder[b.a === i ? b.b : b.a]) > MAX_LANGD + 1e-6) return false;
+        const annan = ritning.noder[b.a === i ? b.b : b.a];
+        if (langd({ x, y }, annan) > MAX_LANGD + 1e-6 || genomFarleden([x, y], [annan.x, annan.y])) return false;
     }
     const valdBalk = ritning.balkar[vald];
     andra(() => {
@@ -272,16 +311,7 @@ function vaxlaForband(i) {
     andra(() => { ritning.noder[i].styv = !ritning.noder[i].styv; });
 }
 
-function kostnad() {
-    let k = 0;
-    for (const b of ritning.balkar) {
-        const na = ritning.noder[b.a], nb = ritning.noder[b.b];
-        const L = Math.hypot(nb.x - na.x, nb.y - na.y);
-        k += L * (profil(b.material || 'limtra', b.storlek).pris + (b.vag ? VAG.pris : 0));
-    }
-    for (const n of ritning.noder) if (!n.fast) k += FORBAND.pris[n.styv ? 'styvt' : 'ledat'];
-    return Math.round(k / 10) * 10;
-}
+const kostnad = () => ritningensKostnad(ritning, bana);
 
 // Spelets pengar: $$ (påhittad valuta).
 const kr = v => v.toLocaleString('sv-SE') + ' $$';
@@ -392,6 +422,40 @@ function ritaVatten(t) {
     ctx.fill();
 }
 
+// Pelarna: betong från botten upp till knutpunkten (före vattnet, som
+// ritas över).
+function ritaPelare() {
+    if (!bana.pelare) return;
+    const b = Math.max(4, 0.8 * kam.sk), botten = sy(bana.pelare.botten);
+    for (const n of ritning.noder) {
+        if (!n.pelare) continue;
+        const X = sx(n.x), Y = sy(n.y);
+        ctx.fillStyle = FARG.betong;
+        ctx.fillRect(X - b / 2, Y, b, botten - Y);
+        ctx.fillStyle = FARG.betongMork;
+        ctx.fillRect(X + b / 4, Y, b / 4, botten - Y);
+        ctx.fillRect(X - b, botten - b / 2, 2 * b, b / 2);
+    }
+}
+
+// Farleden: en streckad ruta där inget får byggas.
+function ritaFarled() {
+    const f = bana.farled;
+    if (!f) return;
+    const x0 = sx(f.x0), x1 = sx(f.x1), y = sy(f.y), h = duk.height / dpr;
+    ctx.strokeStyle = 'rgba(208, 80, 60, 0.75)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([8, 6]);
+    ctx.beginPath(); ctx.moveTo(x0, h); ctx.lineTo(x0, y); ctx.lineTo(x1, y); ctx.lineTo(x1, h); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.font = 'bold 13px system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillStyle = 'rgba(208, 80, 60, 0.9)';
+    ctx.fillText('Farled', (x0 + x1) / 2, y + 6);
+    ctx.textBaseline = 'alphabetic';
+}
+
 // Utnyttjandegraden som färg: grön → gul → röd.
 function utnyttjandeFarg(u) {
     u = Math.max(0, Math.min(1, u));
@@ -477,8 +541,8 @@ function ritaBygg() {
     // Punkterna man kan bygga på.
     const o = bana.omrade, r = Math.max(1.5, 0.05 * kam.sk);
     ctx.fillStyle = FARG.punkt;
-    for (let x = o.x0; x <= o.x1; x += RUTNAT) {
-        for (let y = o.y0; y <= o.y1; y += RUTNAT) {
+    for (let x = o.x0; x <= o.x1; x += rutnat()) {
+        for (let y = o.y0; y <= o.y1; y += rutnat()) {
             if (tillaten(x, y)) { ctx.beginPath(); ctx.arc(sx(x), sy(y), r, 0, 7); ctx.fill(); }
         }
     }
@@ -488,7 +552,7 @@ function ritaBygg() {
     }
     for (const n of ritning.noder) ritaNod(n.x, n.y, n);
     ritaVald();
-    if (drag && (drag.till[0] !== drag.fran[0] || drag.till[1] !== drag.fran[1])) {
+    if (drag && !drag.pelare && (drag.till[0] !== drag.fran[0] || drag.till[1] !== drag.fran[1])) {
         const [x1, y1] = drag.fran, [x2, y2] = drag.till;
         const ok = Math.hypot(x2 - x1, y2 - y1) <= MAX_LANGD + 1e-6;
         ctx.globalAlpha = 0.6;
@@ -767,6 +831,7 @@ const TIPS = {
     balk: 'Dra mellan två punkter: balk. Tryck på en knutpunkt: styv/ledad.',
     andra: 'Tryck på en balk för att ändra eller riva den, eller dra en knutpunkt.',
     andraVald: 'Dra i en ände, eller byt material, storlek (−/+ i halvsteg) eller riv i rutan.',
+    pelare: 'Tryck på en punkt över vattnet: pelare från botten (inte i farleden). Tryck igen: bort.',
     fri: 'Inget verktyg valt: dra med ett finger för att flytta vyn (zooma in först). Välj Väg eller Ändra för att bygga.'
 };
 
@@ -783,7 +848,7 @@ function uppdateraInfo() {
         tredje = sim.brott ? '<span class="over">Bron gick sönder</span>'
             : 'Högsta utnyttjande ' + Math.round(sim.maxU * 100) + ' %';
     } else {
-        tredje = TIPS[!verktyg ? 'fri' : verktyg === 'andra' ? (vald >= 0 ? 'andraVald' : 'andra') : ritVag ? 'vag' : 'balk'];
+        tredje = TIPS[!verktyg ? 'fri' : verktyg === 'andra' ? (vald >= 0 ? 'andraVald' : 'andra') : ritPelare ? 'pelare' : ritVag ? 'vag' : 'balk'];
     }
     infoEl.innerHTML = '<div class="rad">' + pil('forra', '‹', !bygger || banaNr === 0)
         + '<b>Bana ' + (banaNr + 1) + ' · ' + bana.namn + '</b>'
@@ -791,7 +856,8 @@ function uppdateraInfo() {
         + '<div class="rad"><span class="' + (over ? 'over' : '') + '">' + kr(k) + '</span> av ' + kr(bana.budget) + '</div>'
         + '<div class="rad tredje' + (bygger ? ' tips' : '') + '">' + tredje + '</div>';
     for (const v of ['rita', 'andra']) knappar[v].classList.toggle('vald', verktyg === v);
-    knappar.rita.innerHTML = '<span>' + (ritVag ? 'Väg' : 'Balk') + '</span><small>' + MATERIAL[ritMaterial].kort + ' · ' + storleksNamn(storlek) + ' ▴</small>';
+    knappar.rita.innerHTML = ritPelare ? '<span>Pelare</span><small>Betong ▴</small>'
+        : '<span>' + (ritVag ? 'Väg' : 'Balk') + '</span><small>' + MATERIAL[ritMaterial].kort + ' · ' + storleksNamn(storlek) + ' ▴</small>';
     knappar.kor.textContent = lageNu === 'bygg' ? 'Kör' : 'Bygg';
     knappar.kor.classList.toggle('stopp', lageNu !== 'bygg');
     for (const v of ['rita', 'andra']) knappar[v].disabled = lageNu !== 'bygg';
@@ -816,9 +882,18 @@ function visaValjare() {
     const vag = valdBalk ? valdBalk.vag : ritVag, st = valdBalk ? valdBalk.storlek : storlek;
     const mat = valdBalk ? valdBalk.material || 'limtra' : ritMaterial;
     const knapp = (data, text, vald) => '<button ' + data + (vald ? ' class="vald"' : '') + (gra ? ' disabled' : '') + '>' + text + '</button>';
-    const html = '<div class="typ">' + knapp('data-t="vag"', 'Väg', vag) + knapp('data-t="balk"', 'Balk', !vag)
+    const pelare = !valdBalk && ritPelare, medPelare = bana.pelare && !valdBalk && verktyg === 'rita';
+    const typ = '<div class="typ' + (medPelare ? ' tre' : '') + '">' + knapp('data-t="vag"', 'Väg', vag && !pelare)
+        + knapp('data-t="balk"', 'Balk', !vag && !pelare) + (medPelare ? knapp('data-t="pelare"', 'Pelare', pelare) : '')
         + (valdBalk ? '<button data-t="riv" class="riv">Riv</button><button data-t="rivallt" class="riv">Riv allt</button>' : '')
-        + '</div>'
+        + '</div>';
+    if (pelare) {
+        const p = bana.pelare, html = typ + '<p class="pelarinfo">Betongpelare från botten: ' + kr(p.pris) + ' + '
+            + kr(p.perMeter) + '/m (' + kr(pelarensPris(bana, 0)) + ' upp till vägen). Över vattnet, inte i farleden.</p>';
+        if (valjareEl.innerHTML !== html) valjareEl.innerHTML = html;
+        return;
+    }
+    const html = typ
         + '<div class="material">' + Object.entries(MATERIAL).filter(([, m]) => !m.kommer).map(([nyckel, m]) =>
             knapp('data-m="' + nyckel + '"', m.kort, nyckel === mat)).join('') + '</div>'
         + '<div class="storlekar">' + STORLEKAR.map((namn, i) => knapp('data-s="' + i + '"', '<b>' + namn + '</b><small>'
@@ -1178,8 +1253,10 @@ valjareEl.addEventListener('click', e => {
         andra(() => { ritning = nyRitning(bana); });     // går att ångra
         vald = -1;
     }
+    else if (b.dataset.t === 'pelare') ritPelare = true;
     else if (b.dataset.t) {
         const vag = b.dataset.t === 'vag';
+        ritPelare = false;
         if (valdBalk) { if (valdBalk.vag !== vag) andra(() => { valdBalk.vag = vag; }); }
         else ritVag = vag;
     } else if (b.dataset.m) {
@@ -1310,9 +1387,15 @@ duk.addEventListener('pointerdown', e => {
         }
     }
     ratta = null;
+    // Pelare: ett tryck på en punkt sätter eller tar bort en.
+    if (ritPelare) {
+        const p = snappa(wx, wy);
+        if (p) drag = { fran: p, till: p, pelare: true };
+        return;
+    }
     // Nära en knutpunkt eller ett fäste börjar balken där, annars i
     // närmaste punkt (man bygger nästan alltid vidare på något).
-    const nod = narmasteNod(wx, wy, Math.max(RUTNAT / 2, START_NARA / kam.sk), true);
+    const nod = narmasteNod(wx, wy, Math.max(rutnat() / 2, START_NARA / kam.sk), true);
     const p = nod >= 0 ? [ritning.noder[nod].x, ritning.noder[nod].y] : snappa(wx, wy);
     if (p) drag = { fran: p, till: p };
 });
@@ -1355,9 +1438,12 @@ function slapp(e) {
         return;
     }
     if (!drag) return;
-    const { fran, till } = drag;
+    const { fran, till, pelare } = drag;
     drag = null;
-    if (fran[0] === till[0] && fran[1] === till[1]) {
+    if (pelare) {
+        if (fran[0] === till[0] && fran[1] === till[1]) vaxlaPelare(...fran);
+        uppdateraInfo();
+    } else if (fran[0] === till[0] && fran[1] === till[1]) {
         // Ett tryck på en knutpunkt: växla mellan styvt och ledat.
         const i = nodVid(fran[0], fran[1]);
         if (i >= 0) vaxlaForband(i);
@@ -1414,6 +1500,8 @@ function loop(nu) {
     }
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ritaBakgrund();
+    if (lageNu === 'bygg') ritaFarled();
+    ritaPelare();
     if (lageNu === 'bygg') ritaBygg(); else ritaProv();
     ritaKeiws();
     ritaVatten(nu / 1000);

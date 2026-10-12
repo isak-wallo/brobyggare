@@ -380,6 +380,24 @@ dem stegar i halvsteg (Pytte, Pytte+, Liten … Stor+, Jätte; nio per
 material). Halvstegen: trä 66×200, 78×250, 115×300, 140×405; stål HEA
 120, 160, 200, 260. Storlek 0,5 … 3,5 i ritningen (PLUS i material.js).
 
+v28-test: kameran siktar på keIWs som han ritas när man zoomat in (liggande
+syntes bara toppen av huvudet).
+
+v29-test: bana 3, Kanalen. 48 m spann, rutnät på 2 m (bana.rutnat),
+fästen 4 m ner, keIWs 5 m. Farled x 16–32 under y = −2: inga knutpunkter
+och inga balkar igenom. Pelare (väljaren: Väg/Balk/Pelare, bara på banor
+med bana.pelare): ett tryck på en punkt över vattnet utanför farleden
+sätter en betongpelare från botten (−10) upp dit, ett tryck till tar bort
+den. Pelaren är en fast, ledad knutpunkt (tryck i Väg/Balk: styv). Pris
+3 000 $$ + 150 $$/m (4 500 $$ till vägen). Budget 55 000 $$. Provräknat:
+väg Mellan på två pelare 4 m ner med V-strävor Liten 53 040 $$ (lösningen,
+79 %); Pratt ovanpå h6 Liten ca 51 400 $$; rak väg Stor+ på två pelare vid
+vägen ca 54 000 $$ (102 %, går av); stål Liten+ på pelare ca 56 300 $$.
+Kostnaden räknas i ritningensKostnad (banor.js), samma i testerna.
+
+Beslut 2026-10-12: Kanalen med pelare från botten och farled. Älven
+(minst 100 m) blir sista vattendraget, senare.
+
 Beslut 2026-10-12: stålpriset behålls (15 $$/kg). Plastiska leder i stål
 (moment begränsat till Mpl, brott först vid en vridgräns) väntar tills vi
 gör banor där stål ska löna sig.

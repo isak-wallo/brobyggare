@@ -101,6 +101,12 @@ def valj(sida, typ, storlek):
     sida.click(f'#valjare [data-s="{storlek}"]')
 
 
+def oppna_valjaren(sida):
+    """Liggande stängs väljaren när man bygger; Rita öppnar den igen."""
+    if not sida.locator('#valjare').is_visible():
+        sida.click('#verktyg [data-v=rita]')
+
+
 def antal_balkar(sida):
     return sida.evaluate('() => window.bro.ritning.balkar.length')
 
@@ -499,6 +505,48 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     sida.click('#info [data-v=forra]')
     kolla(f'{namn}: bana 1 har kvar sin ritning', sida.evaluate('() => window.bro.banaNr') == 0
           and antal_balkar(sida) == 1)
+
+    # Bana 3, Kanalen: rutnät på 2 m, en farled där inget får byggas, och
+    # pelare från botten (som kostar). Lösningen (väg på två pelare) håller.
+    sida.click('#info [data-v=nasta]')
+    sida.click('#info [data-v=nasta]')
+    kolla(f'{namn}: pilen byter till bana 3 (Kanalen)', sida.evaluate('() => window.bro.banaNr') == 2
+          and antal_balkar(sida) == 0)
+    valj(sida, 'vag', 2)
+    dra(sida, (0, 0), (3.7, 0.3))
+    r = sida.evaluate('() => window.bro.ritning')
+    kolla(f'{namn}: rutnätet på Kanalen är 2 m', antal_balkar(sida) == 1
+          and (r['noder'][r['balkar'][0]['b']]['x'], r['noder'][r['balkar'][0]['b']]['y']) == (4, 0))
+    kolla(f'{namn}: inget i farleden', sida.evaluate('''() => !tillaten(20, -4) && tillaten(20, -2)
+          && tillaten(14, -4) && !laggTillBalk([14, -4], [20, -2]) && laggTillBalk([14, -4], [18, 0])
+          && !flyttaNod(nodVid(18, 0), [18, -4])'''), f'{antal_balkar(sida)} balkar')
+    sida.click('#verktyg [data-v=angra]')
+    fore = sida.evaluate('() => window.bro.kostnad()')
+    oppna_valjaren(sida)
+    sida.click('#valjare [data-t=pelare]')
+    kolla(f'{namn}: väljaren har Pelare med pris', 'Pelare' in sida.inner_text('#verktyg [data-v=rita]')
+          and '4 500' in sida.inner_text('#valjare').replace(' ', ' '), sida.inner_text('#valjare'))
+    tryck(sida, (10, -2))
+    n = sida.evaluate('() => window.bro.ritning.noder.find(n => n.x === 10 && n.y === -2)')
+    kolla(f'{namn}: ett tryck sätter en pelare (3 000 + 8 m × 150 $$)', n and n.get('pelare') and n['fast']
+          and sida.evaluate('() => window.bro.kostnad()') == fore + 4200)
+    tryck(sida, (10, -2))
+    tryck(sida, (24, 0))
+    tryck(sida, (-2, 2))
+    kolla(f'{namn}: pelaren tas bort igen, och går inte i farleden eller på land',
+          not sida.evaluate('() => window.bro.ritning.noder.some(n => n.pelare)')
+          and sida.evaluate('() => window.bro.kostnad()') == fore)
+    oppna_valjaren(sida)
+    sida.click('#valjare [data-t=vag]')
+    sida.evaluate('() => { window.bro.ritning = window.bro.losningsRitning(); }')
+    kolla(f'{namn}: lösningen på Kanalen ryms i budgeten', sida.evaluate('() => window.bro.kostnad()')
+          <= sida.evaluate('() => BANOR[2].budget'))
+    bild(sida, bilder, f'{namn}-10-kanalen')
+    sida.click('#verktyg [data-v=kor]')
+    sida.wait_for_timeout(9000)
+    bild(sida, bilder, f'{namn}-11-kanalen-prov')
+    kolla(f'{namn}: bron på pelare över Kanalen håller', vanta_resultat(sida, 60).startswith('Bron höll!'))
+    sida.click('#ruta [data-v=bygg]')
     kolla(f'{namn}: inga JavaScript-fel', not js_fel, '; '.join(js_fel))
     sida.close()
 
