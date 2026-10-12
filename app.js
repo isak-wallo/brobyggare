@@ -292,12 +292,12 @@ function anpassa() {
     duk.style.width = w + 'px';
     duk.style.height = h + 'px';
     // Luft för infotexten upptill. Hela bana.vy ska synas, och blir det
-    // höjd över (mobilen står) går allt till himlen: banan står längst ner
-    // med bara lite vatten under, och rutor och text får plats ovanför.
+    // höjd över (mobilen står) går det mesta (85 %) till himlen: banan står
+    // långt ner med lite vatten under, och rutor och text får plats ovanför.
     const vy = bana.vy, luft = luftNu;
     const sk = Math.min(w / (vy.x1 - vy.x0), (h - luft) / (vy.y1 - vy.y0));
     const over = h - luft - sk * (vy.y1 - vy.y0);
-    const oy = luft + over + sk * vy.y1, cy = (oy - (luft + h) / 2) / sk;
+    const oy = luft + over * 0.85 + sk * vy.y1, cy = (oy - (luft + h) / 2) / sk;
     const cx = (vy.x0 + vy.x1) / 2;
     const hw = w / 2 / sk, hh = (h - luft) / 2 / sk;
     bas = { sk, cx, cy, B: { x0: cx - hw, x1: cx + hw, y0: cy - hh, y1: cy + hh } };
