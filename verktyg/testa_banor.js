@@ -7,7 +7,7 @@ module.exports = function (S, kolla) {
     const ritningensKostnad = S('ritningensKostnad');
     const enBalk = (bana, storlek, material = 'limtra') => {
         const r = nyRitning(bana);
-        r.balkar.push({ a: 0, b: 2, storlek, vag: true, material });
+        r.balkar.push({ a: 0, b: bana.fasten.findIndex(f => f[2] === 'glid'), storlek, vag: true, material });
         return r;
     };
     BANOR.forEach((bana, i) => {
@@ -23,9 +23,9 @@ module.exports = function (S, kolla) {
         sim = korSim(enBalk(bana, 1), bana);
         kolla(namn + ': en liten balk går av', sim.resultat === 'vatten' && sim.brott > 0,
               sim.resultat + ', brott ' + sim.brott);
-        // En rak träbalk räcker bara över det korta spannet.
+        // En rak träbalk räcker bara över de korta spannen.
         sim = korSim(enBalk(bana, 4), bana);
-        const raktTra = bana.spann <= 12;
+        const raktTra = bana.spann <= 20;     // (över budget på Ravinen)
         kolla(namn + (raktTra ? ': en jättebalk av trä håller' : ': en jättebalk av trä räcker inte rakt'),
               raktTra ? sim.resultat === 'klarade' && sim.brott === 0 : sim.resultat === 'vatten',
               sim.resultat + ', max ' + Math.round(sim.maxU * 100) + ' %');

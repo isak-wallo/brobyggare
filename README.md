@@ -5,7 +5,7 @@ räknas med en riktig liten FE-lösare (korotationella balkelement,
 implicit tidsstegning), och balkarna är riktiga profiler i limträ, stål (HEA)
 eller betong, plus kablar av stållina.
 
-**Utkast:** sex banor (12 m till 400 m spann), byt med pilarna. Dra balkar
+**Utkast:** sju banor (12 m till 400 m spann, vatten och torra dalar), byt med pilarna. Dra balkar
 mellan punkterna och tryck **Kör**. Färgen visar hur hårt balken är
 utnyttjad (grön → gul → röd). Över 100 % går den sönder.
 

@@ -29,6 +29,35 @@ const keiwsStart = bana => -1.25 * keiwsHojd(bana);
 const keiwsMal = bana => bana.spann + 1.25 * keiwsHojd(bana);
 const keiwsFart = bana => 1.8 * keiwsHojd(bana);      // m/s
 
+// Marken: höjden vid x. Utanför spannet är det land (y = 0, eller vatten
+// bortom ön). Vattenbanorna har branta kanter (`kant`: m i sidled per m
+// ner, rundade överst), landbanorna en mjuk dal (`dal`: {djup, bredd}, där
+// kanten går ner som en cosinusvåg över bredden). -Infinity: inget berg.
+function markY(bana, x) {
+    const L = bana.spann;
+    if (bana.ö && x >= L + bana.ö) return -Infinity;
+    if (x <= 0 || x >= L) return 0;
+    const d = Math.min(x, L - x);
+    if (bana.dal) {
+        const { djup, bredd } = bana.dal;
+        return d >= bredd ? -djup : -djup * (1 - Math.cos(Math.PI * d / bredd)) / 2;
+    }
+    const k = bana.kant || 0;          // rundad över den översta halvmetern
+    if (k <= 0) return -Infinity;
+    return d <= k ? -d * d / (2 * k * k) : -(d - k / 2) / k;
+}
+
+// Hur långt in från kanten marken når på djupet t > 0 (markY baklänges).
+function kantAvstand(bana, t) {
+    if (bana.dal) {
+        const { djup, bredd } = bana.dal;
+        return t >= djup ? Infinity : bredd / Math.PI * Math.acos(1 - 2 * t / djup);
+    }
+    const k = bana.kant || 0;
+    if (k <= 0) return 0;
+    return t <= 0.5 ? Math.sqrt(2 * k * k * t) : k * t + k / 2;
+}
+
 function nySim(ritning, bana) {
     const m = byggModell(ritning, bana.element);
     const statisk = losStatiskt(m, 1, 0) && spannKablar(m) && staTyngden(m);
@@ -104,7 +133,8 @@ function keiwsSteg(sim, dt) {
         k.luft += dt;
         if (k.luft > LUFT_TID) k.lage = 'faller';
     }
-    if (k.y < sim.bana.vatten) {
+    const L = sim.bana.spann;
+    if (k.y < sim.bana.vatten || (k.x > 0 && k.x < L && k.y < markY(sim.bana, k.x) - 0.05)) {
         k.lage = 'plask';
         if (!sim.resultat) { sim.resultat = 'vatten'; sim.slutTid = sim.t; }
     } else if (k.x > keiwsMal(sim.bana) && k.lage === 'gar') {
@@ -113,8 +143,8 @@ function keiwsSteg(sim, dt) {
     }
 }
 
-// Bitar som faller in i klipporna stannar på ytan (enkelt: noden flyttas
-// ut till närmaste yta och tappar farten in i berget).
+// Bitar som faller in i marken stannar på ytan (enkelt: noden flyttas ut
+// till närmaste yta, uppåt eller i sidled, och tappar farten in i berget).
 // Glidlagret har stopp: det rör sig bara några dm (även när bron rasar).
 function lagerStopp(sim) {
     const m = sim.m;
@@ -129,18 +159,21 @@ function lagerStopp(sim) {
 }
 
 function berget(sim) {
-    const m = sim.m, L = sim.bana.spann;
+    const m = sim.m, b = sim.bana, L = b.spann;
     for (let p = 0; p < m.np; p++) {
         if (m.punkter[p].fast) continue;
         const [x, y] = lage(m, p);
-        if (y >= 0 || (x > 0 && x < L)) continue;
+        const g = markY(b, x);
+        if (y >= g) continue;
         const ix = 2 * p, iy = 2 * p + 1;
-        const tillKant = x <= 0 ? -x : x - L;
-        if (-y < tillKant) {
-            m.q[iy] -= y; m.v[iy] = Math.max(0, m.v[iy]); m.a[iy] = 0;
+        // I sidled: ut till kanten på samma höjd (mot spannets mitt).
+        const a = y < 0 ? kantAvstand(b, -y) : 0, mot = x < L / 2 ? 1 : -1;
+        const sida = Math.max(0, x < L / 2 ? a - x : x - (L - a));
+        if (g - y <= sida) {
+            m.q[iy] += g - y; m.v[iy] = Math.max(0, m.v[iy]); m.a[iy] = 0;
         } else {
-            m.q[ix] += x <= 0 ? -x : L - x;
-            m.v[ix] = x <= 0 ? Math.max(0, m.v[ix]) : Math.min(0, m.v[ix]); m.a[ix] = 0;
+            m.q[ix] += mot * sida;
+            m.v[ix] = mot > 0 ? Math.max(0, m.v[ix]) : Math.min(0, m.v[ix]); m.a[ix] = 0;
         }
     }
 }

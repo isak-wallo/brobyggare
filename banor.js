@@ -5,8 +5,11 @@
 //   element, maxLangd, maxKabel, maxZoom: för de stora banorna (fysikens
 //           elementlängd, längsta balk och kabel i m, största zoom)
 //   ö:      bredden på ön till höger (annars fortsätter landet)
+//   kant:   vattenbanornas kanter: m i sidled per m ner (branta, rundade
+//           överst); dal: {djup, bredd} för landbanornas mjuka dal (se
+//           markY i spel.js)
 //   material: vilka material som finns (bara limträ om det saknas); stålet
-//           kommer på Kanalen, betongen och kablarna på Älven
+//           kommer på Dalgången, betongen och kablarna på Älven
 //   fasten: fästpunkterna i berget [x, y] eller [x, y, lager]. Vägbanans
 //           fästen är brolager (alltid ledade): 'fast' låser x och y,
 //           'glid' bara y (rör sig fritt i sidled, som på riktiga broar,
@@ -15,7 +18,7 @@
 //           ligger på land, 3 m bakom kanterna). Ett fäste ute i vattnet
 //           är ett fundament (ritas som betong ner till botten).
 //   vatten: vattenytan, keIWs som hamnar där har misslyckats
-//   torr:   inget vatten, bara marken i botten (på vattnets höjd)
+//   torr:   inget vatten, bara marken i dalen (vatten = dalens botten)
 //   budget: i $$ (spelets pengar); man får bygga över, men då blir det
 //           inga stjärnor
 //   keiws:  keIWs höjd i meter (bara utseendet, större på långa banor)
@@ -33,17 +36,21 @@ const BANOR = [
     {
         namn: 'Bäcken',
         spann: 12,
-        fasten: [[0, 0, 'fast'], [0, -3], [12, 0, 'glid'], [12, -3], [-3, 0], [15, 0]],
+        fasten: [[0, 0, 'fast'], [12, 0, 'glid']],
+        kant: 1 / 3,
         vatten: -6,
         budget: 12000,
         keiws: 2,
         omrade: { x0: -3, x1: 15, y0: -5, y1: 7 },
         vy: { x0: -4, x1: 16, y0: -6.5, y1: 7.5 },
         losning: {
-            noder: [[0, 0], [0, -3], [12, 0], [12, -3], [-3, 0], [15, 0], [4, 0], [8, 0], [4, -2], [8, -2]],
+            // Väg Pytte med ett fackverk av Pytte− ovanpå, 2 m högt (9 380 $$).
+            noder: [
+                [0, 0], [12, 0], [4, 0], [8, 0], [4, 2], [8, 2]
+            ],
             balkar: [
-                [0, 6, 1, true], [6, 7, 1, true], [7, 2, 1, true],
-                [1, 8, 1], [8, 6, 1], [3, 9, 1], [9, 7, 1], [8, 9, 1]
+                [0, 2, 0, true], [2, 3, 0, true], [3, 1, 0, true], [0, 4, -0.25], [4, 5, -0.25], [5, 1, -0.25],
+                [2, 4, -0.25], [3, 5, -0.25], [4, 3, -0.25]
             ]
         }
     },
@@ -51,54 +58,85 @@ const BANOR = [
         // Som Bäcken, men dubbelt så långt spann.
         namn: 'Ån',
         spann: 24,
-        fasten: [[0, 0, 'fast'], [0, -3], [24, 0, 'glid'], [24, -3], [-3, 0], [27, 0]],
+        fasten: [[0, 0, 'fast'], [1, -3], [24, 0, 'glid'], [23, -3]],
+        kant: 1 / 3,
         vatten: -6,
         budget: 26000,
         keiws: 3.5,
         omrade: { x0: -3, x1: 27, y0: -5, y1: 9 },
         vy: { x0: -7, x1: 31, y0: -6.5, y1: 9.5 },
         losning: {
-            // Fackverk av Pytte: väg överst, underram 3 m ner (22 970 $$).
-            noder: [[0, 0], [0, -3], [24, 0], [24, -3], [-3, 0], [27, 0], [4, 0], [8, 0], [12, 0], [16, 0], [20, 0],
+            // Fackverk av Pytte: väg överst, underram 3 m ner (22 650 $$).
+            noder: [[0, 0], [1, -3], [24, 0], [23, -3], [4, 0], [8, 0], [12, 0], [16, 0], [20, 0],
                     [4, -3], [8, -3], [12, -3], [16, -3], [20, -3]],
             balkar: [
-                [0, 6, 0, true], [6, 7, 0, true], [7, 8, 0, true], [8, 9, 0, true], [9, 10, 0, true], [10, 2, 0, true],
-                [1, 11, 0], [11, 12, 0], [12, 13, 0], [13, 14, 0], [14, 15, 0], [15, 3, 0],
-                [6, 11, 0], [7, 12, 0], [8, 13, 0], [9, 14, 0], [10, 15, 0],
-                [1, 6, 0], [11, 7, 0], [12, 8, 0], [8, 14, 0], [9, 15, 0], [10, 3, 0]
+                [0, 4, 0, true], [4, 5, 0, true], [5, 6, 0, true], [6, 7, 0, true], [7, 8, 0, true], [8, 2, 0, true],
+                [1, 9, 0], [9, 10, 0], [10, 11, 0], [11, 12, 0], [12, 13, 0], [13, 3, 0],
+                [4, 9, 0], [5, 10, 0], [6, 11, 0], [7, 12, 0], [8, 13, 0],
+                [1, 4, 0], [9, 5, 0], [10, 6, 0], [6, 12, 0], [7, 13, 0], [8, 3, 0]
             ]
         }
     },
     {
-        // En djup och torr dalgång med fästen långt ner i bergväggarna (6
-        // och 12 m ner): ett fackverk under vägen, eller en båge.
-        namn: 'Dalgången',
-        spann: 36,
-        rutnat: 2,
-        material: ['limtra', 'stal'],
-        fasten: [[0, 0, 'fast'], [0, -12], [36, 0, 'glid'], [36, -12], [-4, 0], [40, 0], [0, -6], [36, -6]],
-        vatten: -20,
+        // En kort ravin utan vatten, med mjuka sluttningar och ett fäste
+        // halvvägs ner på var sida.
+        namn: 'Ravinen',
+        spann: 20,
+        fasten: [[0, 0, 'fast'], [4, -5], [20, 0, 'glid'], [16, -5]],
+        dal: { djup: 10, bredd: 8 },
+        vatten: -10,
         torr: true,
-        budget: 45000,
-        keiws: 4.5,
-        omrade: { x0: -4, x1: 40, y0: -12, y1: 12 },
-        vy: { x0: -8, x1: 44, y0: -21, y1: 12.5 },
+        budget: 16000,
+        keiws: 3,
+        omrade: { x0: -3, x1: 23, y0: -9, y1: 8 },
+        vy: { x0: -5, x1: 25, y0: -11, y1: 8.5 },
         losning: {
-            // Fackverk av Liten− (56×215) under vägen, 6 m högt, mellan
-            // fästena 6 m ner i bergväggarna (42 220 $$).
+            // Väg Liten på strävor av Pytte från fästena i sluttningarna (14 650 $$).
             noder: [
-                [0, 0], [0, -12], [36, 0], [36, -12], [-4, 0], [40, 0], [0, -6], [36, -6],
-                [2, 0], [4, 0], [6, 0], [8, 0], [10, 0], [12, 0], [14, 0], [16, 0],
-                [18, 0], [20, 0], [22, 0], [24, 0], [26, 0], [28, 0], [30, 0], [32, 0],
-                [34, 0], [6, -6], [12, -6], [18, -6], [24, -6], [30, -6]
+                [0, 0], [4, -5], [20, 0], [16, -5], [4, 0], [8, 0], [12, 0], [16, 0]
             ],
             balkar: [
-                [0, 8, 0.75, true], [8, 9, 0.75, true], [9, 10, 0.75, true], [10, 11, 0.75, true], [11, 12, 0.75, true], [12, 13, 0.75, true],
-                [13, 14, 0.75, true], [14, 15, 0.75, true], [15, 16, 0.75, true], [16, 17, 0.75, true], [17, 18, 0.75, true], [18, 19, 0.75, true],
-                [19, 20, 0.75, true], [20, 21, 0.75, true], [21, 22, 0.75, true], [22, 23, 0.75, true], [23, 24, 0.75, true], [24, 2, 0.75, true],
-                [6, 25, 0.75], [25, 26, 0.75], [26, 27, 0.75], [27, 28, 0.75], [28, 29, 0.75], [29, 7, 0.75],
-                [25, 10, 0.75], [26, 13, 0.75], [27, 16, 0.75], [28, 19, 0.75], [29, 22, 0.75], [6, 10, 0.75],
-                [25, 13, 0.75], [26, 16, 0.75], [16, 28, 0.75], [19, 29, 0.75], [22, 7, 0.75]
+                [0, 4, 1, true], [4, 5, 1, true], [5, 6, 1, true], [6, 7, 1, true], [7, 2, 1, true], [1, 4, 0],
+                [1, 5, 0], [3, 7, 0], [3, 6, 0]
+            ]
+        }
+    },
+    {
+        // En bred och djup dalgång utan vatten, med långa sluttningar där
+        // man kan ställa stöd. Här kommer stålet.
+        namn: 'Dalgången',
+        spann: 60,
+        rutnat: 2,
+        material: ['limtra', 'stal'],
+        fasten: [[0, 0, 'fast'], [12, -12], [60, 0, 'glid'], [48, -12], [16, -18], [44, -18]],
+        dal: { djup: 24, bredd: 24 },
+        vatten: -24,
+        torr: true,
+        budget: 75000,
+        keiws: 5.5,
+        omrade: { x0: -4, x1: 64, y0: -22, y1: 16 },
+        vy: { x0: -8, x1: 68, y0: -25, y1: 17 },
+        losning: {
+            // Båge av Mellan med pelare av Pytte till vägen (Liten), och
+            // snedsträvor av Mellan från de övre fästena (71 850 $$).
+            noder: [
+                [0, 0], [12, -12], [60, 0], [48, -12], [16, -18], [44, -18], [2, 0], [4, 0],
+                [6, 0], [8, 0], [10, 0], [12, 0], [14, 0], [16, 0], [18, 0], [20, 0],
+                [22, 0], [24, 0], [26, 0], [28, 0], [30, 0], [32, 0], [34, 0], [36, 0],
+                [38, 0], [40, 0], [42, 0], [44, 0], [46, 0], [48, 0], [50, 0], [52, 0],
+                [54, 0], [56, 0], [58, 0], [20, -12], [24, -8], [28, -6], [32, -6], [36, -8],
+                [40, -12]
+            ],
+            balkar: [
+                [0, 6, 1, true], [6, 7, 1, true], [7, 8, 1, true], [8, 9, 1, true], [9, 10, 1, true], [10, 11, 1, true],
+                [11, 12, 1, true], [12, 13, 1, true], [13, 14, 1, true], [14, 15, 1, true], [15, 16, 1, true], [16, 17, 1, true],
+                [17, 18, 1, true], [18, 19, 1, true], [19, 20, 1, true], [20, 21, 1, true], [21, 22, 1, true], [22, 23, 1, true],
+                [23, 24, 1, true], [24, 25, 1, true], [25, 26, 1, true], [26, 27, 1, true], [27, 28, 1, true], [28, 29, 1, true],
+                [29, 30, 1, true], [30, 31, 1, true], [31, 32, 1, true], [32, 33, 1, true], [33, 34, 1, true], [34, 2, 1, true],
+                [4, 35, 2], [35, 36, 2], [36, 37, 2], [37, 38, 2], [38, 39, 2], [39, 40, 2],
+                [40, 5, 2], [35, 15, 0], [36, 17, 0], [37, 19, 0], [38, 21, 0], [39, 23, 0],
+                [40, 25, 0], [1, 11, 0], [1, 8, 2], [1, 4, 0], [3, 29, 0], [3, 32, 2],
+                [3, 5, 0]
             ]
         }
     },
@@ -108,7 +146,8 @@ const BANOR = [
         namn: 'Kanalen',
         spann: 48,
         rutnat: 2,
-        fasten: [[0, 0, 'fast'], [0, -4], [48, 0, 'glid'], [48, -4], [-4, 0], [52, 0]],
+        fasten: [[0, 0, 'fast'], [2, -4], [48, 0, 'glid'], [46, -4], [-4, 0], [52, 0]],
+        kant: 0.5,
         vatten: -6,
         budget: 55000,
         keiws: 5,
@@ -144,7 +183,8 @@ const BANOR = [
         maxLangd: 20,
         maxKabel: 100,
         maxZoom: 12,
-        fasten: [[0, 0, 'fast'], [0, -5], [160, 0, 'glid'], [160, -5], [-5, 0], [165, 0], [40, -8], [120, -8]],
+        fasten: [[0, 0, 'fast'], [160, 0, 'glid'], [-5, 0], [165, 0], [40, -8], [120, -8]],
+        kant: 0.4,
         vatten: -8,
         budget: 175000,
         bil: true,
@@ -157,26 +197,26 @@ const BANOR = [
             // Väg av stål Pytte+ (för bilen), pyloner av betong Pytte 38 m
             // höga på fundamenten, fyra kablar Pytte åt var håll (164 350 $$).
             noder: [
-                [0, 0], [0, -5], [160, 0], [160, -5], [-5, 0], [165, 0], [40, -8, 'styv'], [120, -8, 'styv'],
-                [5, 0], [10, 0], [15, 0], [20, 0], [25, 0], [30, 0], [35, 0], [40, 0],
-                [45, 0], [50, 0], [55, 0], [60, 0], [65, 0], [70, 0], [75, 0], [80, 0],
-                [85, 0], [90, 0], [95, 0], [100, 0], [105, 0], [110, 0], [115, 0], [120, 0],
-                [125, 0], [130, 0], [135, 0], [140, 0], [145, 0], [150, 0], [155, 0], [40, 10],
-                [40, 20], [40, 30], [120, 10], [120, 20], [120, 30]
+                [0, 0], [160, 0], [-5, 0], [165, 0], [40, -8, 'styv'], [120, -8, 'styv'], [5, 0], [10, 0],
+                [15, 0], [20, 0], [25, 0], [30, 0], [35, 0], [40, 0], [45, 0], [50, 0],
+                [55, 0], [60, 0], [65, 0], [70, 0], [75, 0], [80, 0], [85, 0], [90, 0],
+                [95, 0], [100, 0], [105, 0], [110, 0], [115, 0], [120, 0], [125, 0], [130, 0],
+                [135, 0], [140, 0], [145, 0], [150, 0], [155, 0], [40, 10], [40, 20], [40, 30],
+                [120, 10], [120, 20], [120, 30]
             ],
             balkar: [
-                [0, 8, 0.25, true, 'stal'], [8, 9, 0.25, true, 'stal'], [9, 10, 0.25, true, 'stal'], [10, 11, 0.25, true, 'stal'], [11, 12, 0.25, true, 'stal'],
-                [12, 13, 0.25, true, 'stal'], [13, 14, 0.25, true, 'stal'], [14, 15, 0.25, true, 'stal'], [15, 16, 0.25, true, 'stal'], [16, 17, 0.25, true, 'stal'],
-                [17, 18, 0.25, true, 'stal'], [18, 19, 0.25, true, 'stal'], [19, 20, 0.25, true, 'stal'], [20, 21, 0.25, true, 'stal'], [21, 22, 0.25, true, 'stal'],
-                [22, 23, 0.25, true, 'stal'], [23, 24, 0.25, true, 'stal'], [24, 25, 0.25, true, 'stal'], [25, 26, 0.25, true, 'stal'], [26, 27, 0.25, true, 'stal'],
-                [27, 28, 0.25, true, 'stal'], [28, 29, 0.25, true, 'stal'], [29, 30, 0.25, true, 'stal'], [30, 31, 0.25, true, 'stal'], [31, 32, 0.25, true, 'stal'],
-                [32, 33, 0.25, true, 'stal'], [33, 34, 0.25, true, 'stal'], [34, 35, 0.25, true, 'stal'], [35, 36, 0.25, true, 'stal'], [36, 37, 0.25, true, 'stal'],
-                [37, 38, 0.25, true, 'stal'], [38, 2, 0.25, true, 'stal'], [6, 15, 0, false, 'betong'], [15, 39, 0, false, 'betong'], [39, 40, 0, false, 'betong'],
-                [40, 41, 0, false, 'betong'], [41, 13, 0, false, 'vajer'], [41, 17, 0, false, 'vajer'], [41, 11, 0, false, 'vajer'], [41, 19, 0, false, 'vajer'],
-                [41, 9, 0, false, 'vajer'], [41, 21, 0, false, 'vajer'], [41, 0, 0, false, 'vajer'], [41, 23, 0, false, 'vajer'], [7, 31, 0, false, 'betong'],
-                [31, 42, 0, false, 'betong'], [42, 43, 0, false, 'betong'], [43, 44, 0, false, 'betong'], [44, 29, 0, false, 'vajer'], [44, 33, 0, false, 'vajer'],
-                [44, 27, 0, false, 'vajer'], [44, 35, 0, false, 'vajer'], [44, 25, 0, false, 'vajer'], [44, 37, 0, false, 'vajer'], [44, 23, 0, false, 'vajer'],
-                [44, 2, 0, false, 'vajer']
+                [0, 6, 0.25, true, 'stal'], [6, 7, 0.25, true, 'stal'], [7, 8, 0.25, true, 'stal'], [8, 9, 0.25, true, 'stal'], [9, 10, 0.25, true, 'stal'],
+                [10, 11, 0.25, true, 'stal'], [11, 12, 0.25, true, 'stal'], [12, 13, 0.25, true, 'stal'], [13, 14, 0.25, true, 'stal'], [14, 15, 0.25, true, 'stal'],
+                [15, 16, 0.25, true, 'stal'], [16, 17, 0.25, true, 'stal'], [17, 18, 0.25, true, 'stal'], [18, 19, 0.25, true, 'stal'], [19, 20, 0.25, true, 'stal'],
+                [20, 21, 0.25, true, 'stal'], [21, 22, 0.25, true, 'stal'], [22, 23, 0.25, true, 'stal'], [23, 24, 0.25, true, 'stal'], [24, 25, 0.25, true, 'stal'],
+                [25, 26, 0.25, true, 'stal'], [26, 27, 0.25, true, 'stal'], [27, 28, 0.25, true, 'stal'], [28, 29, 0.25, true, 'stal'], [29, 30, 0.25, true, 'stal'],
+                [30, 31, 0.25, true, 'stal'], [31, 32, 0.25, true, 'stal'], [32, 33, 0.25, true, 'stal'], [33, 34, 0.25, true, 'stal'], [34, 35, 0.25, true, 'stal'],
+                [35, 36, 0.25, true, 'stal'], [36, 1, 0.25, true, 'stal'], [4, 13, 0, false, 'betong'], [13, 37, 0, false, 'betong'], [37, 38, 0, false, 'betong'],
+                [38, 39, 0, false, 'betong'], [39, 11, 0, false, 'vajer'], [39, 15, 0, false, 'vajer'], [39, 9, 0, false, 'vajer'], [39, 17, 0, false, 'vajer'],
+                [39, 7, 0, false, 'vajer'], [39, 19, 0, false, 'vajer'], [39, 0, 0, false, 'vajer'], [39, 21, 0, false, 'vajer'], [5, 29, 0, false, 'betong'],
+                [29, 40, 0, false, 'betong'], [40, 41, 0, false, 'betong'], [41, 42, 0, false, 'betong'], [42, 27, 0, false, 'vajer'], [42, 31, 0, false, 'vajer'],
+                [42, 25, 0, false, 'vajer'], [42, 33, 0, false, 'vajer'], [42, 23, 0, false, 'vajer'], [42, 35, 0, false, 'vajer'], [42, 21, 0, false, 'vajer'],
+                [42, 1, 0, false, 'vajer']
             ]
         }
     },
@@ -191,7 +231,8 @@ const BANOR = [
         maxLangd: 30,
         maxKabel: 150,
         maxZoom: 16,
-        fasten: [[0, 0, 'fast'], [0, -10], [400, 0, 'glid'], [400, -10], [-40, 0], [440, 0], [80, -30], [320, -30]],
+        fasten: [[0, 0, 'fast'], [400, 0, 'glid'], [-40, 0], [440, 0], [80, -30], [320, -30]],
+        kant: 0.4,
         vatten: -30,
         budget: 820000,
         bil: true,
@@ -206,33 +247,33 @@ const BANOR = [
             // förankrad på land, hängare Pytte var 20 m, väg av stål
             // Mellan− och pelare under sidospannen (774 260 $$).
             noder: [
-                [0, 0], [0, -10], [400, 0], [400, -10], [-40, 0], [440, 0], [80, -30, 'styv'], [320, -30, 'styv'],
-                [10, 0], [20, 0, 'pelare'], [30, 0], [40, 0, 'pelare'], [50, 0], [60, 0, 'pelare'], [70, 0], [80, 0],
-                [90, 0], [100, 0], [110, 0], [120, 0], [130, 0], [140, 0], [150, 0], [160, 0],
-                [170, 0], [180, 0], [190, 0], [200, 0], [210, 0], [220, 0], [230, 0], [240, 0],
-                [250, 0], [260, 0], [270, 0], [280, 0], [290, 0], [300, 0], [310, 0], [320, 0],
-                [330, 0], [340, 0, 'pelare'], [350, 0], [360, 0, 'pelare'], [370, 0], [380, 0, 'pelare'], [390, 0], [80, -20],
-                [80, -10], [80, 20], [80, 40], [80, 60], [320, -20], [320, -10], [320, 20], [320, 40],
-                [320, 60], [100, 40], [120, 30], [140, 20], [160, 20], [180, 10], [200, 10], [220, 10],
-                [240, 20], [260, 20], [280, 30], [300, 40]
+                [0, 0], [400, 0], [-40, 0], [440, 0], [80, -30, 'styv'], [320, -30, 'styv'], [10, 0], [20, 0, 'pelare'],
+                [30, 0], [40, 0, 'pelare'], [50, 0], [60, 0, 'pelare'], [70, 0], [80, 0], [90, 0], [100, 0],
+                [110, 0], [120, 0], [130, 0], [140, 0], [150, 0], [160, 0], [170, 0], [180, 0],
+                [190, 0], [200, 0], [210, 0], [220, 0], [230, 0], [240, 0], [250, 0], [260, 0],
+                [270, 0], [280, 0], [290, 0], [300, 0], [310, 0], [320, 0], [330, 0], [340, 0, 'pelare'],
+                [350, 0], [360, 0, 'pelare'], [370, 0], [380, 0, 'pelare'], [390, 0], [80, -20], [80, -10], [80, 20],
+                [80, 40], [80, 60], [320, -20], [320, -10], [320, 20], [320, 40], [320, 60], [100, 40],
+                [120, 30], [140, 20], [160, 20], [180, 10], [200, 10], [220, 10], [240, 20], [260, 20],
+                [280, 30], [300, 40]
             ],
             balkar: [
-                [0, 8, 1.75, true, 'stal'], [8, 9, 1.75, true, 'stal'], [9, 10, 1.75, true, 'stal'], [10, 11, 1.75, true, 'stal'], [11, 12, 1.75, true, 'stal'],
-                [12, 13, 1.75, true, 'stal'], [13, 14, 1.75, true, 'stal'], [14, 15, 1.75, true, 'stal'], [15, 16, 1.75, true, 'stal'], [16, 17, 1.75, true, 'stal'],
-                [17, 18, 1.75, true, 'stal'], [18, 19, 1.75, true, 'stal'], [19, 20, 1.75, true, 'stal'], [20, 21, 1.75, true, 'stal'], [21, 22, 1.75, true, 'stal'],
-                [22, 23, 1.75, true, 'stal'], [23, 24, 1.75, true, 'stal'], [24, 25, 1.75, true, 'stal'], [25, 26, 1.75, true, 'stal'], [26, 27, 1.75, true, 'stal'],
-                [27, 28, 1.75, true, 'stal'], [28, 29, 1.75, true, 'stal'], [29, 30, 1.75, true, 'stal'], [30, 31, 1.75, true, 'stal'], [31, 32, 1.75, true, 'stal'],
-                [32, 33, 1.75, true, 'stal'], [33, 34, 1.75, true, 'stal'], [34, 35, 1.75, true, 'stal'], [35, 36, 1.75, true, 'stal'], [36, 37, 1.75, true, 'stal'],
-                [37, 38, 1.75, true, 'stal'], [38, 39, 1.75, true, 'stal'], [39, 40, 1.75, true, 'stal'], [40, 41, 1.75, true, 'stal'], [41, 42, 1.75, true, 'stal'],
-                [42, 43, 1.75, true, 'stal'], [43, 44, 1.75, true, 'stal'], [44, 45, 1.75, true, 'stal'], [45, 46, 1.75, true, 'stal'], [46, 2, 1.75, true, 'stal'],
-                [6, 47, 2.25, false, 'betong'], [47, 48, 2.25, false, 'betong'], [48, 15, 2.25, false, 'betong'], [15, 49, 2.25, false, 'betong'], [49, 50, 2.25, false, 'betong'],
-                [50, 51, 2.25, false, 'betong'], [7, 52, 2.25, false, 'betong'], [52, 53, 2.25, false, 'betong'], [53, 39, 2.25, false, 'betong'], [39, 54, 2.25, false, 'betong'],
-                [54, 55, 2.25, false, 'betong'], [55, 56, 2.25, false, 'betong'], [4, 51, 2.75, false, 'vajer'], [51, 57, 2.75, false, 'vajer'], [57, 58, 2.75, false, 'vajer'],
-                [58, 59, 2.75, false, 'vajer'], [59, 60, 2.75, false, 'vajer'], [60, 61, 2.75, false, 'vajer'], [61, 62, 2.75, false, 'vajer'], [62, 63, 2.75, false, 'vajer'],
-                [63, 64, 2.75, false, 'vajer'], [64, 65, 2.75, false, 'vajer'], [65, 66, 2.75, false, 'vajer'], [66, 67, 2.75, false, 'vajer'], [67, 56, 2.75, false, 'vajer'],
-                [56, 5, 2.75, false, 'vajer'], [57, 17, 0, false, 'vajer'], [58, 19, 0, false, 'vajer'], [59, 21, 0, false, 'vajer'], [60, 23, 0, false, 'vajer'],
-                [61, 25, 0, false, 'vajer'], [62, 27, 0, false, 'vajer'], [63, 29, 0, false, 'vajer'], [64, 31, 0, false, 'vajer'], [65, 33, 0, false, 'vajer'],
-                [66, 35, 0, false, 'vajer'], [67, 37, 0, false, 'vajer']
+                [0, 6, 1.75, true, 'stal'], [6, 7, 1.75, true, 'stal'], [7, 8, 1.75, true, 'stal'], [8, 9, 1.75, true, 'stal'], [9, 10, 1.75, true, 'stal'],
+                [10, 11, 1.75, true, 'stal'], [11, 12, 1.75, true, 'stal'], [12, 13, 1.75, true, 'stal'], [13, 14, 1.75, true, 'stal'], [14, 15, 1.75, true, 'stal'],
+                [15, 16, 1.75, true, 'stal'], [16, 17, 1.75, true, 'stal'], [17, 18, 1.75, true, 'stal'], [18, 19, 1.75, true, 'stal'], [19, 20, 1.75, true, 'stal'],
+                [20, 21, 1.75, true, 'stal'], [21, 22, 1.75, true, 'stal'], [22, 23, 1.75, true, 'stal'], [23, 24, 1.75, true, 'stal'], [24, 25, 1.75, true, 'stal'],
+                [25, 26, 1.75, true, 'stal'], [26, 27, 1.75, true, 'stal'], [27, 28, 1.75, true, 'stal'], [28, 29, 1.75, true, 'stal'], [29, 30, 1.75, true, 'stal'],
+                [30, 31, 1.75, true, 'stal'], [31, 32, 1.75, true, 'stal'], [32, 33, 1.75, true, 'stal'], [33, 34, 1.75, true, 'stal'], [34, 35, 1.75, true, 'stal'],
+                [35, 36, 1.75, true, 'stal'], [36, 37, 1.75, true, 'stal'], [37, 38, 1.75, true, 'stal'], [38, 39, 1.75, true, 'stal'], [39, 40, 1.75, true, 'stal'],
+                [40, 41, 1.75, true, 'stal'], [41, 42, 1.75, true, 'stal'], [42, 43, 1.75, true, 'stal'], [43, 44, 1.75, true, 'stal'], [44, 1, 1.75, true, 'stal'],
+                [4, 45, 2.25, false, 'betong'], [45, 46, 2.25, false, 'betong'], [46, 13, 2.25, false, 'betong'], [13, 47, 2.25, false, 'betong'], [47, 48, 2.25, false, 'betong'],
+                [48, 49, 2.25, false, 'betong'], [5, 50, 2.25, false, 'betong'], [50, 51, 2.25, false, 'betong'], [51, 37, 2.25, false, 'betong'], [37, 52, 2.25, false, 'betong'],
+                [52, 53, 2.25, false, 'betong'], [53, 54, 2.25, false, 'betong'], [2, 49, 2.75, false, 'vajer'], [49, 55, 2.75, false, 'vajer'], [55, 56, 2.75, false, 'vajer'],
+                [56, 57, 2.75, false, 'vajer'], [57, 58, 2.75, false, 'vajer'], [58, 59, 2.75, false, 'vajer'], [59, 60, 2.75, false, 'vajer'], [60, 61, 2.75, false, 'vajer'],
+                [61, 62, 2.75, false, 'vajer'], [62, 63, 2.75, false, 'vajer'], [63, 64, 2.75, false, 'vajer'], [64, 65, 2.75, false, 'vajer'], [65, 54, 2.75, false, 'vajer'],
+                [54, 3, 2.75, false, 'vajer'], [55, 15, 0, false, 'vajer'], [56, 17, 0, false, 'vajer'], [57, 19, 0, false, 'vajer'], [58, 21, 0, false, 'vajer'],
+                [59, 23, 0, false, 'vajer'], [60, 25, 0, false, 'vajer'], [61, 27, 0, false, 'vajer'], [62, 29, 0, false, 'vajer'], [63, 31, 0, false, 'vajer'],
+                [64, 33, 0, false, 'vajer'], [65, 35, 0, false, 'vajer']
             ]
         }
     }

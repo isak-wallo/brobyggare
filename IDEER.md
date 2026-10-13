@@ -466,6 +466,19 @@ fysiken använder de riktiga 2,5 m. Älvens lösning fick väg Pytte+ i stål
 Att fundera på: Havets stora belopp och om Älven räknas fort nog på
 mobilen (annars en snabbare lösare).
 
+v39-test (Isak 2026-10-13): sju banor – två korta vattendrag (Bäcken 12 m,
+Ån 24 m), två över land (Ravinen 20 m, Dalgången 60 m), sedan Kanalen,
+Älven och Havet. Olika många fästen: Bäcken bara vägens två lager, Ån
+lagren och ett fäste 3 m ner i var kant, Ravinen och Dalgången fästen på
+sluttningarna (Dalgången två på var sida). Marken (`markY` i spel.js):
+vattenbanorna har branta, lite lutande kanter (`kant`, rundade överst),
+landbanorna en mjuk dal (`dal`, cosinus). Inga knutpunkter i marken,
+keIWs och bitar stoppas av den. Stålet kommer på Dalgången. Allt sparat
+ligger nu per banans namn (gamla nummer flyttas en gång; det som sparats på
+gamla Dalgången kastas), och fästen som tagits bort blir vanliga
+knutpunkter i gamla ritningar. Nya lösningar: Bäcken 9 380 $$, Ån
+22 650 $$, Ravinen 14 650 $$, Dalgången (båge) 71 850 $$.
+
 Beslut 2026-10-13: linverkan hanteras bara med glidlager (brofästen och
 pelare). Kontrollerna räknar rätt: HEA 100 över 24 m mellan två fästen
 som låser x sjunker 0,42 m och bär som en lina (ca 370 kN drag, 65 %

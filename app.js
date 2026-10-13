@@ -22,9 +22,9 @@ const BYGG_MIN = 1.0;        // ... men hela bygget tar minst ...
 const BYGG_MAX = 3.0;        // ... och högst så här länge (s)
 const BYGG_HEM = 0.35;       // s, tillbaka till startplatsen efteråt
 const POFF_TID = 0.35;       // s, dammet när virveln blir keIWs igen
-const SPARA = 'brobyggare-ritning-';   // + banans nummer
-const SPARA_BANA = 'brobyggare-bana';
-const SPARA_BASTA = 'brobyggare-basta-';  // + banans nummer: billigaste bron som höll
+const SPARA = 'brobyggare-ritning-';   // + banans namn
+const SPARA_BANA = 'brobyggare-bana';     // banans namn
+const SPARA_BASTA = 'brobyggare-basta-';  // + banans namn: billigaste bron som höll
 const SPARA_HISTORIK = 'brobyggare-historik';  // ångra-listan över en omladdning
 const UPPDATERA_VAR = 10 * 60 * 1000;     // ms, leta efter en ny version
 
@@ -79,29 +79,33 @@ let laddaOmSen = false;       // ny version finns: ladda om när det passar
 
 // Varje bana har sin egen sparade ritning, och spelet minns vilken bana
 // man var på.
-// Dalgången flyttades från bana 4 till bana 3 (v37): byt plats på det som
-// sparats för de två, en gång.
+// Förut sparades allt per banans nummer, i två olika ordningar (före och
+// efter v37). Nu per namn, så att banorna kan byta plats. Dalgången
+// ritades om helt (v39): det som sparats där kastas.
 function flyttaSparat() {
     try {
-        if (localStorage.getItem('brobyggare-ordning') === '2') return;
+        const ordning = localStorage.getItem('brobyggare-ordning');
+        if (ordning === '3') return;
+        const forr = ordning === '2' ? ['Bäcken', 'Ån', 'Dalgången', 'Kanalen', 'Älven', 'Havet']
+            : ['Bäcken', 'Ån', 'Kanalen', 'Dalgången', 'Älven', 'Havet'];
         for (const nyckel of [SPARA, SPARA_BASTA]) {
-            const a = localStorage.getItem(nyckel + 2), b = localStorage.getItem(nyckel + 3);
-            for (const [nr, v] of [[2, b], [3, a]]) {
-                if (v === null) localStorage.removeItem(nyckel + nr);
-                else localStorage.setItem(nyckel + nr, v);
-            }
+            forr.forEach((namn, nr) => {
+                const v = localStorage.getItem(nyckel + nr);
+                localStorage.removeItem(nyckel + nr);
+                if (v !== null && namn !== 'Dalgången') localStorage.setItem(nyckel + namn, v);
+            });
         }
         const nr = localStorage.getItem(SPARA_BANA);
-        if (nr === '2' || nr === '3') localStorage.setItem(SPARA_BANA, nr === '2' ? '3' : '2');
+        if (nr !== null && forr[nr]) localStorage.setItem(SPARA_BANA, forr[nr]);
         sessionStorage.removeItem(SPARA_HISTORIK);
-        localStorage.setItem('brobyggare-ordning', '2');
+        localStorage.setItem('brobyggare-ordning', '3');
     } catch (e) { /* privat läge */ }
 }
 
 function lasBanaNr() {
     flyttaSparat();
     let nr = 0;
-    try { nr = parseInt(localStorage.getItem(SPARA_BANA), 10) || 0; } catch (e) { /* privat läge */ }
+    try { nr = Math.max(0, BANOR.findIndex(b => b.namn === localStorage.getItem(SPARA_BANA))); } catch (e) { /* privat läge */ }
     return Math.max(0, Math.min(BANOR.length - 1, nr));
 }
 
@@ -118,6 +122,15 @@ function uppgradera(r, b = bana) {
         if (n.pelare) { n.lager = 'glid'; n.styv = false; }
         const f = b.fasten.find(([x, y]) => x === n.x && y === n.y);
         if (f && f[2]) { n.lager = f[2]; n.styv = false; }
+        // Fästen som tagits bort (färre fästen från v39) blir knutpunkter.
+        if (!f && !n.pelare) { n.fast = false; n.styv = true; delete n.lager; }
+    }
+    // Knutpunkter utan balkar (och som inte är fästen) tas bort.
+    const kvar = r.noder.map((n, i) => n.fast || r.balkar.some(k => k.a === i || k.b === i));
+    if (!kvar.every(Boolean)) {
+        const index = r.noder.map((n, i) => kvar[i] ? r.noder.slice(0, i).filter((m, j) => kvar[j]).length : -1);
+        r.noder = r.noder.filter((n, i) => kvar[i]);
+        for (const k of r.balkar) { k.a = index[k.a]; k.b = index[k.b]; }
     }
     // Fästen som kommit till sedan ritningen sparades (fästena på land).
     for (const [x, y, lager] of b.fasten) {
@@ -131,20 +144,20 @@ function uppgradera(r, b = bana) {
 
 function lasRitning() {
     try {
-        const r = JSON.parse(localStorage.getItem(SPARA + banaNr));
+        const r = JSON.parse(localStorage.getItem(SPARA + bana.namn));
         if (r && r.noder && r.balkar) return uppgradera(r);
     } catch (e) { /* ingen sparad */ }
     return nyRitning(bana);
 }
 
 function sparaRitning() {
-    try { localStorage.setItem(SPARA + banaNr, JSON.stringify(ritning)); } catch (e) { /* privat läge */ }
+    try { localStorage.setItem(SPARA + bana.namn, JSON.stringify(ritning)); } catch (e) { /* privat läge */ }
 }
 
 // Billigaste bron som höll på en bana: {kostnad, ritning}.
 function lasBasta(nr) {
     try {
-        const b = JSON.parse(localStorage.getItem(SPARA_BASTA + nr));
+        const b = JSON.parse(localStorage.getItem(SPARA_BASTA + BANOR[nr].namn));
         // Före brolagren (version 3) och de nya trämåtten (version 4)
         // räknades bron annorlunda: börja om.
         if (b && (b.ritning.version || 0) < 4) return null;
@@ -156,7 +169,7 @@ function sparaBasta(k) {
     const b = lasBasta(banaNr);
     if (b && b.kostnad <= k) return false;
     try {
-        localStorage.setItem(SPARA_BASTA + banaNr, JSON.stringify({ kostnad: k, ritning }));
+        localStorage.setItem(SPARA_BASTA + bana.namn, JSON.stringify({ kostnad: k, ritning }));
     } catch (e) { /* privat läge */ }
     return true;
 }
@@ -175,7 +188,7 @@ function bytBana(nr) {
     if (!bana.pelare) ritPelare = false;
     if (!harMaterial('vajer')) ritKabel = false;
     if (!harMaterial(ritMaterial)) ritMaterial = 'limtra';
-    try { localStorage.setItem(SPARA_BANA, nr); } catch (e) { /* privat läge */ }
+    try { localStorage.setItem(SPARA_BANA, bana.namn); } catch (e) { /* privat läge */ }
     anpassa();
     uppdateraInfo();
     laddaOmOmLugnt();
@@ -200,8 +213,7 @@ function tillaten(x, y) {
     const o = bana.omrade;
     if (bana.fasten.some(([fx, fy]) => fx === x && fy === y)) return true;
     if (y < o.y0 || y > o.y1 || x < o.x0 || x > o.x1 || iFarleden(x, y)) return false;
-    if (x <= 0 || x >= bana.spann) return y > 0;
-    return true;
+    return y > markY(bana, x) + 1e-9;      // inte i marken
 }
 
 // Farleden (en del banor): under farled.y mellan x0 och x1 får inget byggas,
@@ -433,33 +445,36 @@ function ritaBakgrund() {
     g.addColorStop(1, FARG.himmel[1]);
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, w, h);
-    // Klipporna: vänster om x = 0 och höger om spannet (eller en ö), ner
-    // under botten.
-    const botten = sy(bana.vatten - 50), hoger = bana.spann + (bana.ö || 2000);
-    for (const [x0, x1] of [[-2000, 0], [bana.spann, hoger]]) {
-        ctx.fillStyle = FARG.berg;
-        ctx.fillRect(sx(x0), sy(0), sx(x1) - sx(x0), botten - sy(0));
-        ctx.fillStyle = FARG.gras;
-        ctx.fillRect(sx(x0), sy(0) - 0.12 * kam.sk, sx(x1) - sx(x0), 0.25 * kam.sk);
+    // Marken (markY i spel.js), punkt för punkt över skärmen, med gräs där
+    // det är land eller dalens sluttningar (inte under vattnet).
+    const djupt = h + 1000, steg = 2;
+    const yta = [];
+    for (let X = -steg; X <= w + steg; X += steg) {
+        const g = markY(bana, (X - kam.ox) / kam.sk);
+        yta.push([X, g, g === -Infinity ? djupt : Math.min(djupt, sy(g))]);
     }
-    // Lite skugga i bergväggarna.
-    ctx.fillStyle = FARG.bergMork;
-    ctx.fillRect(sx(-0.25), sy(-0.15), 0.25 * kam.sk, botten);
-    ctx.fillRect(sx(bana.spann), sy(-0.15), 0.25 * kam.sk, botten);
-    if (bana.ö) ctx.fillRect(sx(hoger) - 0.25 * kam.sk, sy(-0.15), 0.25 * kam.sk, botten);
+    ctx.fillStyle = FARG.berg;
+    ctx.beginPath();
+    ctx.moveTo(-steg, djupt);
+    for (const [X, , Y] of yta) ctx.lineTo(X, Y);
+    ctx.lineTo(w + steg, djupt);
+    ctx.fill();
+    ctx.strokeStyle = FARG.gras;
+    ctx.lineWidth = 0.25 * kam.sk;
+    ctx.beginPath();
+    let pa = false;
+    for (const [X, g, Y] of yta) {
+        const gront = g > -Infinity && (bana.dal || (g > bana.vatten + 0.1 && g > -0.6));
+        if (gront) { if (pa) ctx.lineTo(X, Y); else ctx.moveTo(X, Y); }
+        pa = gront;
+    }
+    ctx.stroke();
 }
 
 function ritaVatten(t) {
     const w = duk.width / dpr, h = duk.height / dpr;
     const y0 = sy(bana.vatten);
-    if (bana.torr) {
-        // En torr dal: marken i botten.
-        ctx.fillStyle = FARG.berg;
-        ctx.fillRect(0, y0, w, h - y0);
-        ctx.fillStyle = FARG.gras;
-        ctx.fillRect(0, y0 - 0.12 * kam.sk, w, 0.25 * kam.sk);
-        return;
-    }
+    if (bana.torr) return;                // dalens botten är mark
     ctx.fillStyle = FARG.vatten;
     ctx.beginPath();
     ctx.moveTo(0, h);
@@ -475,9 +490,10 @@ function ritaVatten(t) {
 function ritaPelare() {
     ritaFundament();
     if (!bana.pelare) return;
-    const b = Math.max(4, 0.8 * kam.sk), botten = sy(bana.pelare.botten);
+    const b = Math.max(4, 0.8 * kam.sk);
     ritning.noder.forEach((n, i) => {
         if (!n.pelare) return;
+        const botten = sy(Math.max(bana.pelare.botten, markY(bana, n.x)));     // nära kanten: från marken
         const under = Math.max(0, ...ritning.balkar.filter(k => k.a === i || k.b === i)
             .map(k => profil(k.material || 'limtra', k.storlek).h / 2));
         const X = sx(n.x), topp = sy(n.y - under) + 1, Y = topp + b / 2;
@@ -493,11 +509,13 @@ function ritaPelare() {
 }
 
 // Fundamenten (fästen ute i vattnet): betong från botten upp till fästet.
+// I en torr dal står fästet på sluttningen: ett kort block ner i marken.
 function ritaFundament() {
-    const botten = sy(bana.pelare ? bana.pelare.botten : bana.vatten - 6);
+    const botten0 = sy(bana.pelare ? bana.pelare.botten : bana.vatten - 6);
     for (const [x, y] of bana.fasten) {
         if (x <= 0 || x >= bana.spann) continue;
         const b = Math.max(10, 3 * rutnat() / 2 * kam.sk), X = sx(x), Y = sy(y);
+        const botten = bana.torr ? sy(y - 1.5 * rutnat()) : botten0;
         ctx.fillStyle = FARG.betong;
         ctx.fillRect(X - b / 2, Y, b, botten - Y);
         ctx.fillStyle = FARG.betongMork;
@@ -1520,7 +1538,7 @@ duk.addEventListener('pointerdown', e => {
     // Utanför rutnätet (även nere i berget) flyttar ett finger vyn (när man
     // har zoomat in).
     const o = bana.omrade;
-    const iBerget = (wx < -nara || wx > bana.spann + nara) && wy < -nara;
+    const iBerget = [wx - nara, wx + nara].every(x => wy < markY(bana, x) - nara);
     if (iBerget || wx < o.x0 - nara || wx > o.x1 + nara || wy < o.y0 - nara || wy > o.y1 + nara) {
         panorera = { p: iDuken(e), mitt: vynsMitt() };
         return;
