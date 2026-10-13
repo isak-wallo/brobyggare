@@ -35,22 +35,24 @@
 const BANOR = [
     {
         namn: 'Bäcken',
-        spann: 12,
-        fasten: [[0, 0, 'fast'], [12, 0, 'glid']],
+        // 14 m: längre än en balk (12 m), så man måste skarva. En rak balk
+        // måste vara Stor och går över budget, ett litet fackverk ryms.
+        spann: 14,
+        fasten: [[0, 0, 'fast'], [14, 0, 'glid']],
         kant: 1 / 3,
-        vatten: -6,
-        budget: 12000,
+        vatten: -2,
+        budget: 11000,
         keiws: 2,
-        omrade: { x0: -3, x1: 15, y0: -5, y1: 7 },
-        vy: { x0: -4, x1: 16, y0: -6.5, y1: 7.5 },
+        omrade: { x0: -3, x1: 17, y0: -1, y1: 7 },
+        vy: { x0: -4, x1: 18, y0: -3, y1: 7.5 },
         losning: {
-            // Väg Pytte med ett fackverk av Pytte− ovanpå, 2 m högt (9 380 $$).
+            // Väg Pytte med ett fackverk av Pytte− ovanpå, 2 m högt.
             noder: [
-                [0, 0], [12, 0], [4, 0], [8, 0], [4, 2], [8, 2]
+                [0, 0], [14, 0], [5, 0], [9, 0], [5, 2], [9, 2]
             ],
             balkar: [
                 [0, 2, 0, true], [2, 3, 0, true], [3, 1, 0, true], [0, 4, -0.25], [4, 5, -0.25], [5, 1, -0.25],
-                [2, 4, -0.25], [3, 5, -0.25], [4, 3, -0.25]
+                [2, 4, -0.25], [3, 5, -0.25]
             ]
         }
     },

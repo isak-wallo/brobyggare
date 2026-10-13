@@ -483,6 +483,15 @@ v40-test (Isak 2026-10-13): ett styvt förband väger 40 kg (knutplåtar och
 fler bultar), ett ledat 20 kg; priset 500/300 $$ som förut. Dalgångens
 lösning går upp till 96 % men håller.
 
+v41-test (Isak 2026-10-13): Bäcken görs "perfekt", en bana i taget. Grund
+bäck: vattnet 2 m under marken, rutnätet ner till 1 m under vägen. Spannet
+14 m (längre än en balk, 12 m), så man måste skarva. En rak skarvad balk
+måste vara Stor och kostar 11 280 $$, över budgeten 11 000; ett litet
+fackverk (väg Pytte, Pytte− ovanpå, 2 m högt) kostar 10 170 $$ (74 %), med
+ledade knutpunkter ca 9 400 $$. Ett fackverk under vägen är svagare än
+samma ovanpå: vägen blir tryckt och böjd samtidigt, och trycket förstärker
+böjningen (andra ordningens effekt), medan dragen väg rätas ut.
+
 Beslut 2026-10-13: linverkan hanteras bara med glidlager (brofästen och
 pelare). Kontrollerna räknar rätt: HEA 100 över 24 m mellan två fästen
 som låser x sjunker 0,42 m och bär som en lina (ca 370 kN drag, 65 %

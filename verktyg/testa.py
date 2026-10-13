@@ -164,19 +164,19 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     kolla(f'{namn}: väljaren ' + ('är kvar' if bredd < hojd else 'stängs') + ' när man valt storlek',
           sida.locator('#valjare').is_visible() == (bredd < hojd)
           and 'Stor' in sida.inner_text('#verktyg [data-v=rita]'))
-    dra(sida, (0, 0), (6, 0))
-    dra(sida, (6, 0), (12, 0))
+    dra(sida, (0, 0), (7, 0))
+    dra(sida, (7, 0), (14, 0))
     r = sida.evaluate('() => window.bro.ritning')
     kolla(f'{namn}: två vägbalkar byggda', len(r['balkar']) == 2 and all(b['vag'] for b in r['balkar']),
           f"{len(r['balkar'])} balkar")
     valj(sida, 'balk', 3)
-    dra(sida, (6, 0), (6, 4))
-    tryck(sida, (6, 0))
-    mitt = next(n for n in sida.evaluate('() => window.bro.ritning.noder') if n['x'] == 6 and n['y'] == 0)
+    dra(sida, (7, 0), (7, 4))
+    tryck(sida, (7, 0))
+    mitt = next(n for n in sida.evaluate('() => window.bro.ritning.noder') if n['x'] == 7 and n['y'] == 0)
     kolla(f'{namn}: tryck på knutpunkten gör den ledad', not mitt['styv'])
-    tryck(sida, (6, 0))
+    tryck(sida, (7, 0))
     sida.click('#verktyg [data-v=andra]')
-    tryck(sida, (6, 2))
+    tryck(sida, (7, 2))
     kolla(f'{namn}: Ändra väljer balken och visar väljaren med Riv', sida.evaluate('() => window.bro.vald') == 2
           and sida.locator('#valjare [data-t=riv]').is_visible())
     bild(sida, bilder, f'{namn}-0-andra')
@@ -186,10 +186,10 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
           len(r['balkar']) == 2 and not any(n['y'] == 4 for n in r['noder']))
     sida.click('#verktyg [data-v=angra]')
     kolla(f'{namn}: ångra tar tillbaka den', antal_balkar(sida) == 3)
-    tryck(sida, (6, 2))
+    tryck(sida, (7, 2))
     sida.click('#valjare [data-t=riv]')
     valj(sida, 'vag', 3)
-    dra(sida, (-2, 1), (9, -5))                   # 12,5 m
+    dra(sida, (-2, 1), (10, 4))                   # 12,4 m
     kolla(f'{namn}: för lång balk går inte', antal_balkar(sida) == 2)
 
     # Startpunkten: nära en knutpunkt börjar balken i den, fast närmaste
@@ -197,22 +197,22 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     valj(sida, 'balk', 3)
     sk = sida.evaluate('() => window.bro.kam.sk')
     d = min(0.9, 20 / sk)
-    dra(sida, (6 + d, -0.15), (9, -3))
+    dra(sida, (7 + d, 0.15), (10, 3))
     r = sida.evaluate('() => window.bro.ritning')
     b = r['balkar'][-1]
-    kolla(f'{namn}: balken börjar i knutpunkten intill', (r['noder'][b['a']]['x'], r['noder'][b['a']]['y']) == (6, 0),
+    kolla(f'{namn}: balken börjar i knutpunkten intill', (r['noder'][b['a']]['x'], r['noder'][b['a']]['y']) == (7, 0),
           f'{d:.2f} m bredvid')
     sida.click('#verktyg [data-v=angra]')
     # En ny balk som började i en ny punkt går att rätta i startänden.
-    dra(sida, (3, -3), (6, 0))
+    dra(sida, (4, 3), (7, 0))
     kolla(f'{namn}: ny balk från en ny punkt får ett handtag', sida.evaluate('() => !!window.bro.ratta'))
     bild(sida, bilder, f'{namn}-0-langd')
-    dra(sida, (3, -3), (4, -3))
+    dra(sida, (4, 3), (5, 3))
     r = sida.evaluate('() => window.bro.ritning')
     b = r['balkar'][-1]
     kolla(f'{namn}: handtaget flyttar startänden', len(r['balkar']) == 3
-          and (r['noder'][b['a']]['x'], r['noder'][b['a']]['y']) == (4, -3)
-          and not any(n['x'] == 3 and n['y'] == -3 for n in r['noder']))
+          and (r['noder'][b['a']]['x'], r['noder'][b['a']]['y']) == (5, 3)
+          and not any(n['x'] == 4 and n['y'] == 3 for n in r['noder']))
     sida.click('#verktyg [data-v=angra]')
     sida.click('#verktyg [data-v=angra]')
     kolla(f'{namn}: ångrat tillbaka', antal_balkar(sida) == 2)
@@ -232,17 +232,17 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
 
     # Ändra: en snedbalk som hamnade fel flyttas i ena änden.
     valj(sida, 'balk', 3)
-    dra(sida, (6, 0), (3, -3))
+    dra(sida, (7, 0), (4, 3))
     sida.click('#verktyg [data-v=andra]')
-    tryck(sida, (4.5, -1.5))
+    tryck(sida, (5.5, 1.5))
     kolla(f'{namn}: Ändra väljer balken man trycker på', sida.evaluate('() => window.bro.vald') == 2)
     hojder.append(info_h())
-    dra(sida, (3, -3), (4, -3))
+    dra(sida, (4, 3), (5, 3))
     r = sida.evaluate('() => window.bro.ritning')
     b = r['balkar'][2]
     andar = sorted([(r['noder'][b['a']]['x'], r['noder'][b['a']]['y']), (r['noder'][b['b']]['x'], r['noder'][b['b']]['y'])])
     kolla(f'{namn}: änden flyttas, den gamla punkten försvinner',
-          andar == [(4, -3), (6, 0)] and not any(n['x'] == 3 and n['y'] == -3 for n in r['noder']), str(andar))
+          andar == [(5, 3), (7, 0)] and not any(n['x'] == 4 and n['y'] == 3 for n in r['noder']), str(andar))
     tryck(sida, (3, 0))                           # välj vägen till vänster
     sida.click('#valjare [data-s="4"]')
     kolla(f'{namn}: väljaren byter storlek på vald balk',
@@ -259,13 +259,13 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     for _ in range(3):
         sida.click('#verktyg [data-v=angra]')
     tryck(sida, (3, 3))                           # tomt: ingen vald
-    dra(sida, (6, 0), (6, 1))                     # knutpunkten med alla balkar
+    dra(sida, (7, 0), (7, 1))                     # knutpunkten med alla balkar
     r = sida.evaluate('() => window.bro.ritning')
-    i = next(j for j, n in enumerate(r['noder']) if n['x'] == 6 and n['y'] == 1)
+    i = next(j for j, n in enumerate(r['noder']) if n['x'] == 7 and n['y'] == 1)
     kolla(f'{namn}: knutpunkten flyttas med alla tre balkarna',
           sum(1 for b in r['balkar'] if i in (b['a'], b['b'])) == 3)
     sida.click('#verktyg [data-v=angra]')
-    tryck(sida, (5, -1.5))
+    tryck(sida, (6, 1.5))
     sida.click('#valjare [data-t=riv]')
     kolla(f'{namn}: tillbaka till två vägbalkar', antal_balkar(sida) == 2
           and all(b['vag'] and b['storlek'] == 3 for b in sida.evaluate('() => window.bro.ritning.balkar')))
@@ -275,12 +275,12 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
           and 'Inget verktyg valt' in sida.inner_html('#info'))
 
     # Inget verktyg: inzoomad flyttar ett finger vyn även mitt i rutnätet.
-    sida.mouse.move(*skarm(sida, (6, 0)))
+    sida.mouse.move(*skarm(sida, (7, 0)))
     sida.mouse.wheel(0, -600)
     sida.wait_for_timeout(100)
-    fore = skarm(sida, (6, 0))
+    fore = skarm(sida, (7, 0))
     dra(sida, (5, 2), (7, 2))
-    efter = skarm(sida, (6, 0))
+    efter = skarm(sida, (7, 0))
     kolla(f'{namn}: utan verktyg flyttar ett finger vyn i rutnätet, bygger inget',
           abs(efter[0] - fore[0]) > 20 and antal_balkar(sida) == 2, f'{efter[0] - fore[0]:.0f} px')
     sida.mouse.wheel(0, 3000)
@@ -297,9 +297,9 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     sida.mouse.move(*skarm(sida, (0, 0)))
     sida.mouse.wheel(0, -600)
     sida.wait_for_timeout(100)
-    fore = skarm(sida, (6, 0))
+    fore = skarm(sida, (7, 0))
     dra(sida, (-1.5, -1.5), (-0.5, -1.5))
-    efter = skarm(sida, (6, 0))
+    efter = skarm(sida, (7, 0))
     kolla(f'{namn}: inzoomad flyttar ett finger utanför rutnätet vyn',
           sida.evaluate('() => window.bro.zoom') > 1.2 and abs(efter[0] - fore[0]) > 20 and antal_balkar(sida) == 2,
           f'{efter[0] - fore[0]:.0f} px')
@@ -308,18 +308,18 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     sida.wait_for_timeout(100)
 
     # Zoom: mushjulet kring en punkt, sedan nyp med två fingrar.
-    x, y = skarm(sida, (6, 0))
+    x, y = skarm(sida, (7, 0))
     sida.mouse.move(x, y)
     sida.mouse.wheel(0, -400)
     sida.wait_for_timeout(100)
-    x2, y2 = skarm(sida, (6, 0))
+    x2, y2 = skarm(sida, (7, 0))
     zoom = sida.evaluate('() => window.bro.zoom')
     kolla(f'{namn}: mushjulet zoomar in kring pekaren', zoom > 1.2 and abs(x2 - x) < 2 and abs(y2 - y) < 2,
           f'zoom {zoom:.2f}')
     sida.mouse.wheel(0, 3000)
     sida.wait_for_timeout(100)
     kolla(f'{namn}: och ut igen', sida.evaluate('() => window.bro.zoom') == 1)
-    x, y = skarm(sida, (6, -2))
+    x, y = skarm(sida, (7, 2))
     box = sida.locator('#duk').bounding_box()
     sida.evaluate('''([x, y, ox, oy]) => {
         const duk = document.getElementById('duk');
@@ -329,7 +329,7 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
         for (let k = 1; k <= 5; k++) { h('pointermove', 11, x - 40 - 16 * k, y); h('pointermove', 12, x + 40 + 16 * k, y); }
         h('pointerup', 11, x - 120, y); h('pointerup', 12, x + 120, y);
     }''', [x - box['x'], y - box['y'], box['x'], box['y']])
-    x2, y2 = skarm(sida, (6, -2))
+    x2, y2 = skarm(sida, (7, 2))
     zoom = sida.evaluate('() => window.bro.zoom')
     kolla(f'{namn}: nyp med två fingrar zoomar (3×), punkten står kvar, inget byggs',
           abs(zoom - 3) < 0.05 and abs(x2 - x) < 2 and abs(y2 - y) < 2 and antal_balkar(sida) == 2,
@@ -419,7 +419,7 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     sida.click('#menyknapp')
     text = sida.locator('#meny').inner_text()
     kolla(f'{namn}: menyn visar billigaste bron och förklaringen',
-          'Billigaste bron som höll' in text and '(budget 12 000 $$)' in text.replace(' ', ' ') and 'Hur funkar det?' in text
+          'Billigaste bron som höll' in text and '(budget 11 000 $$)' in text.replace(' ', ' ') and 'Hur funkar det?' in text
           and 'Förutsättningar – för nördar' in text and 'Version v' in text)
     sida.click('#meny [data-v=dela]')
     dela = sida.locator('#meny .dela').input_value()
@@ -456,7 +456,7 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
           and any((n['x'], n['y']) == (2, o['y1']) for n in r['noder']), f"{len(r['balkar'])} balkar")
     kolla(f'{namn}: inga knutpunkter i marken (kanten lutar lite)', sida.evaluate(
         '() => tillaten(-2, 1) && !tillaten(-2, 0) && !tillaten(-2, -1) && !tillaten(-3, 0) && !tillaten(-4, 1)'
-        ' && !tillaten(0, -1) && tillaten(1, -2) && BANOR[0].fasten.length === 2'))
+        ' && !tillaten(0, -1) && tillaten(1, -1) && !tillaten(3, -2) && BANOR[0].fasten.length === 2'))
     sida.click('#verktyg [data-v=angra]')
     sida.click('#verktyg [data-v=angra]')
     sida.click('#verktyg [data-v=angra]')
@@ -466,11 +466,11 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
           uppgradera({ version: 4, noder: [], balkar: [{ storlek: 1.5 }, { storlek: 2 }, { storlek: 3.5 }] }).balkar
           .map(b => storleksNamn(b.storlek)).join()''') == 'Mellan−,Mellan,Jätte−')
     kolla(f'{namn}: gamla ritningar tappar fästena som tagits bort', sida.evaluate('''() => { const b = BANOR[0];
-        const gamla = [[0, 0, 'fast'], [0, -3], [12, 0, 'glid'], [12, -3], [-3, 0], [15, 0]];
+        const gamla = [[0, 0, 'fast'], [0, -3], [14, 0, 'glid'], [14, -3], [-3, 0], [17, 0]];
         const r = uppgradera({ version: 4, noder: gamla.map(([x, y, l]) => fastNod(x, y, l)),
                                balkar: [{ a: 3, b: 2, storlek: 1, vag: false, material: 'limtra' }] }, b);
         const k = r.balkar[0], n = r.noder[k.a];
-        return r.noder.length === 3 && !n.fast && n.x === 12 && n.y === -3 && r.noder[k.b].lager === 'glid'; }'''))
+        return r.noder.length === 3 && !n.fast && n.x === 14 && n.y === -3 && r.noder[k.b].lager === 'glid'; }'''))
     sida.click('#menyknapp')
     sida.mouse.click(5, sida.viewport_size['height'] - 120)   # utanför panelen
     kolla(f'{namn}: ett tryck utanför stänger menyn', not sida.locator('#meny').is_visible())

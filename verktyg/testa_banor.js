@@ -50,6 +50,20 @@ module.exports = function (S, kolla) {
             const p = korSim(r, bana);
             kolla(namn + ': HEA 100 mellan två pelare går av', p.resultat === 'vatten' && p.brott > 0, p.resultat + ', brott ' + p.brott);
         }
+        // Bäcken: en rak balk (skarvad i mitten, 14 m > 12 m) måste vara
+        // Stor och går då över budget; fackverket är billigast.
+        if (bana.namn === 'Bäcken') {
+            const rak = st => {
+                const r = nyRitning(bana);
+                r.noder.push({ x: bana.spann / 2, y: 0, fast: false, styv: true });
+                r.balkar.push({ a: 0, b: 2, storlek: st, vag: true, material: 'limtra' }, { a: 2, b: 1, storlek: st, vag: true, material: 'limtra' });
+                return r;
+            };
+            const p = korSim(rak(2.75), bana), q = korSim(rak(3), bana), k = ritningensKostnad(rak(3), bana);
+            kolla(namn + ': en rak skarvad balk Stor− går av, Stor håller men går över budget',
+                  p.resultat === 'vatten' && q.resultat === 'klarade' && q.brott === 0 && k > bana.budget,
+                  'Stor− ' + p.resultat + ', Stor ' + q.resultat + ' för ' + k + ' $$');
+        }
         const glid = sim.m.punkter.findIndex(p => p.glid), u = sim.m.q[2 * glid];
         kolla(namn + ': glidlagret stannar vid stoppet när bron rasar', glid >= 0 && Math.abs(u) <= 0.3 + 1e-9,
               (u * 1000).toFixed(0) + ' mm');
