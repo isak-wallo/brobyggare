@@ -159,6 +159,7 @@ const storleksNamn = s => {
 const VAG = { massa: 200, pris: 400, tjocklek: 0.12 };
 
 // Förbanden (knutpunkterna man bygger). Ledat: balkarna kan vrida sig
-// fritt mot varandra. Styvt: de sitter ihop och böjer tillsammans.
+// fritt mot varandra. Styvt: de sitter ihop och böjer tillsammans, med
+// knutplåtar och fler bultar (dyrare och tyngre).
 // Fästpunkterna i berget kostar inget.
-const FORBAND = { massa: 20, pris: { ledat: 300, styvt: 500 } };
+const FORBAND = { massa: { ledat: 20, styvt: 40 }, pris: { ledat: 300, styvt: 500 } };

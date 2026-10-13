@@ -44,7 +44,7 @@ function byggModell(ritning, elLangd = ELEMENT_LANGD) {
 
     const nyRot = fast => { rotFast.push(!!fast); return rotFast.length - 1; };
     const nodPunkt = ritning.noder.map(n => {
-        punkter.push({ x0: n.x, y0: n.y, fast: !!n.fast, glid: n.lager === 'glid', forband: !n.fast });
+        punkter.push({ x0: n.x, y0: n.y, fast: !!n.fast, glid: n.lager === 'glid', forband: n.fast ? null : n.styv ? 'styvt' : 'ledat' });
         return punkter.length - 1;
     });
     // Knutpunkter där bara kablar sitter har ingen vridning (den vore lös).
@@ -105,7 +105,7 @@ function byggModell(ritning, elLangd = ELEMENT_LANGD) {
         m.X0[2 * i] = p.x0; m.X0[2 * i + 1] = p.y0;
         m.fri[2 * i] = p.fast && !p.glid ? 0 : 1;
         m.fri[2 * i + 1] = p.fast ? 0 : 1;
-        if (p.forband) m.massa[2 * i] = m.massa[2 * i + 1] = FORBAND.massa;
+        if (p.forband) m.massa[2 * i] = m.massa[2 * i + 1] = FORBAND.massa[p.forband];
     });
     rotFast.forEach((f, r) => { m.fri[2 * np + r] = f ? 0 : 1; });
 

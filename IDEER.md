@@ -479,6 +479,10 @@ gamla Dalgången kastas), och fästen som tagits bort blir vanliga
 knutpunkter i gamla ritningar. Nya lösningar: Bäcken 9 380 $$, Ån
 22 650 $$, Ravinen 14 650 $$, Dalgången (båge) 71 850 $$.
 
+v40-test (Isak 2026-10-13): ett styvt förband väger 40 kg (knutplåtar och
+fler bultar), ett ledat 20 kg; priset 500/300 $$ som förut. Dalgångens
+lösning går upp till 96 % men håller.
+
 Beslut 2026-10-13: linverkan hanteras bara med glidlager (brofästen och
 pelare). Kontrollerna räknar rätt: HEA 100 över 24 m mellan två fästen
 som låser x sjunker 0,42 m och bär som en lina (ca 370 kN drag, 65 %

@@ -1230,7 +1230,7 @@ land) låser x och y och kan vara styva eller ledade.</li>
 <table class="tabell">
 <tr><th>g</th><td>${G}</td><td class="v">m/s²</td></tr>
 <tr><th>Vägbana</th><td>${VAG.massa}</td><td class="v">kg/m</td></tr>
-<tr><th>Förband</th><td>${FORBAND.massa}</td><td class="v">kg/st</td></tr>
+<tr><th>Förband</th><td>${FORBAND.massa.ledat}/${FORBAND.massa.styvt}</td><td class="v">kg/st, ledat/styvt</td></tr>
 <tr><th>keIWs</th><td>${KEIWS_MASSA}</td><td class="v">kg, rörlig last</td></tr>
 <tr><th>Bil</th><td>${BIL_MASSA}</td><td class="v">kg från Älven, två hjul ${tal(BIL_AXEL, 1)} m isär</td></tr>
 </table>
