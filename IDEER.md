@@ -419,6 +419,12 @@ v33-test: nya lagersymboler. Glidlager på land: svart rund nod. Fast
 lager: svart fyrkant med vit rund (som ett ledat fäste). Pelare: svart
 rund topp (glidlagret) som slutar precis under balkarna i knutpunkten.
 
+Beslut 2026-10-13: linverkan hanteras bara med glidlager (brofästen och
+pelare). Kontrollerna räknar rätt: HEA 100 över 24 m mellan två fästen
+som låser x sjunker 0,42 m och bär som en lina (ca 370 kN drag, 65 %
+utnyttjande, momentet litet). Inget nedböjningskrav och ingen gräns för
+dragkraft i fästena.
+
 Senare (Isak 2026-10-13): pelare ihopgjutna med bron (styv inspänning),
 men då måste pelaren deformeras också: pelaren som ett eget balkelement
 i betong från botten, med böjstyvhet, så att den lutar och böjs när
