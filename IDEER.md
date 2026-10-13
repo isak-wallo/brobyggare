@@ -451,6 +451,12 @@ träfackverk (Liten−, 6 m högt, 42 220 $$, 90 %) i stället för betongbågen
 Ingen bana är låst, men pilen › varnar först om ingen bro har hållit på
 banan ("Tryck › igen för att gå vidare ändå").
 
+v37-test (Isak 2026-10-13): Dalgången blir bana 3 (före Kanalen) och är
+torr: marken i botten i stället för vatten ("Aj! keIWs ramlade ner i
+dalen."). Det sparade för bana 3 och 4 byter plats en gång
+(`flyttaSparat`). Stål kommer på Dalgången. Texterna i "Hur funkar det?"
+genomgångna stycke för stycke med Isak (kortare, kablar från Älven).
+
 Att fundera på: Havets stora belopp och om Älven räknas fort nog på
 mobilen (annars en snabbare lösare).
 

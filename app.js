@@ -79,7 +79,27 @@ let laddaOmSen = false;       // ny version finns: ladda om när det passar
 
 // Varje bana har sin egen sparade ritning, och spelet minns vilken bana
 // man var på.
+// Dalgången flyttades från bana 4 till bana 3 (v37): byt plats på det som
+// sparats för de två, en gång.
+function flyttaSparat() {
+    try {
+        if (localStorage.getItem('brobyggare-ordning') === '2') return;
+        for (const nyckel of [SPARA, SPARA_BASTA]) {
+            const a = localStorage.getItem(nyckel + 2), b = localStorage.getItem(nyckel + 3);
+            for (const [nr, v] of [[2, b], [3, a]]) {
+                if (v === null) localStorage.removeItem(nyckel + nr);
+                else localStorage.setItem(nyckel + nr, v);
+            }
+        }
+        const nr = localStorage.getItem(SPARA_BANA);
+        if (nr === '2' || nr === '3') localStorage.setItem(SPARA_BANA, nr === '2' ? '3' : '2');
+        sessionStorage.removeItem(SPARA_HISTORIK);
+        localStorage.setItem('brobyggare-ordning', '2');
+    } catch (e) { /* privat läge */ }
+}
+
 function lasBanaNr() {
+    flyttaSparat();
     let nr = 0;
     try { nr = parseInt(localStorage.getItem(SPARA_BANA), 10) || 0; } catch (e) { /* privat läge */ }
     return Math.max(0, Math.min(BANOR.length - 1, nr));
@@ -432,6 +452,14 @@ function ritaBakgrund() {
 function ritaVatten(t) {
     const w = duk.width / dpr, h = duk.height / dpr;
     const y0 = sy(bana.vatten);
+    if (bana.torr) {
+        // En torr dal: marken i botten.
+        ctx.fillStyle = FARG.berg;
+        ctx.fillRect(0, y0, w, h - y0);
+        ctx.fillStyle = FARG.gras;
+        ctx.fillRect(0, y0 - 0.12 * kam.sk, w, 0.25 * kam.sk);
+        return;
+    }
     ctx.fillStyle = FARG.vatten;
     ctx.beginPath();
     ctx.moveTo(0, h);
@@ -853,7 +881,7 @@ function ritaKeiws() {
 
 function ritaPlask() {
     if (sim && sim.poff !== undefined && sim.poff < POFF_TID) ritaPoff(keiwsStart(bana), 0, sim.poff);
-    if (!sim || sim.resultat !== 'vatten') return;
+    if (!sim || sim.resultat !== 'vatten' || bana.torr) return;
     const t = sim.t - sim.slutTid;
     if (t > 1.2) return;
     ctx.fillStyle = 'rgba(230, 244, 250, ' + (1 - t / 1.2) + ')';
@@ -1058,30 +1086,30 @@ function bygg() {
 
 const LEKMAN_TEXT = `
 <ul>
-<li><b>Balkar böjer sig</b> när de bär. Större balk = styvare och starkare,
-men tyngre och dyrare.</li>
-<li><b>Trä eller stål?</b> Trä är billigt och lätt. Stål är dyrare men mycket
-starkare, så en enda stålbalk kan bära där trä behöver hjälp.</li>
+<li><b>Alla balkar böjer sig</b> lite när de bär. En större balk böjer sig
+mindre och tål mer, men är tyngre och dyrare.</li>
+<li><b>Trä är billigt och lätt, stål är starkt och dyrt.</b> Nya material
+dyker upp på senare banor.</li>
 <li><b>Betong</b> är billig och tål mycket tryck, men är tung. Bra i bågar
 och höga pyloner som trycks ihop.</li>
-<li><b>Kablar</b> är tunna stållinor som bara kan dra, som ett rep. I
-tryck slaknar de. Med kablar från höga pyloner kan man bära långa
-spann: snedkabelbroar och hängbroar. Kablarna spänns när bron byggs så
-att vägen ligger där man ritat den.</li>
-<li><b>Bron bär först sig själv</b> (balkar och vägbana), sedan keIWs när
-han går över.</li>
-<li><b>Färgerna</b> visar hur hårt en bit jobbar: grön är lugnt, gul börjar
-bli mycket, röd är nära gränsen. Över gränsen går den sönder.</li>
+<li><b>Kablar</b> (från Älven) kan bara dra, som ett rep. Trycker man på
+dem slaknar de. Häng upp vägen i kablar från höga pyloner, så klarar du
+långa spann.</li>
+<li><b>Bron måste först bära sin egen vikt</b>, balkarna och vägen. Sedan
+går keIWs över.</li>
+<li><b>Färgerna</b> visar hur hårt varje bit jobbar: grönt är lugnt, gult är
+mycket och rött nästan för mycket. Över 100 % går biten sönder.</li>
 <li><b>Långa smala balkar som trycks ihop kan knäckas</b>, som ett sugrör
-man trycker på från båda ändarna.</li>
-<li><b>Trianglar är starka.</b> I ett fackverk dras eller trycks balkarna i
-stället för att böjas, och då räcker små balkar långt.</li>
-<li><b>Styv knut:</b> balkarna sitter fast i varandra. <b>Ledad knut:</b> de
-kan vrida sig som ett gångjärn.</li>
-<li><b>Brons ändar vid vägen vilar på lager</b>, som på riktiga broar: det
-vänstra sitter fast, det högra står på rullar och kan glida i sidled. Då
-kan bron inte hänga som en lina mellan kanterna, utan måste bära själv.
-De andra fästena, i berget och på land bakom kanterna, sitter fast.</li>
+man trycker på. Kortare eller grövre balkar knäcks inte lika lätt.</li>
+<li><b>Bygg trianglar.</b> En triangel kan inte tryckas sned, så balkarna i
+ett fackverk dras eller trycks i stället för att böjas. Då räcker små
+balkar långt.</li>
+<li><b>Styv knut</b> (fyrkant): balkarna sitter ihop och vrider sig
+tillsammans. <b>Ledad knut</b> (ring): de vrider sig fritt, som ett
+gångjärn. Tryck på en knut för att byta.</li>
+<li><b>Vid vägens ändar står bron på lager</b>, som riktiga broar: den ena
+änden sitter fast och den andra står på rullar. Övriga fästen sitter
+fast.</li>
 </ul>`;
 
 // Materialens egenskaper: [nyckel, rubrik, enhet, omräkning].
@@ -1263,7 +1291,7 @@ function visaResultat() {
             + (basta ? '<br><b>Din billigaste bro hittills på den här banan!</b>' : ''),
             [['bygg', 'Bygg vidare'], ['kor', 'Kör igen']]);
     } else {
-        visaRuta('Plask!<br>keIWs ramlade i vattnet.', sim.brott ? 'Bron gick sönder.' : 'Vägen räckte inte hela vägen över.',
+        visaRuta(bana.torr ? 'Aj!<br>keIWs ramlade ner i dalen.' : 'Plask!<br>keIWs ramlade i vattnet.', sim.brott ? 'Bron gick sönder.' : 'Vägen räckte inte hela vägen över.',
             [['bygg', 'Bygg om'], ['kor', 'Kör igen']]);
     }
     placeraRuta();
