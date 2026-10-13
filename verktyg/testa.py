@@ -553,6 +553,9 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
           and sida.evaluate('() => window.bro.kostnad()') == fore)
     oppna_valjaren(sida)
     sida.click('#valjare [data-t=vag]')
+    kolla(f'{namn}: Kanalen har trä och stål men inte betong och kabel',
+          sida.locator('#valjare [data-m=betong]').count() == 0 and sida.locator('#valjare [data-t=kabel]').count() == 0
+          and sida.locator('#valjare [data-m=stal]').count() == 1)
     sida.evaluate('() => { window.bro.ritning = window.bro.losningsRitning(); }')
     kolla(f'{namn}: lösningen på Kanalen ryms i budgeten', sida.evaluate('() => window.bro.kostnad()')
           <= sida.evaluate('() => BANOR[2].budget'))
@@ -566,6 +569,9 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     # Bana 4, Dalgången: lösningen (betongbåge) ryms i budgeten.
     sida.click('#info [data-v=nasta]')
     sida.evaluate('() => { window.bro.ritning = window.bro.losningsRitning(); }')
+    oppna_valjaren(sida)
+    kolla(f'{namn}: betongen kommer på Dalgången, kabeln inte än',
+          sida.locator('#valjare [data-m=betong]').count() == 1 and sida.locator('#valjare [data-t=kabel]').count() == 0)
     kolla(f'{namn}: lösningen på bana 4 (Dalgången) ryms i budgeten', sida.evaluate('() => window.bro.banaNr') == 3
           and sida.evaluate('() => window.bro.kostnad()') <= sida.evaluate('() => BANOR[3].budget'))
     bild(sida, bilder, f'{namn}-12-dalgangen')

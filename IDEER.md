@@ -443,9 +443,12 @@ vart vi landar"; skarp första version när de sex banorna är testade).
   320 på 30 m djup. Lösning: hängbro med 60 m pyloner, bärkabel ankrad på
   land och pelare närmast stränderna (774 260 $$ av 820 000, 84 %).
 
-Att fundera på: banornas ordning (Dalgången före Älven nu), om betong och
-kablar ska finnas på alla banor (det gör de nu), Havets stora belopp och
-om Älven räknas fort nog på mobilen (annars en snabbare lösare).
+Beslut 2026-10-13 (Isak): ordningen Bäcken, Ån, Kanalen, Dalgången,
+Älven, Havet. Materialen låses upp per bana (banans `material`): trä och
+stål från början, betong från Dalgången, kablar från Älven (v35-test).
+
+Att fundera på: Havets stora belopp och om Älven räknas fort nog på
+mobilen (annars en snabbare lösare).
 
 Beslut 2026-10-13: linverkan hanteras bara med glidlager (brofästen och
 pelare). Kontrollerna räknar rätt: HEA 100 över 24 m mellan två fästen

@@ -152,6 +152,8 @@ function bytBana(nr) {
     zoom = 1;
     mitt = null;
     if (!bana.pelare) ritPelare = false;
+    if (!harMaterial('vajer')) ritKabel = false;
+    if (!harMaterial(ritMaterial)) ritMaterial = 'limtra';
     try { localStorage.setItem(SPARA_BANA, nr); } catch (e) { /* privat läge */ }
     anpassa();
     uppdateraInfo();
@@ -219,6 +221,7 @@ function vaxlaPelare(x, y) {
 
 const rutnat = () => bana.rutnat || 1;   // m mellan punkterna man bygger på
 const maxZoom = () => bana.maxZoom || MAX_ZOOM;
+const harMaterial = nyckel => (bana.material || ['limtra', 'stal']).includes(nyckel);
 const arKabel = b => b.material === 'vajer';
 
 // Längsta balken (eller kabeln, som får vara längre) på banan.
@@ -926,10 +929,12 @@ function visaValjare() {
     const knapp = (data, text, vald) => '<button ' + data + (vald ? ' class="vald"' : '') + (gra ? ' disabled' : '') + '>' + text + '</button>';
     const pelare = !valdBalk && ritPelare, medPelare = bana.pelare && !valdBalk && verktyg === 'rita';
     // Väg, Balk, Kabel (och Pelare) lika breda, sedan Riv och Riv allt.
-    const kolumner = 'repeat(' + (medPelare ? 4 : 3) + ', 1fr)' + (verktyg === 'andra' ? ' auto auto' : '');
+    // Kabeln finns från Älven (eller om den valda balken redan är en kabel).
+    const medKabel = harMaterial('vajer') || kabel;
+    const kolumner = 'repeat(' + (2 + medKabel + !!medPelare) + ', 1fr)' + (verktyg === 'andra' ? ' auto auto' : '');
     const typ = '<div class="typ" style="grid-template-columns: ' + kolumner + '">'
         + knapp('data-t="vag"', 'Väg', vag && !pelare) + knapp('data-t="balk"', 'Balk', !vag && !kabel && !pelare)
-        + knapp('data-t="kabel"', 'Kabel', kabel && !pelare) + (medPelare ? knapp('data-t="pelare"', 'Pelare', pelare) : '')
+        + (medKabel ? knapp('data-t="kabel"', 'Kabel', kabel && !pelare) : '') + (medPelare ? knapp('data-t="pelare"', 'Pelare', pelare) : '')
         // Med Ändra finns Riv och Riv allt alltid, gråa när det inte finns något att riva.
         + (verktyg === 'andra' ? '<button data-t="riv" class="riv"' + (valdBalk || valdP ? '' : ' disabled') + '>Riv</button>'
             + '<button data-t="rivallt" class="riv"' + (ritning.balkar.length || ritning.noder.some(n => n.pelare) ? '' : ' disabled')
@@ -945,7 +950,7 @@ function visaValjare() {
     }
     // Kabeln har inget material att välja (bara storleken).
     const html = typ
-        + (kabel ? '' : '<div class="material">' + Object.entries(MATERIAL).filter(([, m]) => !m.kommer && m.typ !== 'vajer')
+        + (kabel ? '' : '<div class="material">' + Object.entries(MATERIAL).filter(([nyckel, m]) => !m.kommer && m.typ !== 'vajer' && (harMaterial(nyckel) || nyckel === mat))
             .map(([nyckel, m]) => knapp('data-m="' + nyckel + '"', m.kort, nyckel === mat)).join('') + '</div>')
         + '<div class="storlekar">' + STORLEKAR.map((namn, i) => knapp('data-s="' + i + '"', '<b>' + namn + '</b><small>'
             + PROFILER[mat][i].namn + '</small><small>' + kr(PROFILER[mat][i].pris + (vag ? VAG.pris : 0)) + '/m</small>',

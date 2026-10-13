@@ -5,6 +5,8 @@
 //   element, maxLangd, maxKabel, maxZoom: för de stora banorna (fysikens
 //           elementlängd, längsta balk och kabel i m, största zoom)
 //   ö:      bredden på ön till höger (annars fortsätter landet)
+//   material: vilka material som finns (limträ och stål om det saknas);
+//           betongen kommer på Dalgången och kablarna på Älven
 //   fasten: fästpunkterna i berget [x, y] eller [x, y, lager]. Vägbanans
 //           fästen är brolager (alltid ledade): 'fast' låser x och y,
 //           'glid' bara y (rör sig fritt i sidled, som på riktiga broar,
@@ -101,6 +103,7 @@ const BANOR = [
         namn: 'Dalgången',
         spann: 36,
         rutnat: 2,
+        material: ['limtra', 'stal', 'betong'],
         fasten: [[0, 0, 'fast'], [0, -12], [36, 0, 'glid'], [36, -12], [-4, 0], [40, 0], [0, -6], [36, -6]],
         vatten: -20,
         budget: 45000,
@@ -133,6 +136,7 @@ const BANOR = [
         namn: 'Älven',
         spann: 160,
         rutnat: 5,
+        material: ['limtra', 'stal', 'betong', 'vajer'],
         element: 2.5,
         maxLangd: 20,
         maxKabel: 100,
@@ -178,6 +182,7 @@ const BANOR = [
         namn: 'Havet',
         spann: 400,
         rutnat: 10,
+        material: ['limtra', 'stal', 'betong', 'vajer'],
         element: 5,
         maxLangd: 30,
         maxKabel: 150,
