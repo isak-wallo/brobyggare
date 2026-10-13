@@ -7,13 +7,16 @@
 // tyngd) läggs tyngden på gradvis i stället. keIWs är en rörlig last på vägbanan: tyngden fördelas på
 // de två noderna i elementet under fötterna. Finns ingen vägbana under,
 // faller keIWs. Hamnar keIWs i vattnet har bron misslyckats, och kommer
-// keIWs fram till andra sidan har den klarat sig.
+// keIWs fram till andra sidan har den klarat sig. På banor med `bil` kör
+// keIWs en bil på ett ton: två hjul med halva tyngden var.
 
 const DT = 1 / 120;          // s, ett fysiksteg
 const TYNGD_TID = 1.0;       // s, tyngden läggs på under den här tiden (om
                              // bron inte gick att räkna statiskt)
 const START_TID = 1.4;       // s, då börjar keIWs gå
 const KEIWS_MASSA = 100;     // kg
+const BIL_MASSA = 1000;      // kg, bilen med keIWs i
+const BIL_AXEL = 2.5;        // m mellan hjulen
 const KLIV_UPP = 0.25;       // m, så högt kliver keIWs upp utan att hoppa
 const LUFT_TID = 0.15;       // s i luften innan det räknas som att falla
 const GLID_MAX = 0.3;        // m, så långt glidlagret kan glida åt varje håll
@@ -84,14 +87,18 @@ function keiwsSteg(sim, dt) {
     k.vy -= G * dt;
     const ny = k.y + k.vy * dt;
     const yta = ytaUnder(sim, k.x, k.y + KLIV_UPP);
+    // Tyngden på vägbanan under x (fördelad på elementets två noder).
+    const last = (x, F) => {
+        const y = ytaUnder(sim, x, k.y + KLIV_UPP);
+        if (!y || !y.e || y.y < k.y - KLIV_UPP) return;
+        m.last[2 * y.e.i + 1] -= F * (1 - y.t);
+        m.last[2 * y.e.j + 1] -= F * y.t;
+    };
     if (yta && yta.y >= ny) {
         k.y = yta.y; k.vy = 0; k.luft = 0;
         if (k.lage === 'faller') k.lage = 'gar';
-        if (yta.e) {
-            const F = KEIWS_MASSA * G;
-            m.last[2 * yta.e.i + 1] -= F * (1 - yta.t);
-            m.last[2 * yta.e.j + 1] -= F * yta.t;
-        }
+        if (!sim.bana.bil) last(k.x, KEIWS_MASSA * G);
+        else for (const d of [-0.5, 0.5]) last(k.x + d * BIL_AXEL, BIL_MASSA / 2 * G);
     } else {
         k.y = ny;
         k.luft += dt;

@@ -457,6 +457,12 @@ dalen."). Det sparade för bana 3 och 4 byter plats en gång
 (`flyttaSparat`). Stål kommer på Dalgången. Texterna i "Hur funkar det?"
 genomgångna stycke för stycke med Isak (kortare, kablar från Älven).
 
+v38-test (Isak 2026-10-13): från Älven kör keIWs en pixlig bil (röd, keIWs
+sitter i den) som väger 1 000 kg, på två hjul 2,5 m isär (500 kg per hjul
+på vägbanan, banans `bil`). Bilen ritas i keIWs skala (större än 2,5 m),
+fysiken använder de riktiga 2,5 m. Älvens lösning fick väg Pytte+ i stål
+(164 350 $$, 76 %) och budget 175 000; Havets lösning håller (95 %).
+
 Att fundera på: Havets stora belopp och om Älven räknas fort nog på
 mobilen (annars en snabbare lösare).
 

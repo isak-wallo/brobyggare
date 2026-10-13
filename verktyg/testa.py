@@ -620,6 +620,12 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
         kolla(f'{namn}: lösningen på bana {nr + 1} ryms i budgeten', sida.evaluate('() => window.bro.banaNr') == nr
               and sida.evaluate('() => window.bro.kostnad()') <= sida.evaluate(f'() => BANOR[{nr}].budget'))
         bild(sida, bilder, f'{namn}-12-{bnamn}')
+    # Havet: keIWs kör bil (ett ton) över hängbron.
+    sida.click('#verktyg [data-v=kor]')
+    sida.wait_for_timeout(8000)
+    bild(sida, bilder, f'{namn}-13-bil')
+    kolla(f'{namn}: keIWs kör bil över hängbron på Havet', vanta_resultat(sida, 90).startswith('Bron höll!'))
+    sida.click('#ruta [data-v=bygg]')
     kolla(f'{namn}: inga JavaScript-fel', not js_fel, '; '.join(js_fel))
     sida.close()
 

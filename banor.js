@@ -19,6 +19,7 @@
 //   budget: i $$ (spelets pengar); man får bygga över, men då blir det
 //           inga stjärnor
 //   keiws:  keIWs höjd i meter (bara utseendet, större på långa banor)
+//   bil:    keIWs kör bil (1 ton på två hjul) i stället för att gå
 //   omrade: där man får sätta knutpunkter (över land bara ovanför marken)
 //   vy:     det som syns utan zoom
 //   farled: {x0, x1, y}: under y mellan x0 och x1 får inget byggas (båtarna)
@@ -145,15 +146,16 @@ const BANOR = [
         maxZoom: 12,
         fasten: [[0, 0, 'fast'], [0, -5], [160, 0, 'glid'], [160, -5], [-5, 0], [165, 0], [40, -8], [120, -8]],
         vatten: -8,
-        budget: 165000,
+        budget: 175000,
+        bil: true,
         keiws: 8,
         omrade: { x0: -5, x1: 165, y0: -8, y1: 50 },
         vy: { x0: -15, x1: 175, y0: -10, y1: 52 },
         farled: { x0: 45, x1: 115, y: -1 },
         pelare: { botten: -16, pris: 3000, perMeter: 150 },
         losning: {
-            // Väg av stål Pytte, pyloner av betong Pytte 38 m höga på
-            // fundamenten, fyra kablar Pytte åt var håll (153 150 $$).
+            // Väg av stål Pytte+ (för bilen), pyloner av betong Pytte 38 m
+            // höga på fundamenten, fyra kablar Pytte åt var håll (164 350 $$).
             noder: [
                 [0, 0], [0, -5], [160, 0], [160, -5], [-5, 0], [165, 0], [40, -8, 'styv'], [120, -8, 'styv'],
                 [5, 0], [10, 0], [15, 0], [20, 0], [25, 0], [30, 0], [35, 0], [40, 0],
@@ -163,13 +165,13 @@ const BANOR = [
                 [40, 20], [40, 30], [120, 10], [120, 20], [120, 30]
             ],
             balkar: [
-                [0, 8, 0, true, 'stal'], [8, 9, 0, true, 'stal'], [9, 10, 0, true, 'stal'], [10, 11, 0, true, 'stal'], [11, 12, 0, true, 'stal'],
-                [12, 13, 0, true, 'stal'], [13, 14, 0, true, 'stal'], [14, 15, 0, true, 'stal'], [15, 16, 0, true, 'stal'], [16, 17, 0, true, 'stal'],
-                [17, 18, 0, true, 'stal'], [18, 19, 0, true, 'stal'], [19, 20, 0, true, 'stal'], [20, 21, 0, true, 'stal'], [21, 22, 0, true, 'stal'],
-                [22, 23, 0, true, 'stal'], [23, 24, 0, true, 'stal'], [24, 25, 0, true, 'stal'], [25, 26, 0, true, 'stal'], [26, 27, 0, true, 'stal'],
-                [27, 28, 0, true, 'stal'], [28, 29, 0, true, 'stal'], [29, 30, 0, true, 'stal'], [30, 31, 0, true, 'stal'], [31, 32, 0, true, 'stal'],
-                [32, 33, 0, true, 'stal'], [33, 34, 0, true, 'stal'], [34, 35, 0, true, 'stal'], [35, 36, 0, true, 'stal'], [36, 37, 0, true, 'stal'],
-                [37, 38, 0, true, 'stal'], [38, 2, 0, true, 'stal'], [6, 15, 0, false, 'betong'], [15, 39, 0, false, 'betong'], [39, 40, 0, false, 'betong'],
+                [0, 8, 0.25, true, 'stal'], [8, 9, 0.25, true, 'stal'], [9, 10, 0.25, true, 'stal'], [10, 11, 0.25, true, 'stal'], [11, 12, 0.25, true, 'stal'],
+                [12, 13, 0.25, true, 'stal'], [13, 14, 0.25, true, 'stal'], [14, 15, 0.25, true, 'stal'], [15, 16, 0.25, true, 'stal'], [16, 17, 0.25, true, 'stal'],
+                [17, 18, 0.25, true, 'stal'], [18, 19, 0.25, true, 'stal'], [19, 20, 0.25, true, 'stal'], [20, 21, 0.25, true, 'stal'], [21, 22, 0.25, true, 'stal'],
+                [22, 23, 0.25, true, 'stal'], [23, 24, 0.25, true, 'stal'], [24, 25, 0.25, true, 'stal'], [25, 26, 0.25, true, 'stal'], [26, 27, 0.25, true, 'stal'],
+                [27, 28, 0.25, true, 'stal'], [28, 29, 0.25, true, 'stal'], [29, 30, 0.25, true, 'stal'], [30, 31, 0.25, true, 'stal'], [31, 32, 0.25, true, 'stal'],
+                [32, 33, 0.25, true, 'stal'], [33, 34, 0.25, true, 'stal'], [34, 35, 0.25, true, 'stal'], [35, 36, 0.25, true, 'stal'], [36, 37, 0.25, true, 'stal'],
+                [37, 38, 0.25, true, 'stal'], [38, 2, 0.25, true, 'stal'], [6, 15, 0, false, 'betong'], [15, 39, 0, false, 'betong'], [39, 40, 0, false, 'betong'],
                 [40, 41, 0, false, 'betong'], [41, 13, 0, false, 'vajer'], [41, 17, 0, false, 'vajer'], [41, 11, 0, false, 'vajer'], [41, 19, 0, false, 'vajer'],
                 [41, 9, 0, false, 'vajer'], [41, 21, 0, false, 'vajer'], [41, 0, 0, false, 'vajer'], [41, 23, 0, false, 'vajer'], [7, 31, 0, false, 'betong'],
                 [31, 42, 0, false, 'betong'], [42, 43, 0, false, 'betong'], [43, 44, 0, false, 'betong'], [44, 29, 0, false, 'vajer'], [44, 33, 0, false, 'vajer'],
@@ -192,6 +194,7 @@ const BANOR = [
         fasten: [[0, 0, 'fast'], [0, -10], [400, 0, 'glid'], [400, -10], [-40, 0], [440, 0], [80, -30], [320, -30]],
         vatten: -30,
         budget: 820000,
+        bil: true,
         keiws: 12,
         ö: 60,
         omrade: { x0: -40, x1: 440, y0: -30, y1: 100 },

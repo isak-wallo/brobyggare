@@ -845,6 +845,39 @@ function ritaFigur(rekt, x, y, lyft) {
     }
 }
 
+// Bilen (banor med `bil`): rektanglar [x0, h0, x1, h1, färg] i figurens
+// pixlar, x från bilens mitt och h uppåt från vägen. keIWs sitter i den
+// (fötterna 60 upp, benen döljs av karossen).
+const BIL = [
+    [-190, 40, 190, 150, '#d9503f'],      // karossen
+    [-190, 40, 190, 65, '#a93a2d'],       // mörkare nedtill
+    [-202, 50, -186, 80, '#5d6670'],      // stötfångare bak
+    [186, 50, 202, 80, '#5d6670'],        // och fram
+    [176, 112, 190, 134, '#f8d648'],      // strålkastare
+    [-190, 112, -178, 134, '#ec78a8'],    // baklykta
+    [80, 150, 92, 236, '#5d6670'],        // vindrutans ram
+    [92, 150, 112, 228, '#b8defc'],       // vindrutan
+    [-150, 0, -80, 70, '#262a31'],        // hjulen
+    [80, 0, 150, 70, '#262a31']
+];
+const BIL_HJUL = [-115, 115];             // hjulens mitt
+
+// Bilen med keIWs i, hjulen på vägen vid (x, y). fas: hjulnaven snurrar.
+function ritaBil(x, y, rekt, fas, lyft) {
+    const m = keiwsBild() / 204, s = m * kam.sk;      // meter och skärmpunkter per figurpixel
+    ritaFigur(rekt, x - 10 * m, y + 60 * m, lyft);
+    const X = sx(x), Y = sy(y);
+    for (const [x0, h0, x1, h1, farg] of BIL) {
+        ctx.fillStyle = farg;
+        ctx.fillRect(X + x0 * s, Y - h1 * s, (x1 - x0) * s + 0.5, (h1 - h0) * s + 0.5);
+    }
+    ctx.fillStyle = '#8c909c';
+    for (const c of BIL_HJUL) {
+        const x0 = c + (fas ? -22 : 2);
+        ctx.fillRect(X + x0 * s, Y - 47 * s, 20 * s + 0.5, 20 * s + 0.5);
+    }
+}
+
 function ruta(anim, t) {
     const total = anim.reduce((s, r) => s + r.tid, 0);
     let ms = (t * 1000) % total;
@@ -854,6 +887,14 @@ function ruta(anim, t) {
 
 function ritaKeiws() {
     const k = sim ? sim.keiws : null;
+    if (bana.bil && !(sim && sim.bygge)) {
+        if (!k) { ritaBil(keiwsStart(bana), 0, ruta(FIG.idle, performance.now() / 1000), 0); return; }
+        if (k.lage === 'plask') return;
+        if (k.lage === 'klar') { ritaBil(k.x, k.y, ruta(FIG.rekordjubel, sim.t - sim.slutTid), 0); return; }
+        if (k.lage === 'faller') { ritaBil(k.x, k.y, ruta(FIG.faller, sim.t), 0); return; }
+        ritaBil(k.x, k.y, FIG.vrid[3], Math.floor(k.gatt / (0.15 * keiwsHojd(bana))) % 2);
+        return;
+    }
     if (!k) {
         // På klippan och väntar medan man bygger.
         ritaFigur(ruta(FIG.idle, performance.now() / 1000), keiwsStart(bana), 0);
@@ -1097,6 +1138,8 @@ dem slaknar de. Häng upp vägen i kablar från höga pyloner, så klarar du
 långa spann.</li>
 <li><b>Bron måste först bära sin egen vikt</b>, balkarna och vägen. Sedan
 går keIWs över.</li>
+<li><b>Från Älven kör keIWs bil.</b> Den väger ett ton, tio gånger så mycket
+som keIWs, så vägen måste vara starkare.</li>
 <li><b>Färgerna</b> visar hur hårt varje bit jobbar: grönt är lugnt, gult är
 mycket och rött nästan för mycket. Över 100 % går biten sönder.</li>
 <li><b>Långa smala balkar som trycks ihop kan knäckas</b>, som ett sugrör
@@ -1171,6 +1214,7 @@ land) låser x och y och kan vara styva eller ledade.</li>
 <tr><th>Vägbana</th><td>${VAG.massa}</td><td class="v">kg/m</td></tr>
 <tr><th>Förband</th><td>${FORBAND.massa}</td><td class="v">kg/st</td></tr>
 <tr><th>keIWs</th><td>${KEIWS_MASSA}</td><td class="v">kg, rörlig last</td></tr>
+<tr><th>Bil</th><td>${BIL_MASSA}</td><td class="v">kg från Älven, två hjul ${tal(BIL_AXEL, 1)} m isär</td></tr>
 </table>
 <p>Egentyngden räknas statiskt (bron är färdigbyggd och står still), sedan
 går keIWs över och resten räknas dynamiskt.</p>
