@@ -429,20 +429,25 @@ function ritaVatten(t) {
     ctx.fill();
 }
 
-// Pelarna: betong från botten upp till knutpunkten (före vattnet, som
-// ritas över).
+// Pelarna: betong från botten, med en svart rund topp (glidlagret) som
+// slutar precis under balkarna i knutpunkten (före vattnet, som ritas över).
 function ritaPelare() {
     if (!bana.pelare) return;
     const b = Math.max(4, 0.8 * kam.sk), botten = sy(bana.pelare.botten);
-    for (const n of ritning.noder) {
-        if (!n.pelare) continue;
-        const X = sx(n.x), Y = sy(n.y);
+    ritning.noder.forEach((n, i) => {
+        if (!n.pelare) return;
+        const under = Math.max(0, ...ritning.balkar.filter(k => k.a === i || k.b === i)
+            .map(k => profil(k.material || 'limtra', k.storlek).h / 2));
+        const X = sx(n.x), topp = sy(n.y - under) + 1, Y = topp + b / 2;
+        ctx.fillStyle = FARG.nod;
+        ctx.beginPath(); ctx.arc(X, Y, b / 2, Math.PI, 0); ctx.fill();
+        ctx.fillRect(X - b / 2, Y, b, b * 0.25);
         ctx.fillStyle = FARG.betong;
-        ctx.fillRect(X - b / 2, Y, b, botten - Y);
+        ctx.fillRect(X - b / 2, Y + b * 0.25, b, botten - Y);
         ctx.fillStyle = FARG.betongMork;
-        ctx.fillRect(X + b / 4, Y, b / 4, botten - Y);
+        ctx.fillRect(X + b / 4, Y + b * 0.25, b / 4, botten - Y);
         ctx.fillRect(X - b, botten - b / 2, 2 * b, b / 2);
-    }
+    });
 }
 
 // Farleden: en streckad ruta där inget får byggas.
@@ -509,23 +514,13 @@ function ritaBit(x1, y1, x2, y2, prof, vag, farg, kant) {
     }
 }
 
-function ritaNod(x, y, { fast, styv, lager }) {
+function ritaNod(x, y, { fast, styv, lager, pelare }) {
     const r = Math.max(3.5, 0.13 * kam.sk);
     ctx.fillStyle = FARG.nod;
-    if (lager) {
-        // Brolager: en triangel med en led i toppen, på rullar om det glider.
-        // Stort nog att synas under balken (ca 0,55 m högt).
-        const X = sx(x), Y = sy(y), h = Math.max(r * 2.6, 0.55 * kam.sk), b = h * 0.7, rr = h * 0.17;
-        const fot = Y + h + (lager === 'glid' ? rr * 2.4 : 0);
-        ctx.beginPath(); ctx.moveTo(X, Y); ctx.lineTo(X - b, Y + h); ctx.lineTo(X + b, Y + h); ctx.closePath(); ctx.fill();
-        if (lager === 'glid') {
-            for (const dx of [-b * 0.6, 0, b * 0.6]) {
-                ctx.beginPath(); ctx.arc(X + dx, Y + h + rr * 1.2, rr, 0, 7); ctx.fill();
-            }
-        }
-        ctx.fillRect(X - b * 1.3, fot, b * 2.6, Math.max(2, h * 0.1));
-        ctx.fillStyle = '#e8ecef';
-        ctx.beginPath(); ctx.arc(X, Y, r * 0.55, 0, 7); ctx.fill();
+    // Glidlager: en svart rund nod (på en pelare är det pelarens topp, se
+    // ritaPelare). Fast lager ritas som ett ledat fäste.
+    if (lager === 'glid') {
+        if (!pelare) { ctx.beginPath(); ctx.arc(sx(x), sy(y), r * 1.6, 0, 7); ctx.fill(); }
         return;
     }
     if (fast) {

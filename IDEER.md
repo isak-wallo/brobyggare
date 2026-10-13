@@ -415,6 +415,15 @@ v32-test: pelarna har glidlager överst (låser bara y, glider högst
 mellan två pelare höll som en lina (73 %); nu går den av (Mellan, HEA
 240, håller med 82 %). Kanalens lösning håller fortfarande (78 %).
 
+v33-test: nya lagersymboler. Glidlager på land: svart rund nod. Fast
+lager: svart fyrkant med vit rund (som ett ledat fäste). Pelare: svart
+rund topp (glidlagret) som slutar precis under balkarna i knutpunkten.
+
+Senare (Isak 2026-10-13): pelare ihopgjutna med bron (styv inspänning),
+men då måste pelaren deformeras också: pelaren som ett eget balkelement
+i betong från botten, med böjstyvhet, så att den lutar och böjs när
+bron rör sig. Kanske ett val per pelare: glidlager eller ingjuten.
+
 Beslut 2026-10-12: Kanalen med pelare från botten och farled. Älven
 (minst 100 m) blir sista vattendraget, senare.
 
