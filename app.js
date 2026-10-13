@@ -58,7 +58,7 @@ let ritPelare = false;       // sätter pelare i stället (banor med pelare)
 let ritKabel = false;        // ritar kablar i stället (bara drag)
 let valjareOppen = false;     // väljaren för väg/balk och storlek (verktyget Rita)
 let varnaNasta = false;      // varningen när man går vidare utan en bro som höll
-let storlek = 2;              // Mellan
+let storlek = 1;              // Mellan
 let ritMaterial = 'limtra';   // materialet man ritar väg och balk med (kabeln har sitt eget)
 let lageNu = 'bygg';
 let sim = null;
@@ -112,9 +112,18 @@ function lasBanaNr() {
 // Ritningar från när det fanns tre storlekar (utan version) får de nya
 // numren, så att balkarna behåller sina mått. Fästena får sina brolager
 // från banan (version 3). Version 4: nya trämått (samma storleksnamn).
+// Version 5: 9 steg (Liten−–Stor+) i stället för 15 (Pytte−–Jätte+); varje
+// balk behåller sin profil (gamla Pytte = nya Liten−; stål: HEA 100 =
+// Liten−), det som saknas blir närmaste steg.
 function uppgradera(r, b = bana) {
     if (!r.version) {
         for (const k of r.balkar) k.storlek = [1, 3, 4][k.storlek] ?? 2;
+    }
+    if ((r.version || 0) < 5) {
+        for (const k of r.balkar) {
+            const s = k.storlek, gammalt = 3 * Math.round(s) + Math.sign(s - Math.round(s)) + 1;
+            k.storlek = storlekAv(Math.max(0, Math.min(ANTAL_STEG - 1, gammalt - (k.material === 'stal' ? 0 : 1))));
+        }
     }
     for (const n of r.noder) {
         if (!n.fast) continue;
@@ -136,9 +145,8 @@ function uppgradera(r, b = bana) {
     for (const [x, y, lager] of b.fasten) {
         if (!r.noder.some(n => n.fast && n.x === x && n.y === y)) r.noder.push(fastNod(x, y, lager));
     }
-    // Gamla halvsteg till de nya stegen (1,5 → Mellan−, 1,75).
     for (const k of r.balkar) k.storlek = storlekAv(stegAv(k.storlek));
-    r.version = 4;
+    r.version = 5;
     return r;
 }
 

@@ -1,8 +1,9 @@
 // Material och tvärsnitt.
 //
-// Spelläget har fem storlekar per material (Pytte–Jätte), var och en med
-// ett steg under och ett över (Pytte−, Pytte, Pytte+ … Jätte+, 15 steg)
-// som man når med −/+ under knapparna. Var och en är en riktig profil, så
+// Spelläget har tre storlekar per material (Liten, Mellan, Stor), var och
+// en med ett steg under och ett över (Liten−, Liten, Liten+ … Stor+, 9
+// steg) som man når med −/+ under knapparna. Träet är för de kortare
+// broarna (56×180–90×345), stålet tar över med HEA 100–260. Var och en är en riktig profil, så
 // att lösaren räknar med verkliga A, I, W, vikt och pris.
 // Enheter: SI (m, kg, N, Pa). Priserna är i spelets pengar, $$ (ungefär som
 // kronor).
@@ -110,14 +111,13 @@ function vajer(d) {
     };
 }
 
-const STORLEKAR = ['Pytte', 'Liten', 'Mellan', 'Stor', 'Jätte'];
+const STORLEKAR = ['Liten', 'Mellan', 'Stor'];
 
-// De 15 stegen per material, från Pytte− till Jätte+. Varje steg är
+// De 9 stegen per material, från Liten− till Stor+. Varje steg är
 // ungefär 1,35 gånger styvare (I) än det förra, så att knäckningen inte tar
 // för stora kliv, och både pris och styvhet ökar för varje steg.
 const STEGEN = {
-    limtra: [[42, 180], [56, 180], [56, 200], [56, 215], [66, 225], [78, 230], [90, 245], [90, 270],
-             [90, 305], [90, 345], [115, 360], [115, 395], [115, 435], [140, 450], [140, 495]]
+    limtra: [[56, 180], [56, 200], [56, 215], [66, 225], [78, 230], [90, 245], [90, 270], [90, 305], [90, 345]]
         .map(([b, h]) => rektangel('limtra', b, h)),
     // HEA 100–400 i följd, böjning kring den styva axeln (W elastiskt, A_v =
     // livets area). HEB och HEM är tyngre för samma styvhet, så de skulle bli
@@ -126,25 +126,20 @@ const STEGEN = {
            iprofil('HEA 140', 31.4, 1033, 155, 10.1, 133), iprofil('HEA 160', 38.8, 1673, 220, 13.2, 152),
            iprofil('HEA 180', 45.3, 2510, 294, 14.5, 171), iprofil('HEA 200', 53.8, 3692, 389, 18.1, 190),
            iprofil('HEA 220', 64.3, 5410, 515, 20.7, 210), iprofil('HEA 240', 76.8, 7763, 675, 25.2, 230),
-           iprofil('HEA 260', 86.8, 10450, 836, 28.8, 250), iprofil('HEA 280', 97.3, 13670, 1013, 31.7, 270),
-           iprofil('HEA 300', 112.5, 18260, 1260, 37.3, 290), iprofil('HEA 320', 124.4, 22930, 1479, 41.1, 310),
-           iprofil('HEA 340', 133.5, 27690, 1678, 45.0, 330), iprofil('HEA 360', 142.8, 33090, 1891, 49.0, 350),
-           iprofil('HEA 400', 159.0, 45070, 2311, 57.3, 390)],
+           iprofil('HEA 260', 86.8, 10450, 836, 28.8, 250)],
     // Betong: rektanglar b × h, från en smal sträva till en rejäl pylon.
-    betong: [[200, 250], [200, 300], [250, 300], [250, 350], [300, 350], [300, 400], [350, 450], [400, 500],
-             [400, 600], [450, 650], [500, 700], [500, 800], [600, 900], [700, 1000], [800, 1100]]
+    betong: [[200, 300], [250, 300], [250, 350], [300, 350], [300, 400], [350, 450], [400, 500], [400, 600], [450, 650]]
         .map(([b, h]) => rektangel('betong', b, h)),
-    vajer: [8, 10, 12, 14, 16, 18, 20, 24, 28, 32, 36, 40, 46, 52, 60].map(vajer)
+    vajer: [10, 12, 14, 16, 18, 20, 24, 28, 32].map(vajer)
 };
 
-// I ritningen är storleken 0–4 (Pytte–Jätte), med − och + som ± 0,25
-// (Liten− = 0,75, Liten+ = 1,25). Gamla halvsteg (1,5) räknas som steget
-// under nästa storlek (Mellan−).
-const stegAv = s => 3 * Math.round(s) + Math.sign(s - Math.round(s)) + 1;     // 0–14
+// I ritningen är storleken 0–2 (Liten–Stor), med − och + som ± 0,25
+// (Mellan− = 0,75, Mellan+ = 1,25).
+const ANTAL_STEG = 9;
+const stegAv = s => Math.max(0, Math.min(ANTAL_STEG - 1, 3 * Math.round(s) + Math.sign(s - Math.round(s)) + 1));     // 0–8
 const storlekAv = k => Math.floor(k / 3) + (k % 3 - 1) * 0.25;
-const ANTAL_STEG = 15;
 
-// Fem storlekar (knapparna) är mittensteget i varje grupp om tre.
+// Tre storlekar (knapparna) är mittensteget i varje grupp om tre.
 const PROFILER = Object.fromEntries(Object.entries(STEGEN).map(([m, lista]) => [m, lista.filter((p, k) => k % 3 === 1)]));
 
 // Profilen för en storlek och dess namn (Liten−, Liten, Liten+ …).

@@ -11,8 +11,8 @@ utnyttjad (grön → gul → röd). Över 100 % går den sönder.
 
 - **Rita** (t.ex. "Väg · Mellan"): tryck för att välja väg (balk med
   vägbana som keIWs går på), balk (stöttor, fackverk) eller kabel (bara
-  drag, för snedkabel- och hängbroar), och en av fem
-  storlekar från Pytte till Jätte.
+  drag, för snedkabel- och hängbroar), och en av tre
+  storlekar Liten, Mellan och Stor (med − och +, nio steg).
 - **Tryck på en knutpunkt:** växla mellan styvt (fyrkant) och ledat (ring).
 - **Ändra:** tryck på en balk och dra i dess ändar, byt storlek eller riv
   den (eller riv allt), eller dra en knutpunkt.

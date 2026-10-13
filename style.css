@@ -252,7 +252,7 @@ html, body {
 }
 
 #valjare .storlekar {
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(3, 1fr);
 }
 
 /* Pelare: pris i stället för material och storlek. */

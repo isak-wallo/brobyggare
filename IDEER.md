@@ -492,6 +492,15 @@ ledade knutpunkter ca 9 400 $$. Ett fackverk under vägen är svagare än
 samma ovanpå: vägen blir tryckt och böjd samtidigt, och trycket förstärker
 böjningen (andra ordningens effekt), medan dragen väg rätas ut.
 
+v42-test (Isak 2026-10-13): tre storlekar (Liten, Mellan, Stor) med − och
++, nio steg i stället för femton. Trä är för de kortare broarna: gamla
+Pytte till Stor− (56×180–90×345); stålet är de nio minsta HEA (100–260),
+så stålet tar naturligt över där träet slutar. Betong och kabel: gamla
+Pytte–Stor−. Ritningar (version 5) behåller sina profiler, det som inte
+finns kvar blir närmaste steg. Bäckens fackverk blev Liten− rakt igenom
+(10 550 $$). En rak träbalk räcker inte längre över Bäcken (14 m), inte
+ens Stor+ – det blir fackverk.
+
 Beslut 2026-10-13: linverkan hanteras bara med glidlager (brofästen och
 pelare). Kontrollerna räknar rätt: HEA 100 över 24 m mellan två fästen
 som låser x sjunker 0,42 m och bär som en lina (ca 370 kN drag, 65 %
