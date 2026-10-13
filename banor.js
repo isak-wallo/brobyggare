@@ -5,8 +5,8 @@
 //   element, maxLangd, maxKabel, maxZoom: för de stora banorna (fysikens
 //           elementlängd, längsta balk och kabel i m, största zoom)
 //   ö:      bredden på ön till höger (annars fortsätter landet)
-//   material: vilka material som finns (limträ och stål om det saknas);
-//           betongen kommer på Dalgången och kablarna på Älven
+//   material: vilka material som finns (bara limträ om det saknas); stålet
+//           kommer på Kanalen, betongen och kablarna på Älven
 //   fasten: fästpunkterna i berget [x, y] eller [x, y, lager]. Vägbanans
 //           fästen är brolager (alltid ledade): 'fast' låser x och y,
 //           'glid' bara y (rör sig fritt i sidled, som på riktiga broar,
@@ -80,6 +80,7 @@ const BANOR = [
         omrade: { x0: -4, x1: 52, y0: -4, y1: 12 },
         vy: { x0: -9, x1: 57, y0: -7.5, y1: 12.5 },
         farled: { x0: 16, x1: 32, y: -2 },
+        material: ['limtra', 'stal'],
         pelare: { botten: -10, pris: 3000, perMeter: 150 },
         losning: {
             // Väg Mellan på två pelare 4 m ner, med strävor av Liten (53 040 $$).
@@ -99,11 +100,12 @@ const BANOR = [
     },
     {
         // En djup dalgång med en bäck i botten och fästen långt ner i
-        // bergväggarna: här passar en båge (betongen tål tryck).
+        // bergväggarna (6 och 12 m ner): ett fackverk under vägen, eller en
+        // båge.
         namn: 'Dalgången',
         spann: 36,
         rutnat: 2,
-        material: ['limtra', 'stal', 'betong'],
+        material: ['limtra', 'stal'],
         fasten: [[0, 0, 'fast'], [0, -12], [36, 0, 'glid'], [36, -12], [-4, 0], [40, 0], [0, -6], [36, -6]],
         vatten: -20,
         budget: 45000,
@@ -111,22 +113,21 @@ const BANOR = [
         omrade: { x0: -4, x1: 40, y0: -12, y1: 12 },
         vy: { x0: -8, x1: 44, y0: -21, y1: 12.5 },
         losning: {
-            // Båge av betong Pytte+ från −12, pelare och väg av trä (43 900 $$).
+            // Fackverk av Liten− (56×215) under vägen, 6 m högt, mellan
+            // fästena 6 m ner i bergväggarna (42 220 $$).
             noder: [
                 [0, 0], [0, -12], [36, 0], [36, -12], [-4, 0], [40, 0], [0, -6], [36, -6],
                 [2, 0], [4, 0], [6, 0], [8, 0], [10, 0], [12, 0], [14, 0], [16, 0],
                 [18, 0], [20, 0], [22, 0], [24, 0], [26, 0], [28, 0], [30, 0], [32, 0],
-                [34, 0], [4, -8], [8, -6], [12, -4], [16, -2], [20, -2], [24, -4], [28, -6],
-                [32, -8]
+                [34, 0], [6, -6], [12, -6], [18, -6], [24, -6], [30, -6]
             ],
             balkar: [
-                [0, 8, 0, true], [8, 9, 0, true], [9, 10, 0, true], [10, 11, 0, true], [11, 12, 0, true],
-                [12, 13, 0, true], [13, 14, 0, true], [14, 15, 0, true], [15, 16, 0, true], [16, 17, 0, true],
-                [17, 18, 0, true], [18, 19, 0, true], [19, 20, 0, true], [20, 21, 0, true], [21, 22, 0, true],
-                [22, 23, 0, true], [23, 24, 0, true], [24, 2, 0, true], [1, 25, 0.75, false, 'betong'], [25, 26, 0.75, false, 'betong'],
-                [26, 27, 0.75, false, 'betong'], [27, 28, 0.75, false, 'betong'], [28, 29, 0.75, false, 'betong'], [29, 30, 0.75, false, 'betong'], [30, 31, 0.75, false, 'betong'],
-                [31, 32, 0.75, false, 'betong'], [32, 3, 0.75, false, 'betong'], [25, 9, -0.25], [26, 11, -0.25], [27, 13, -0.25],
-                [28, 15, -0.25], [29, 17, -0.25], [30, 19, -0.25], [31, 21, -0.25], [32, 23, -0.25]
+                [0, 8, 0.75, true], [8, 9, 0.75, true], [9, 10, 0.75, true], [10, 11, 0.75, true], [11, 12, 0.75, true], [12, 13, 0.75, true],
+                [13, 14, 0.75, true], [14, 15, 0.75, true], [15, 16, 0.75, true], [16, 17, 0.75, true], [17, 18, 0.75, true], [18, 19, 0.75, true],
+                [19, 20, 0.75, true], [20, 21, 0.75, true], [21, 22, 0.75, true], [22, 23, 0.75, true], [23, 24, 0.75, true], [24, 2, 0.75, true],
+                [6, 25, 0.75], [25, 26, 0.75], [26, 27, 0.75], [27, 28, 0.75], [28, 29, 0.75], [29, 7, 0.75],
+                [25, 10, 0.75], [26, 13, 0.75], [27, 16, 0.75], [28, 19, 0.75], [29, 22, 0.75], [6, 10, 0.75],
+                [25, 13, 0.75], [26, 16, 0.75], [16, 28, 0.75], [19, 29, 0.75], [22, 7, 0.75]
             ]
         }
     },

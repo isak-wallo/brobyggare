@@ -433,9 +433,8 @@ vart vi landar"; skarp första version när de sex banorna är testade).
   (/ Pelare); kabeln har ingen materialrad, och Ändra gör om balk ↔ kabel.
 - Banorna kan ha egen elementlängd, längsta balk/kabel, största zoom, en
   ö på andra sidan och fundament (fästen ute i vattnet).
-- Bana 4 Dalgången: 36 m, 32 m djup, budget 45 000. Lösning: betongbåge
-  med träpelare (43 900 $$, 81 %). Ett träfackverk h 6 är ungefär lika
-  billigt (42 220 $$).
+- Bana 4 Dalgången: 36 m, 32 m djup, budget 45 000. Lösning först en
+  betongbåge med träpelare (43 900 $$, 81 %), se v36.
 - Bana 5 Älven: 160 m, farled 70 m, fundament vid 40 och 120, balk ≤ 20 m,
   kabel ≤ 100 m. Lösning: snedkabelbro med 30 m höga betongpyloner (153 150
   $$ av 165 000, 67 %). Tung att räkna (ca 4 s för en provkörning på datorn).
@@ -444,8 +443,13 @@ vart vi landar"; skarp första version när de sex banorna är testade).
   land och pelare närmast stränderna (774 260 $$ av 820 000, 84 %).
 
 Beslut 2026-10-13 (Isak): ordningen Bäcken, Ån, Kanalen, Dalgången,
-Älven, Havet. Materialen låses upp per bana (banans `material`): trä och
-stål från början, betong från Dalgången, kablar från Älven (v35-test).
+Älven, Havet. Materialen låses upp per bana (banans `material`).
+
+v36-test (Isak 2026-10-13): bara trä på Bäcken och Ån, stål från
+Kanalen, betong och kablar från Älven. Dalgångens lösning blev därför ett
+träfackverk (Liten−, 6 m högt, 42 220 $$, 90 %) i stället för betongbågen.
+Ingen bana är låst, men pilen › varnar först om ingen bro har hållit på
+banan ("Tryck › igen för att gå vidare ändå").
 
 Att fundera på: Havets stora belopp och om Älven räknas fort nog på
 mobilen (annars en snabbare lösare).

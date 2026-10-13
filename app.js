@@ -57,6 +57,7 @@ let ritVag = true;            // ritar väg (som keIWs går på) eller balk
 let ritPelare = false;       // sätter pelare i stället (banor med pelare)
 let ritKabel = false;        // ritar kablar i stället (bara drag)
 let valjareOppen = false;     // väljaren för väg/balk och storlek (verktyget Rita)
+let varnaNasta = false;      // varningen när man går vidare utan en bro som höll
 let storlek = 2;              // Mellan
 let ritMaterial = 'limtra';   // materialet man ritar väg och balk med (kabeln har sitt eget)
 let lageNu = 'bygg';
@@ -221,7 +222,7 @@ function vaxlaPelare(x, y) {
 
 const rutnat = () => bana.rutnat || 1;   // m mellan punkterna man bygger på
 const maxZoom = () => bana.maxZoom || MAX_ZOOM;
-const harMaterial = nyckel => (bana.material || ['limtra', 'stal']).includes(nyckel);
+const harMaterial = nyckel => (bana.material || ['limtra']).includes(nyckel);
 const arKabel = b => b.material === 'vajer';
 
 // Längsta balken (eller kabeln, som får vara längre) på banan.
@@ -884,7 +885,9 @@ function uppdateraInfo() {
     const pil = (v, t, av) => '<button data-v="' + v + '"' + (av ? ' disabled' : '') + '>' + t + '</button>';
     const bygger = lageNu === 'bygg';
     let tredje;
-    if (!bygger && sim && sim.bygge) {
+    if (varnaNasta) {
+        tredje = '<span class="over">Ingen bro har hållit här än. Tryck › igen för att gå vidare ändå.</span>';
+    } else if (!bygger && sim && sim.bygge) {
         tredje = 'keIWs bygger …';
     } else if (!bygger && sim) {
         tredje = sim.brott ? '<span class="over">Bron gick sönder</span>'
@@ -896,7 +899,7 @@ function uppdateraInfo() {
         + '<b>Bana ' + (banaNr + 1) + ' · ' + bana.namn + '</b>'
         + pil('nasta', '›', !bygger || banaNr === BANOR.length - 1) + '</div>'
         + '<div class="rad"><span class="' + (over ? 'over' : '') + '">' + kr(k) + '</span> av ' + kr(bana.budget) + '</div>'
-        + '<div class="rad tredje' + (bygger ? ' tips' : '') + '">' + tredje + '</div>';
+        + '<div class="rad tredje' + (bygger && !varnaNasta ? ' tips' : '') + '">' + tredje + '</div>';
     for (const v of ['rita', 'andra']) knappar[v].classList.toggle('vald', verktyg === v);
     knappar.rita.innerHTML = ritPelare ? '<span>Pelare</span><small>Betong ▴</small>'
         : ritKabel ? '<span>Kabel</span><small>' + profil('vajer', storlek).namn + ' · ' + storleksNamn(storlek) + ' ▴</small>'
@@ -1358,8 +1361,24 @@ valjareEl.addEventListener('click', e => {
 infoEl.addEventListener('click', e => {
     const b = e.target.closest('button');
     if (!b || b.disabled) return;
+    // Alla banor är öppna, men den som går vidare utan en bro som höll får
+    // en varning först (ett tryck till går vidare).
+    if (b.dataset.v === 'nasta' && !varnaNasta && !lasBasta(banaNr)) {
+        varnaNasta = true;
+        uppdateraInfo();
+        return;
+    }
+    varnaNasta = false;
     bytBana(banaNr + (b.dataset.v === 'nasta' ? 1 : -1));
 });
+
+// Varningen försvinner vid allt annat man trycker på.
+document.addEventListener('pointerdown', e => {
+    if (varnaNasta && !e.target.closest('#info [data-v=nasta]')) {
+        varnaNasta = false;
+        uppdateraInfo();
+    }
+}, true);
 
 rutaEl.addEventListener('click', e => {
     const b = e.target.closest('button');
