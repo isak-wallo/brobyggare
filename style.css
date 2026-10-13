@@ -239,17 +239,13 @@ html, body {
     gap: 4px;
 }
 
+/* Kolumnerna i .typ sätts i app.js (Väg, Balk, Kabel, ev. Pelare och Riv). */
 #valjare .typ {
-    grid-template-columns: 1fr 1fr auto auto;
     margin-bottom: 6px;
 }
 
-#valjare .typ.tre {
-    grid-template-columns: 1fr 1fr 1fr;
-}
-
 #valjare .material {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr;
     margin-bottom: 6px;
 }
 

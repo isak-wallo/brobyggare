@@ -17,7 +17,7 @@ Idéer och beslut i `IDEER.md` (läs den först).
 
 ## Filer
 
-- `material.js` – material (limträ GL30c, stål S355 med HEA; vajer kommer) och de 15
+- `material.js` – material (limträ GL30c, stål S355 med HEA, betong C35/45, kabel) och de 15
   stegen per material (Pytte−, Pytte, Pytte+ … Jätte+; storlek 0–4 ± 0,25),
   vägbanan och förbanden (vikt och pris).
 - `fysik.js` – FE-lösaren: korotationella Euler–Bernoulli-element, Newmark
@@ -42,6 +42,9 @@ ritningar, se `uppgradera` i app.js).
 Pelare (banor med `pelare`) är fasta knutpunkter med glidlager (`lager: 'glid'`, `pelare: true`)
 i ritningen; de kostar efter höjden över botten (`ritningensKostnad`).
 Farleden (`farled`) stoppar knutpunkter och balkar i app.js, inte i fysiken.
+Kablar (`material: 'vajer'`) är ett enda element utan böjstyvhet som bara
+tar drag; kablar i vägen spänns vid bygget (`spannKablar`). Stora banor har
+egna `element`, `maxLangd`, `maxKabel`, `maxZoom` (se banor.js).
 Massan klumpas i noderna. Egentyngden räknas statiskt (losStatiskt; går
 det inte läggs den på under 1 s), sedan går keIWs (100 kg) över. g = 10 m/s². Ett element över 100 %
 utnyttjande tas bort; en balk som knäcks tappar mittelementet.

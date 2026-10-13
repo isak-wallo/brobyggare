@@ -8,7 +8,8 @@
 // kronor).
 //
 // typ:     styr brottsregeln (BROTTREGLER här, BROTT i fysik.js):
-//          'tra', 'stal' eller 'vajer'
+//          'tra', 'stal', 'betong' eller 'vajer' (kabeln: bara drag, ett
+//          enda rakt element utan böjstyvhet)
 // kommer:  finns inte i spelet än; visas gråat i menyn med preliminära
 //          värden
 
@@ -36,15 +37,28 @@ const MATERIAL = {
         fv: 205e6,         // skjuvning, fy/√3
         prisM3: 118000     // 15 $$/kg
     },
+    // Armerad betong, förenklat: tryck i betongen, drag och böjning i
+    // armeringen (ungefär 1 %), räknat som om tvärsnittet vore homogent.
+    betong: {
+        namn: 'Betong C35/45',
+        kort: 'Betong',
+        typ: 'betong',
+        E: 34000e6,
+        densitet: 2500,
+        fm: 15e6,          // böjning (armeringen tar draget)
+        ft: 4e6,           // drag: armeringen, ca 1 % av arean
+        fc: 30e6,          // tryck
+        fv: 2e6,           // skjuvning (med byglar)
+        prisM3: 3000       // billig per m³ (betong + armering), men tung
+    },
     vajer: {
-        namn: 'Vajer',
-        kort: 'Vajer',
+        namn: 'Kabel (stållina)',
+        kort: 'Kabel',
         typ: 'vajer',
-        kommer: true,
         E: 160000e6,       // lägre än stål: trådarna ligger i spiral
         densitet: 7850,    // räknat på metallarean
         fu: 1570e6,        // brottgräns för trådarna
-        prisM3: 600000     // ca 75 $$/kg
+        prisM3: 300000     // ca 38 $$/kg
     }
 };
 
@@ -56,8 +70,11 @@ const BROTTREGLER = {
     stal: ['N/(A·f<sub>y</sub>) + M/(W·f<sub>y</sub>) ≤ 100 %',
            'V/(A<sub>v</sub>·f<sub>v</sub>) ≤ 100 % (A<sub>v</sub> = livets area)',
            'Knäckning: tryckkraften < π²·E·I/L²'],
+    betong: ['N/(A·f<sub>t</sub> eller f<sub>c</sub>) + M/(W·f<sub>m</sub>) ≤ 100 %',
+             '1,5·V/(A·f<sub>v</sub>) ≤ 100 %',
+             'Knäckning: tryckkraften < π²·E·I/L²'],
     vajer: ['Bara drag: N/(A·f<sub>u</sub>) ≤ 100 %',
-            'Tryck: vajern slaknar, bär ingen böjning']
+            'Tryck: kabeln slaknar, den bär ingen böjning']
 };
 
 // Ett rektangulärt tvärsnitt b × h i millimeter.
@@ -82,13 +99,14 @@ function iprofil(namn, A, I, W, Av, h) {
     };
 }
 
-// En vajer med diametern d mm. Metallarean ca 60 % av cirkeln (spiralslagen
-// lina), ingen böjstyvhet att tala om.
+// En kabel med diametern d mm. Metallarean ca 60 % av cirkeln (spiralslagen
+// lina), ingen böjstyvhet att tala om. Priset i hela $$ (de klenaste
+// kablarna kostar bara några $$/m).
 function vajer(d) {
     const mat = MATERIAL.vajer, A = 0.6 * Math.PI * (d / 1000) ** 2 / 4;
     return {
         namn: 'Ø ' + d, material: 'vajer', h: d / 1000, A, I: 0, W: 0,
-        massa: A * mat.densitet, pris: Math.round(A * mat.prisM3 / 10) * 10
+        massa: A * mat.densitet, pris: Math.round(A * mat.prisM3)
     };
 }
 
@@ -112,8 +130,11 @@ const STEGEN = {
            iprofil('HEA 300', 112.5, 18260, 1260, 37.3, 290), iprofil('HEA 320', 124.4, 22930, 1479, 41.1, 310),
            iprofil('HEA 340', 133.5, 27690, 1678, 45.0, 330), iprofil('HEA 360', 142.8, 33090, 1891, 49.0, 350),
            iprofil('HEA 400', 159.0, 45070, 2311, 57.3, 390)],
-    // Preliminär (vajern finns inte i spelet än).
-    vajer: [7, 8, 9, 11, 12, 13, 14, 16, 18, 22, 24, 26, 29, 32, 36].map(vajer)
+    // Betong: rektanglar b × h, från en smal sträva till en rejäl pylon.
+    betong: [[200, 250], [200, 300], [250, 300], [250, 350], [300, 350], [300, 400], [350, 450], [400, 500],
+             [400, 600], [450, 650], [500, 700], [500, 800], [600, 900], [700, 1000], [800, 1100]]
+        .map(([b, h]) => rektangel('betong', b, h)),
+    vajer: [8, 10, 12, 14, 16, 18, 20, 24, 28, 32, 36, 40, 46, 52, 60].map(vajer)
 };
 
 // I ritningen är storleken 0–4 (Pytte–Jätte), med − och + som ± 0,25

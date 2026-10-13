@@ -128,6 +128,37 @@ const mat = MATERIAL.limtra;
           'δ/L ' + (-y / L).toFixed(3) + ', x/L ' + (x / L).toFixed(3));
 }
 
+// 7. Kablar (bara drag): två kablar i 45° bär en last, N = P / (2 sin 45°).
+{
+    const P = 10000;
+    const m = byggModell({ noder: [{ x: 0, y: 0, fast: true }, { x: 4, y: 0, fast: true }, { x: 2, y: -2 }],
+                           balkar: [{ a: 0, b: 2, storlek: 2, material: 'vajer' }, { a: 2, b: 1, storlek: 2, material: 'vajer' }] });
+    m.last[2 * m.nodPunkt[2] + 1] = -P;
+    losStatiskt(m, 0, 1);
+    const N = m.element[m.balkar[0].element[0]].N, hand = P / (2 * Math.SQRT1_2);
+    kolla('kablar, dragkraft', nara(N, hand, 0.01) && m.balkar[0].element.length === 1, pct(N, hand));
+}
+
+// 8. En kabel slaknar i tryck: konsol med en kabel ner till ett fäste under
+//    spetsen. Last nedåt: kabeln trycks och bär inget (δ = PL³/3EI). Last
+//    uppåt: kabeln dras och tar nästan hela lasten.
+{
+    const L = 4, P = 2000, p = PROFILER.limtra[2];
+    const ny = () => byggModell({ noder: [{ x: 0, y: 0, fast: true, styv: true }, { x: L, y: 0 }, { x: L, y: -2, fast: true }],
+                                  balkar: [{ a: 0, b: 1, storlek: 2 }, { a: 1, b: 2, storlek: 2, material: 'vajer' }] });
+    let m = ny();
+    m.last[2 * m.nodPunkt[1] + 1] = -P;
+    losStatiskt(m, 0, 1);
+    const d = -m.q[2 * m.nodPunkt[1] + 1], hand = P * L ** 3 / (3 * mat.E * p.I);
+    const Nk = m.element[m.balkar[1].element[0]].N;
+    kolla('slak kabel i tryck', nara(d, hand, 0.01) && Math.abs(Nk) < 0.01 * P, pct(d, hand) + ', N ' + Nk.toFixed(1) + ' N');
+    m = ny();
+    m.last[2 * m.nodPunkt[1] + 1] = P;
+    losStatiskt(m, 0, 1);
+    const Nd = m.element[m.balkar[1].element[0]].N;
+    kolla('spänd kabel i drag', Nd > 0.95 * P, (Nd / P * 100).toFixed(1) + ' % av lasten');
+}
+
 require(path.join(__dirname, 'testa_banor.js'))(S, kolla);
 
 console.log(fel ? fel + ' FEL' : 'Allt OK');

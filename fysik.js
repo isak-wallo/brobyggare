@@ -23,6 +23,7 @@ const NEWMARK_GAMMA = 0.6;    // > 1/2 dämpar bort de högsta frekvenserna
 const DAMPNING = 0.4;         // 1/s, massproportionell dämpning
 const MAX_ITER = 8;
 const TOL = 1e-7;             // m, Newton är klar när ändringen är mindre
+const SLAK = 1e-6;            // en slak kabel (i tryck) har så här lite av sin styvhet kvar
 
 // Ritningen → en beräkningsmodell.
 //
@@ -32,7 +33,10 @@ const TOL = 1e-7;             // m, Newton är klar när ändringen är mindre
 //
 // Ett styvt förband delar vridningen mellan balkändarna. Ett ledat ger varje
 // balkände en egen vridning. En styv fästpunkt är inspänd (vridningen låst).
-function byggModell(ritning) {
+// En kabel är ett enda rakt element utan böjstyvhet som bara tar drag (den
+// slaknar i tryck), och den bryr sig inte om förbandets vridning.
+// elLangd: ungefärlig elementlängd (längre på de stora banorna).
+function byggModell(ritning, elLangd = ELEMENT_LANGD) {
     const punkter = [];     // FE-noder: {x0, y0, fast}
     const rotFast = [];     // per vridningsfrihetsgrad: låst?
     const element = [];
@@ -43,22 +47,30 @@ function byggModell(ritning) {
         punkter.push({ x0: n.x, y0: n.y, fast: !!n.fast, glid: n.lager === 'glid', forband: !n.fast });
         return punkter.length - 1;
     });
-    const nodRot = ritning.noder.map(n => n.styv && !n.lager ? nyRot(n.fast) : -1);
+    // Knutpunkter där bara kablar sitter har ingen vridning (den vore lös).
+    const kabel = b => MATERIAL[b.material || 'limtra'].typ === 'vajer';
+    const medBalk = new Set();
+    for (const b of ritning.balkar) if (!kabel(b)) { medBalk.add(b.a); medBalk.add(b.b); }
+    const nodRot = ritning.noder.map((n, i) => n.styv && !n.lager && medBalk.has(i) ? nyRot(n.fast) : -1);
+    let rotKabel = -1;      // en låst vridning som alla kablar delar
 
     ritning.balkar.forEach((b, bi) => {
         const na = ritning.noder[b.a], nb = ritning.noder[b.b];
         const material = b.material || 'limtra';
         const prof = profil(material, b.storlek), mat = MATERIAL[material];
         const dx = nb.x - na.x, dy = nb.y - na.y, L = Math.hypot(dx, dy);
-        const n = Math.max(2, Math.ceil(L / ELEMENT_LANGD));
-        const pts = [nodPunkt[b.a]], rots = [nodRot[b.a] >= 0 ? nodRot[b.a] : nyRot(false)];
+        const slak = kabel(b);
+        if (slak && rotKabel < 0) rotKabel = nyRot(true);
+        const n = slak ? 1 : Math.max(2, Math.ceil(L / elLangd));
+        const andRot = i => slak ? rotKabel : nodRot[i] >= 0 ? nodRot[i] : nyRot(false);
+        const pts = [nodPunkt[b.a]], rots = [andRot(b.a)];
         for (let k = 1; k < n; k++) {
             punkter.push({ x0: na.x + dx * k / n, y0: na.y + dy * k / n, fast: false });
             pts.push(punkter.length - 1);
             rots.push(nyRot(false));
         }
         pts.push(nodPunkt[b.b]);
-        rots.push(nodRot[b.b] >= 0 ? nodRot[b.b] : nyRot(false));
+        rots.push(andRot(b.b));
 
         const balk = {
             L, prof, mat, vag: !!b.vag, element: [], uk: 0, knackt: false,
@@ -68,7 +80,7 @@ function byggModell(ritning) {
             balk.element.push(element.length);
             element.push({
                 i: pts[k], j: pts[k + 1], ri: rots[k], rj: rots[k + 1],
-                L0: L / n, b0: Math.atan2(dy, dx), balk: bi, vag: !!b.vag,
+                L0: L / n, b0: Math.atan2(dy, dx), balk: bi, vag: !!b.vag, slak,
                 EA: mat.E * prof.A, EI: mat.E * prof.I,
                 dod: false, N: 0, M1: 0, M2: 0, V: 0, u: 0
             });
@@ -187,7 +199,8 @@ function elementet(m, e, medK) {
     const ul = (Ln * Ln - e.L0 * e.L0) / (Ln + e.L0);         // förlängningen
 
     const k = e.EI / e.L0;
-    const N = e.EA / e.L0 * ul;
+    const ea = e.EA / e.L0 * (e.slak && ul < 0 ? SLAK : 1);
+    const N = ea * ul;
     const M1 = k * (4 * t1 + 2 * t2), M2 = k * (2 * t1 + 4 * t2);
     e.N = N; e.M1 = M1; e.M2 = M2; e.V = (M1 + M2) / Ln;
 
@@ -201,7 +214,7 @@ function elementet(m, e, medK) {
     // B = d(ul, t1, t2)/d(frihetsgrader), K = Bᵀ D B + geometrisk styvhet.
     const B1 = z.map(v => -v / Ln), B2 = B1.slice();
     B1[2] += 1; B2[5] += 1;
-    const ea = e.EA / e.L0, k4 = 4 * k, k2 = 2 * k;
+    const k4 = 4 * k, k2 = 2 * k;
     const gN = N / Ln, gM = (M1 + M2) / (Ln * Ln);
     for (let a = 0; a < 6; a++) {
         const da = ea * r[a];
@@ -323,12 +336,14 @@ function steg(m, dt) {
 
 // Statisk lösning: tyngden och lasterna läggs på i `delar` steg, med
 // Newton–Raphson i varje. Returnerar false om den inte gick ihop (t.ex.
-// en mekanism som inte kan stå still).
-function losStatiskt(m, lg = 1, ll = 1, delar = 10) {
+// en mekanism som inte kan stå still). Ett steg som flyttar något mer än
+// maxSteg m kortas av: kablar som ännu inte spänts och långa veka spann
+// får annars Newton att gå vilse.
+function losStatiskt(m, lg = 1, ll = 1, delar = 10, maxSteg = 1) {
     let ok = true;
     for (let s = 1; s <= delar && ok; s++) {
         let max = Infinity;
-        for (let iter = 0; iter < 30; iter++) {
+        for (let iter = 0; iter < 80; iter++) {
             montera(m, true);
             for (let d = 0; d < m.ntot; d++) {
                 const p = m.eq[d];
@@ -338,13 +353,13 @@ function losStatiskt(m, lg = 1, ll = 1, delar = 10) {
             m.du.set(m.R);
             cholLos(m.K, m.neq, m.band, m.du);
             max = 0;
+            for (let p = 0; p < m.neq; p++) max = Math.max(max, Math.abs(m.du[p]));
+            if (!(max < 1e4)) break;         // NaN eller orimligt: ger upp
+            const f = Math.min(1, maxSteg / max);
             for (let d = 0; d < m.ntot; d++) {
                 const p = m.eq[d];
-                if (p < 0) continue;
-                m.q[d] += m.du[p];
-                max = Math.max(max, Math.abs(m.du[p]));
+                if (p >= 0) m.q[d] += f * m.du[p];
             }
-            if (!(max < 50)) break;          // NaN eller orimligt: ger upp
             if (max < 1e-10) break;
         }
         ok = max < 1e-6;
@@ -353,13 +368,48 @@ function losStatiskt(m, lg = 1, ll = 1, delar = 10) {
     return ok && m.q.every(Number.isFinite);
 }
 
+// Kablarna spänns när bron byggs, som på riktiga snedkabel- och hängbroar:
+// en kabel som håller upp vägen kortas (eller förlängs) tills vägen ligger
+// där den är ritad under sin egen tyngd. Annars skulle varje kabel behöva
+// ha exakt rätt längd, och det går inte på ett rutnät. Gäller kablar med
+// ena änden i vägbanan; huvudkabeln i en hängbro får hitta sin form själv.
+// Körs efter losStatiskt (bron står redan under sin tyngd). Returnerar
+// false om statiken inte gick ihop.
+function spannKablar(m, varv = 30) {
+    const iVag = new Uint8Array(m.np);
+    for (const e of m.element) if (e.vag) iVag[e.i] = iVag[e.j] = 1;
+    const kablar = [];
+    for (const e of m.element) {
+        if (!e.slak || iVag[e.i] === iVag[e.j]) continue;
+        const [p, a] = iVag[e.i] ? [e.i, e.j] : [e.j, e.i];      // p i vägen, a uppe i andra änden
+        if (!m.fri[2 * p + 1]) continue;
+        kablar.push({ e, p, a, L0: e.L0 });
+    }
+    if (!kablar.length) return true;
+    for (let v = 0; v < varv; v++) {
+        let max = 0;
+        for (const k of kablar) {
+            const [xp, yp] = lage(m, k.p), [xa, ya] = lage(m, k.a);
+            const L = Math.hypot(xa - xp, ya - yp), sjunkit = -m.q[2 * k.p + 1];
+            max = Math.max(max, Math.abs(sjunkit));
+            // Vägen sjönk: kortare kabel (lika mycket som sjunkningen längs kabeln).
+            k.e.L0 = Math.max(0.3 * k.L0, Math.min(1.5 * k.L0, k.e.L0 - sjunkit * (ya - yp) / L));
+        }
+        if (max < 1e-3) return true;
+        if (!losStatiskt(m, 1, 0, 1)) return false;
+    }
+    return true;
+}
+
 // Utnyttjandegraden i ett element (N, M, V) efter materialets typ, se
-// BROTTREGLER i material.js. Vajern finns inte i spelet än; den behöver
-// också få slakna i tryck i lösaren.
+// BROTTREGLER i material.js. Betongen räknas som trä, med sina egna
+// hållfastheter.
+const rektangelBrott = (N, M, V, p, mat) => Math.max(
+    (N >= 0 ? N / (p.A * mat.ft) : -N / (p.A * mat.fc)) + M / (p.W * mat.fm),
+    1.5 * V / (p.A * mat.fv));
 const BROTT = {
-    tra: (N, M, V, p, mat) => Math.max(
-        (N >= 0 ? N / (p.A * mat.ft) : -N / (p.A * mat.fc)) + M / (p.W * mat.fm),
-        1.5 * V / (p.A * mat.fv)),
+    tra: rektangelBrott,
+    betong: rektangelBrott,
     stal: (N, M, V, p, mat) => Math.max(Math.abs(N) / (p.A * mat.fy) + M / (p.W * mat.fy), V / (p.Av * mat.fv)),
     vajer: (N, M, V, p, mat) => Math.max(0, N) / (p.A * mat.fu)
 };
@@ -375,7 +425,7 @@ function utnyttjande(m) {
         if (e.dod) { e.u = 0; continue; }
         const balk = m.balkar[e.balk], p = balk.prof, mat = balk.mat;
         e.u = BROTT[mat.typ](e.N, Math.max(Math.abs(e.M1), Math.abs(e.M2)), Math.abs(e.V), p, mat);
-        if (e.N < 0) balk.uk = Math.max(balk.uk, -e.N / balk.Pcr);
+        if (e.N < 0 && balk.Pcr > 0) balk.uk = Math.max(balk.uk, -e.N / balk.Pcr);      // kablar knäcks inte
     }
 }
 

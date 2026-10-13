@@ -427,9 +427,11 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     kolla(f'{namn}: dela konstruktionen ger ritningen som text', dela.startswith('BROBYGGARE ')
           and json.loads(dela[11:])['ritning'] == sida.evaluate('() => window.bro.ritning'))
     sida.click('#meny details:nth-of-type(2) summary')
-    kolla(f'{namn}: materialtabellen har limträ, stål och vajer',
+    kolla(f'{namn}: materialtabellen har limträ, stål, betong och kabel',
           sida.locator('#meny .tabell th:has-text("Limträ GL30c")').count() == 1
-          and sida.locator('#meny .tabell th.kommer').count() == 1)
+          and sida.locator('#meny .tabell th:has-text("Betong C35/45")').count() == 1
+          and sida.locator('#meny .tabell th:has-text("Kabel (stållina)")').count() == 1
+          and sida.locator('#meny .tabell th.kommer').count() == 0)
     bild(sida, bilder, f'{namn}-7-meny')
     sida.click('#meny [data-v=hamta]')
     kolla(f'{namn}: hämta ger den bästa ritningen och stänger menyn',
@@ -560,6 +562,46 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     bild(sida, bilder, f'{namn}-11-kanalen-prov')
     kolla(f'{namn}: bron på pelare över Kanalen håller', vanta_resultat(sida, 60).startswith('Bron höll!'))
     sida.click('#ruta [data-v=bygg]')
+
+    # Bana 4, Dalgången: lösningen (betongbåge) ryms i budgeten.
+    sida.click('#info [data-v=nasta]')
+    sida.evaluate('() => { window.bro.ritning = window.bro.losningsRitning(); }')
+    kolla(f'{namn}: lösningen på bana 4 (Dalgången) ryms i budgeten', sida.evaluate('() => window.bro.banaNr') == 3
+          and sida.evaluate('() => window.bro.kostnad()') <= sida.evaluate('() => BANOR[3].budget'))
+    bild(sida, bilder, f'{namn}-12-dalgangen')
+
+    # Bana 5, Älven: kablar får vara längre än balkarna, ingen materialrad
+    # för kabeln, och en balk kan göras om till kabel. Lösningen
+    # (snedkabelbro) ritas, provkörningen är testad i testa_banor.js.
+    sida.click('#info [data-v=nasta]')
+    kolla(f'{namn}: pilen byter till bana 5 (Älven)', sida.evaluate('() => window.bro.banaNr') == 4
+          and antal_balkar(sida) == 0)
+    valj(sida, 'kabel', 0)
+    kolla(f'{namn}: kabeln har ingen materialrad', sida.locator('#valjare .material').count() == 0
+          and 'Kabel' in sida.inner_text('#verktyg [data-v=rita]'))
+    kolla(f'{namn}: en kabel får vara 60 m men inte en balk', sida.evaluate('''() => laggTillBalk([0, 0], [40, 45])
+          && window.bro.ritning.balkar.at(-1).material === 'vajer' && !window.bro.ritning.balkar.at(-1).vag'''))
+    oppna_valjaren(sida)
+    sida.click('#valjare [data-t=balk]')
+    kolla(f'{namn}: balken är högst 20 m på Älven', sida.evaluate('''() => !laggTillBalk([0, 0], [25, 0])
+          && laggTillBalk([0, 0], [20, 0]) && window.bro.ritning.balkar.at(-1).material !== 'vajer' '''))
+    sida.click('#verktyg [data-v=andra]')
+    tryck(sida, (10, 0))
+    oppna_valjaren(sida)
+    sida.click('#valjare [data-t=kabel]')
+    kolla(f'{namn}: Ändra gör om en balk till kabel', sida.evaluate(
+        '() => window.bro.ritning.balkar.at(-1).material') == 'vajer')
+    sida.click('#valjare [data-t=rivallt]')
+    sida.click('#verktyg [data-v=rita]')
+    oppna_valjaren(sida)
+    sida.click('#valjare [data-t=vag]')
+    for nr, bnamn in [(4, 'alven'), (5, 'havet')]:
+        if nr > 4:
+            sida.click('#info [data-v=nasta]')
+        sida.evaluate('() => { window.bro.ritning = window.bro.losningsRitning(); }')
+        kolla(f'{namn}: lösningen på bana {nr + 1} ryms i budgeten', sida.evaluate('() => window.bro.banaNr') == nr
+              and sida.evaluate('() => window.bro.kostnad()') <= sida.evaluate(f'() => BANOR[{nr}].budget'))
+        bild(sida, bilder, f'{namn}-12-{bnamn}')
     kolla(f'{namn}: inga JavaScript-fel', not js_fel, '; '.join(js_fel))
     sida.close()
 

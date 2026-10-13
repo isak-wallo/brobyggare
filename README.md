@@ -2,14 +2,16 @@
 
 Ett 2D-webbspel där man bygger broar som keIWs tar sig över. Broarna
 räknas med en riktig liten FE-lösare (korotationella balkelement,
-implicit tidsstegning), och balkarna är riktiga profiler i limträ eller stål (HEA).
+implicit tidsstegning), och balkarna är riktiga profiler i limträ, stål (HEA)
+eller betong, plus kablar av stållina.
 
-**Första utkastet:** två banor (12 och 24 m spann), byt med pilarna. Dra balkar
+**Utkast:** sex banor (12 m till 400 m spann), byt med pilarna. Dra balkar
 mellan punkterna och tryck **Kör**. Färgen visar hur hårt balken är
 utnyttjad (grön → gul → röd). Över 100 % går den sönder.
 
 - **Rita** (t.ex. "Väg · Mellan"): tryck för att välja väg (balk med
-  vägbana som keIWs går på) eller balk (stöttor, fackverk), och en av fem
+  vägbana som keIWs går på), balk (stöttor, fackverk) eller kabel (bara
+  drag, för snedkabel- och hängbroar), och en av fem
   storlekar från Pytte till Jätte.
 - **Tryck på en knutpunkt:** växla mellan styvt (fyrkant) och ledat (ring).
 - **Ändra:** tryck på en balk och dra i dess ändar, byt storlek eller riv

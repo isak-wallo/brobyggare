@@ -419,6 +419,34 @@ v33-test: nya lagersymboler. Glidlager på land: svart rund nod. Fast
 lager: svart fyrkant med vit rund (som ett ledat fäste). Pelare: svart
 rund topp (glidlagret) som slutar precis under balkarna i knutpunkten.
 
+v34-test (utkast): betong och kablar, och tre nya banor (Isak
+2026-10-13: "två nya material och tre nya banor, ett utkast så ser vi
+vart vi landar"; skarp första version när de sex banorna är testade).
+- Betong C35/45, förenklat armerad (homogen rektangel, samma brottregel
+  som trä: fc 30, ft 4, fm 15, fv 2 MPa), 200×250 … 800×1100. Pris 3 000
+  $$/m³ (5 000 gjorde bågarna för dyra).
+- Kabel (stållina, Ø 8 … 60): ett enda rakt element utan böjstyvhet, bara
+  drag (i tryck 1e-6 av styvheten kvar), knäcks inte. Kablar som sitter i
+  vägen spänns vid bygget (spannKablar i fysik.js): längden justeras tills
+  vägen ligger där den är ritad under egentyngden. Därför hittar
+  hängbrons bärkabel sin form själv. Väljaren: Väg / Balk / Kabel
+  (/ Pelare); kabeln har ingen materialrad, och Ändra gör om balk ↔ kabel.
+- Banorna kan ha egen elementlängd, längsta balk/kabel, största zoom, en
+  ö på andra sidan och fundament (fästen ute i vattnet).
+- Bana 4 Dalgången: 36 m, 32 m djup, budget 45 000. Lösning: betongbåge
+  med träpelare (43 900 $$, 81 %). Ett träfackverk h 6 är ungefär lika
+  billigt (42 220 $$).
+- Bana 5 Älven: 160 m, farled 70 m, fundament vid 40 och 120, balk ≤ 20 m,
+  kabel ≤ 100 m. Lösning: snedkabelbro med 30 m höga betongpyloner (153 150
+  $$ av 165 000, 67 %). Tung att räkna (ca 4 s för en provkörning på datorn).
+- Bana 6 Havet: 400 m ut till en ö, farled 200 m, fundament vid 80 och
+  320 på 30 m djup. Lösning: hängbro med 60 m pyloner, bärkabel ankrad på
+  land och pelare närmast stränderna (774 260 $$ av 820 000, 84 %).
+
+Att fundera på: banornas ordning (Dalgången före Älven nu), om betong och
+kablar ska finnas på alla banor (det gör de nu), Havets stora belopp och
+om Älven räknas fort nog på mobilen (annars en snabbare lösare).
+
 Beslut 2026-10-13: linverkan hanteras bara med glidlager (brofästen och
 pelare). Kontrollerna räknar rätt: HEA 100 över 24 m mellan två fästen
 som låser x sjunker 0,42 m och bär som en lina (ca 370 kN drag, 65 %

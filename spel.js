@@ -27,8 +27,8 @@ const keiwsMal = bana => bana.spann + 1.25 * keiwsHojd(bana);
 const keiwsFart = bana => 1.8 * keiwsHojd(bana);      // m/s
 
 function nySim(ritning, bana) {
-    const m = byggModell(ritning);
-    const statisk = losStatiskt(m, 1, 0) && staTyngden(m);
+    const m = byggModell(ritning, bana.element);
+    const statisk = losStatiskt(m, 1, 0) && spannKablar(m) && staTyngden(m);
     if (!statisk) m.q.fill(0);
     m.v.fill(0);
     m.a.fill(0);
