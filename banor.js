@@ -22,6 +22,7 @@
 //   budget: i $$ (spelets pengar); man får bygga över, men då blir det
 //           inga stjärnor
 //   keiws:  keIWs höjd i meter (bara utseendet, större på långa banor)
+//   keiwsInzoomad: så mycket större keIWs ritas vid största zoom (1 om det saknas)
 //   bil:    keIWs kör bil (1 ton på två hjul) i stället för att gå
 //   omrade: där man får sätta knutpunkter (över land bara ovanför marken)
 //   vy:     det som syns utan zoom
@@ -44,6 +45,7 @@ const BANOR = [
         vatten: -2,
         budget: 12000,
         keiws: 2,
+        keiwsInzoomad: 1.35,
         omrade: { x0: -3, x1: 17, y0: -1, y1: 7 },
         vy: { x0: -4, x1: 18, y0: -3, y1: 7.5 },
         losning: {

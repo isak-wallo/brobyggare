@@ -861,8 +861,9 @@ const KEIWS_BILD = 1.25;
 const KEIWS_UTZOOMAD = 0.7;  // så stor som inzoomad (största zoom) när man ser hela banan
 // keIWs ritas nästan lika stor på skärmen vid alla zoomnivåer: full storlek
 // inzoomad, lite mindre utzoomad (jämnt emellan, räknat på log-zoom).
+// Banans keiwsInzoomad gör honom större än så vid största zoom.
 const keiwsBild = () => KEIWS_BILD * keiwsHojd(bana) / zoom
-    * (KEIWS_UTZOOMAD + (1 - KEIWS_UTZOOMAD) * Math.log(zoom) / Math.log(maxZoom()));
+    * (KEIWS_UTZOOMAD + ((bana.keiwsInzoomad || 1) - KEIWS_UTZOOMAD) * Math.log(zoom) / Math.log(maxZoom()));
 
 // Rektanglar [x0, y0, x1, y1, färg, del] med fötternas mitt i (x, y).
 function ritaFigur(rekt, x, y, lyft) {
@@ -1133,7 +1134,8 @@ function byggKlart() {
     uppdateraInfo();
 }
 
-function bygg() {
+// omladdning = false: ingen ny version laddas här (Nästa bana byter bana först).
+function bygg(omladdning = true) {
     doljRuta();
     sim = null;
     lageNu = 'bygg';
@@ -1145,7 +1147,7 @@ function bygg() {
     rutaEl.style.top = '';
     rutaEl.style.left = '';
     uppdateraInfo();
-    laddaOmOmLugnt();
+    if (omladdning) laddaOmOmLugnt();
 }
 
 // ---------- Menyn ----------
@@ -1363,7 +1365,7 @@ function visaResultat() {
             'Kostnad ' + kr(k) + ' – ' + (under ? 'under' : '<span class="over">över</span>') + ' budget'
             + '<br>Högsta utnyttjande ' + Math.round(sim.maxU * 100) + ' %'
             + (basta ? '<br><b>Din billigaste bro hittills på den här banan!</b>' : ''),
-            [['bygg', 'Bygg vidare'], ['kor', 'Kör igen']]);
+            [['bygg', 'Bygg vidare'], banaNr < BANOR.length - 1 ? ['nasta', 'Nästa bana'] : ['kor', 'Kör igen']]);
     } else {
         visaRuta(bana.torr ? 'Aj!<br>keIWs ramlade ner i dalen.' : 'Plask!<br>keIWs ramlade i vattnet.', sim.brott ? 'Bron gick sönder.' : 'Vägen räckte inte hela vägen över.',
             [['bygg', 'Bygg om'], ['kor', 'Kör igen']]);
@@ -1485,7 +1487,9 @@ document.addEventListener('pointerdown', e => {
 rutaEl.addEventListener('click', e => {
     const b = e.target.closest('button');
     if (!b) return;
-    if (b.dataset.v === 'kor') kor(); else bygg();
+    if (b.dataset.v === 'kor') kor();
+    else if (b.dataset.v === 'nasta') { bygg(false); bytBana(banaNr + 1); }
+    else bygg();
 });
 
 // ---------- Bygga med fingret ----------

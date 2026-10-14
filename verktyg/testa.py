@@ -385,8 +385,12 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     # Inzoomad: inget bygge, kameran följer keIWs, och Bygg ger tillbaka vyn.
     sida.click('#ruta [data-v=bygg]')
     sida.mouse.move(*skarm(sida, (0, 0)))
+    utzoomad = sida.evaluate('() => window.bro.keiwsPx')
     sida.mouse.wheel(0, -3000)                    # full zoom
     sida.wait_for_timeout(100)
+    inzoomad = sida.evaluate('() => window.bro.keiwsPx')
+    kolla(f'{namn}: keIWs är större fullt inzoomad på Bäcken', abs(inzoomad / utzoomad - 1.35 / 0.7) < 0.02,
+          f'{utzoomad:.0f} -> {inzoomad:.0f} px')
     fore = sida.evaluate('() => [window.bro.zoom, window.bro.mitt]')
     sida.click('#verktyg [data-v=kor]')
     kolla(f'{namn}: inzoomad hoppar keIWs över bygget', not sida.evaluate('() => window.bro.bygger'))
@@ -518,7 +522,13 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     sida.wait_for_timeout(9000)
     bild(sida, bilder, f'{namn}-9-bana2-prov')
     kolla(f'{namn}: fackverket på bana 2 håller', vanta_resultat(sida, 60).startswith('Bron höll!'))
-    sida.click('#ruta [data-v=bygg]')
+    kolla(f'{namn}: rutan har Bygg vidare och Nästa bana',
+          sida.locator('#ruta [data-v=bygg]').count() == 1 and sida.inner_text('#ruta [data-v=nasta]') == 'Nästa bana')
+    sida.click('#ruta [data-v=nasta]')
+    kolla(f'{namn}: Nästa bana går till bana 3 och bygget',
+          sida.evaluate('() => window.bro.banaNr') == 2 and sida.locator('#ruta.dold').count() == 1
+          and sida.evaluate('() => window.bro.lage') == 'bygg')
+    sida.click('#info [data-v=forra]')
     sida.click('#info [data-v=forra]')
     kolla(f'{namn}: bana 1 har kvar sin ritning', sida.evaluate('() => window.bro.banaNr') == 0
           and antal_balkar(sida) == 1)
