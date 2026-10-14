@@ -561,3 +561,12 @@ kolumner, med Ångra och Kör på en rad under. Panorera är ✋ sist i första
 raden (ett verktyg: Välj, Väg, Balk … bygger igen). Rekord från före
 version 7 glöms; menyn har Nollställ rekordet (två tryck), och Hämta går
 även direkt efter ett prov.
+v49-test (Isak 2026-10-14): panelen är två rader: Material, Typ, Profil
+(knappar med liten rubrik, varje öppnar en ruta vid knappen) och ✋, Ångra,
+Riv (håll inne: Riv allt), Kör, med luft nedtill för Androids streck.
+Liggande två kolumner. Välj är borta: håll fingret på en balk, knutpunkt
+eller pelare för att välja den. Profilerna: limträ bredd 42–140 × höjd
+180–630 (45 mm lameller), stål IPE 80–600, HEA och HEB 100–600 (tabell i
+material.js); betong och kabel har kvar sina sex steg. Balkens storlek är
+profilens namn (eller steget 0–5). Inga tips under kostnaden. Pilarna
+bredvid varandra till vänster om namnet, och namnet visar alla banor.

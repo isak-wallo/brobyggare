@@ -47,8 +47,8 @@ html, body {
     pointer-events: none;
 }
 
-/* Stående: bana, kostnad och utnyttjande (eller tips) på varsin rad.
-   Liggande: allt på en rad, utan tipsen. */
+/* Stående: banan (‹ › och namnet) och kostnaden på varsin rad.
+   Liggande: allt på en rad. */
 #info .rad {
     white-space: nowrap;
     overflow: hidden;
@@ -60,24 +60,7 @@ html, body {
     margin-bottom: 2px;
 }
 
-/* Tredje raden har alltid samma höjd (två rader text), så att banan inte
-   hoppar när texten byts. */
-#info .tredje {
-    height: 36px;
-    line-height: 18px;
-    white-space: normal;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-}
-
-#info .tips {
-    font-size: 13px;
-    opacity: 0.75;
-}
-
 @media (orientation: landscape) {
-    /* Allt på en rad, med fast höjd. */
     #info {
         height: 34px;
         overflow: hidden;
@@ -89,23 +72,13 @@ html, body {
         margin-right: 14px;
         vertical-align: middle;
     }
-
-    #info .tredje {
-        display: inline-block;
-        height: auto;
-        line-height: 22px;
-    }
-
-    #info .tips {
-        display: none;
-    }
 }
 
 #info button {
     pointer-events: auto;
     min-width: 36px;
     height: 32px;
-    margin: 0 6px;
+    margin: 0 6px 0 0;
     border: none;
     border-radius: 8px;
     background-color: rgba(47, 63, 76, 0.75);
@@ -117,8 +90,13 @@ html, body {
     cursor: pointer;
 }
 
-#info button:first-child {
-    margin-left: 0;
+/* Banans namn: ett tryck visar alla banor. */
+#info button.namn {
+    padding: 0 4px;
+    background: none;
+    color: #2f3f4c;
+    font-size: 15px;
+    font-weight: 700;
 }
 
 #info button:disabled {
@@ -126,32 +104,45 @@ html, body {
     cursor: default;
 }
 
+#info button.namn:disabled {
+    opacity: 1;
+}
+
 #info .over {
     color: #c0392b;
     font-weight: bold;
 }
 
-/* Styrningen under spelytan (stående) eller till höger (liggande): panelen
-   och Ångra/Kör bredvid, i en smal kolumn (stående) eller en rad under
-   (liggande). */
+/* Styrningen under spelytan (stående): panelen (Material, Typ, Profil)
+   överst och ✋ ↶ Riv Kör under, med luft nedtill för telefonens
+   navigeringsstreck. Liggande: två kolumner till höger. */
 #styrning {
     flex: none;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 64px;
-    gap: 4px;
-    padding: 8px;
-    padding-bottom: max(8px, env(safe-area-inset-bottom));
+    grid-template-rows: 50px 50px;
+    gap: 6px;
+    padding: 8px 8px max(22px, calc(env(safe-area-inset-bottom) + 8px));
     background-color: #2f3f4c;
 }
 
+#valjare,
 #verktyg {
     display: grid;
-    grid-template-rows: 40px 1fr;
-    gap: 4px;
+    gap: 6px;
+    min-width: 0;
 }
 
-#verktyg button {
+#valjare {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+#verktyg {
+    grid-template-columns: 56px 56px minmax(0, 1fr) minmax(0, 1.4fr);
+}
+
+#styrning button {
     min-width: 0;
+    padding: 2px 4px;
     border: none;
     border-radius: 10px;
     background-color: #4a5d6c;
@@ -162,8 +153,29 @@ html, body {
     cursor: pointer;
 }
 
-#verktyg button[data-v=angra] {
+#styrning button:disabled {
+    opacity: 0.4;
+    cursor: default;
+}
+
+#verktyg button[data-v=angra],
+#verktyg button[data-v=panorera] {
     font-size: 22px;
+}
+
+#styrning button.vald {
+    background-color: #e8b062;
+    color: #2f3f4c;
+}
+
+#verktyg button.riv {
+    background-color: #b5523f;
+}
+
+/* Riv utan något valt: grå, men går att hålla inne för Riv allt. */
+#verktyg button.riv.av {
+    background-color: #5a4f4f;
+    color: rgba(242, 244, 245, 0.55);
 }
 
 #verktyg button.kor {
@@ -175,9 +187,53 @@ html, body {
     background-color: #6c8796;
 }
 
-#verktyg button:disabled {
-    opacity: 0.4;
-    cursor: default;
+/* Panelen: liten rubrik överst och valet under. Under provkörningen syns
+   den inte men har kvar sin plats. */
+#valjare.vilar > * {
+    visibility: hidden;
+}
+
+#valjare button small,
+#valjare .etikett small {
+    display: block;
+    font-size: 10px;
+    font-weight: 500;
+    line-height: 13px;
+    opacity: 0.8;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#valjare button b,
+#valjare .etikett b {
+    display: block;
+    font-size: 15px;
+    line-height: 19px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#valjare button.oppen {
+    background-color: #5f7687;
+}
+
+/* En vald balk, knutpunkt eller pelare: panelen gäller den. */
+#valjare.redigerar button:not(:disabled) {
+    box-shadow: inset 0 0 0 2px #6aa8ff;
+}
+
+#valjare .etikett {
+    align-self: center;
+    padding-left: 6px;
+    color: #f2f4f5;
+    min-width: 0;
+}
+
+/* Pelaren: höjd och pris över hela bredden. */
+#valjare .etikett:only-child {
+    grid-column: 1 / -1;
 }
 
 @media (orientation: landscape) {
@@ -186,184 +242,133 @@ html, body {
     }
 
     #styrning {
-        grid-template-columns: none;
-        grid-template-rows: minmax(0, 1fr) 48px;
-        width: 260px;
-        padding-top: max(8px, env(safe-area-inset-top));
-        padding-right: max(8px, env(safe-area-inset-right));
-        padding-bottom: 8px;
+        grid-template-rows: none;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        width: 200px;
+        padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) 8px 8px;
+    }
+
+    #valjare {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: repeat(3, minmax(0, 64px));
     }
 
     #verktyg {
-        grid-template-rows: none;
-        grid-template-columns: 64px 1fr;
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: repeat(3, minmax(0, 1fr)) minmax(0, 1.4fr);
+    }
+
+    #valjare .etikett {
+        padding: 0;
+        text-align: center;
+    }
+
+    #valjare .etikett b {
+        white-space: normal;
+        font-size: 13px;
     }
 }
 
-/* Panelen (Välj, Väg, Balk …, material, Riv och storlek): alltid framme,
-   ovanför verktygen när mobilen står och i en kolumn till vänster om dem
-   när den ligger. Under provkörningen syns den inte men har kvar sin plats,
-   så att spelytan inte hoppar. */
-#valjare {
-    min-width: 0;
-}
-
-#valjare.vilar > * {
-    visibility: hidden;
-}
-
-#valjare button:disabled {
-    opacity: 0.45;
-    cursor: default;
-}
-
-#valjare .typ,
-#valjare .material,
-#valjare .storlekar {
-    display: grid;
-    gap: 4px;
-}
-
-/* Kolumnerna i .typ och .material sätts i app.js (Välj, Väg, Balk, ev.
-   Kabel och Pelare; materialen, eller vad som är valt, och Riv, Riv allt). */
-#valjare .typ {
-    margin-bottom: 6px;
-}
-
-#valjare .material {
-    margin-bottom: 6px;
-}
-
-#valjare .etikett {
-    align-self: center;
-    padding-left: 6px;
+/* Rutan med val (material, typ, profil, Riv allt, banorna) vid sin knapp. */
+#popup {
+    position: fixed;
+    z-index: 20;
+    max-width: calc(100vw - 16px);
+    padding: 8px;
+    border-radius: 12px;
+    background-color: #3b4d5b;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
     color: #f2f4f5;
     font-size: 14px;
-    font-weight: 600;
 }
 
-/* Knutpunkten: styv eller ledad. */
-#valjare .forband {
+#popup.dold {
+    display: none;
+}
+
+#popup.popup-profil {
+    width: min(calc(100vw - 16px), 420px);
+}
+
+#popup .val {
+    display: flex;
+    gap: 6px;
+}
+
+#popup .rubrik {
+    padding: 2px 4px 4px;
+    font-size: 13px;
+}
+
+#popup .rad {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 44px minmax(0, 1fr);
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+}
+
+#popup .rad > span {
+    font-size: 12px;
+    opacity: 0.8;
+}
+
+#popup .rad > div {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
     gap: 4px;
 }
 
-/* Storlekarna 1–6 på en rad, profilen och priset längst till höger. */
-#valjare .storlekar {
-    grid-template-columns: repeat(6, 1fr) 84px;
-    align-items: center;
+#popup .lista {
+    display: grid;
+    gap: 4px;
+    min-width: 230px;
 }
 
-#valjare .pris {
-    padding-left: 4px;
-    color: #f2f4f5;
-    font-size: 12px;
-    line-height: 16px;
-    text-align: right;
-    white-space: nowrap;
-}
-
-/* Pelare: pris i stället för material och storlek. */
-#valjare .pelarinfo {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 40px;
-    margin: 0 4px;
-    color: #f2f4f5;
-    font-size: 12px;
-    line-height: 13px;
-    text-align: center;
-}
-
-#valjare button {
-    min-width: 0;
-    min-height: 40px;
-    padding: 4px 2px;
+#popup button {
+    min-width: 70px;
+    min-height: 42px;
+    padding: 2px 10px;
     border: none;
     border-radius: 10px;
     background-color: #4a5d6c;
     color: #f2f4f5;
     font: inherit;
-    font-size: 14px;
     font-weight: 600;
     cursor: pointer;
 }
 
-#valjare button b,
-#valjare button small {
-    display: block;
+#popup .rad button {
+    min-width: 0;
+    min-height: 36px;
+    padding: 2px;
+    font-size: 13px;
 }
 
-#valjare button small {
-    font-size: 10px;
+#popup .lista button {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    text-align: left;
+}
+
+#popup .lista small {
     font-weight: 500;
-    opacity: 0.85;
-    white-space: nowrap;
+    opacity: 0.8;
 }
 
-#valjare button.vald {
+#popup button.vald {
     background-color: #e8b062;
     color: #2f3f4c;
 }
 
-#valjare button.riv {
-    padding: 0 12px;
+#popup button.riv {
     background-color: #b5523f;
 }
 
-/* Liggande: panelen vriden 90°, tre kolumner (typ, material och Riv,
-   storlek). */
-@media (orientation: landscape) {
-    #valjare {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 4px;
-        align-items: start;
-        overflow-y: auto;
-    }
-
-    #valjare .typ,
-    #valjare .material,
-    #valjare .storlekar,
-    #valjare .forband {
-        grid-template-columns: minmax(0, 1fr) !important;
-        margin: 0;
-    }
-
-    #valjare .etikett {
-        padding: 6px 0;
-        text-align: center;
-    }
-
-    #valjare .pris {
-        padding: 2px 0 0;
-        text-align: center;
-        white-space: normal;
-    }
-
-    #valjare .pelarinfo {
-        height: auto;
-        margin: 0;
-        font-size: 11px;
-    }
-
-    #valjare button {
-        font-size: 13px;
-    }
-
-    #valjare button.riv {
-        padding: 0 8px;
-    }
-
-    #valjare .storlekar button {
-        min-height: 34px;
-    }
-
-    #valjare .pris {
-        font-size: 11px;
-    }
+#popup button:disabled {
+    opacity: 0.4;
+    cursor: default;
 }
 
 /* Menyknappen uppe till höger, och versionen litet nere till vänster */

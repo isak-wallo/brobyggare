@@ -17,10 +17,11 @@ Idéer och beslut i `IDEER.md` (läs den först).
 
 ## Filer
 
-- `material.js` – material (limträ GL30c, stål S355 med IPE/HEA, betong C35/45, kabel) och de 6
-  storlekarna per material (storlek 0–5, knapparna 1–6; trä 56×180–90×345, stål IPE 80, IPE 100
-  och HEA 100, 140, 160, 200; ritningar före version 7 hade 9 steg, se GAMLA_STEG),
-  vägbanan och förbanden (vikt och pris).
+- `material.js` – material (limträ GL30c, stål S355, betong C35/45, kabel) och profilerna:
+  trä bredd × höjd (TRA_BREDD, TRA_HOJD), stål IPE/HEA/HEB (STAL_SERIER), betong och kabel
+  6 steg (STEGEN). Balkens `storlek` är profilens namn ('90×315', 'HEA 200') eller ett steg
+  0–5 i STEGEN (banornas lösningar, äldre ritningar; före version 7 9 steg, se GAMLA_STEG).
+  `profil(material, storlek)` ger A, I, W, vikt och pris. Vägbanan och förbanden (vikt och pris).
 - `fysik.js` – FE-lösaren: korotationella Euler–Bernoulli-element, Newmark
   + Newton–Raphson, bandad Cholesky med Cuthill–McKee, brott (spänning,
   skjuvning, Euler-knäckning). SI-enheter, y uppåt.
@@ -28,8 +29,9 @@ Idéer och beslut i `IDEER.md` (läs den först).
 - `spel.js` – provkörningen utan ritning: keIWs som rörlig last, faller
   utan vägbana, marken (`markY`) stoppar fallande bitar. Testerna kör den i node.
 - `app.js` – ritning, verktyg, bygga med fingret, kamera och layout
-  (`#styrning` = panelen + Ångra/Kör; stående: nedtill, panelen i tre rader;
-  liggande: till höger, panelen i tre kolumner).
+  (`#styrning` = panelen Material/Typ/Profil + ✋/Ångra/Riv/Kör; stående: två
+  rader nedtill; liggande: två kolumner till höger; `#popup` = rutan med val).
+  Man väljer genom att hålla fingret på något (HALL_TID).
 - `figur_data.js` – keIWs rektanglar och animationer. Kopierad från
   flappy-keiws (samma fil); ändra inte för hand.
 
