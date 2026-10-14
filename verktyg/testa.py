@@ -470,7 +470,7 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
           uppgradera({ version: 4, noder: [], balkar: [{ storlek: 0 }, { storlek: 1.5 }, { storlek: 2 }, { storlek: 3.5 },
           { storlek: 0, material: 'stal' }, { storlek: -0.25, material: 'stal' }] }).balkar
           .map(b => storleksNamn(b.storlek) + ' ' + profil(b.material || 'limtra', b.storlek).namn).join()''')
-          == 'Liten− 56×180,Mellan+ 90×245,Stor− 90×270,Stor+ 90×345,Liten HEA 120,Liten− HEA 100')
+          == 'Liten− 56×180,Mellan+ 90×245,Stor− 90×270,Stor+ 115×360,Liten HEA 120,Liten− HEA 100')
     kolla(f'{namn}: nya ritningar behåller storleken', sida.evaluate('''() =>
           uppgradera({ version: 5, noder: [], balkar: [{ storlek: 0.75 }] }).balkar[0].storlek''') == 0.75)
     kolla(f'{namn}: gamla ritningar tappar fästena som tagits bort', sida.evaluate('''() => { const b = BANOR[0];

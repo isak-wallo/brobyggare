@@ -36,7 +36,7 @@ const BANOR = [
     {
         namn: 'Bäcken',
         // 14 m: längre än en balk (12 m), så man måste skarva. En rak balk
-        // räcker inte (träet slutar på Stor+), ett litet fackverk gör det.
+        // måste vara Stor+ och går över budget, ett litet fackverk ryms.
         spann: 14,
         fasten: [[0, 0, 'fast'], [14, 0, 'glid']],
         kant: 1 / 3,

@@ -498,8 +498,9 @@ Pytte till Stor− (56×180–90×345); stålet är de nio minsta HEA (100–260
 så stålet tar naturligt över där träet slutar. Betong och kabel: gamla
 Pytte–Stor−. Ritningar (version 5) behåller sina profiler, det som inte
 finns kvar blir närmaste steg. Bäckens fackverk blev Liten− rakt igenom
-(10 550 $$). En rak träbalk räcker inte längre över Bäcken (14 m), inte
-ens Stor+ – det blir fackverk.
+(10 550 $$). Träets sista steg är ett större kliv (Stor+ = 115×360 i
+stället för 90×345): precis nog för en rak skarvad balk över Bäcken, men
+den kostar 11 280 $$, över budgeten.
 
 Beslut 2026-10-13: linverkan hanteras bara med glidlager (brofästen och
 pelare). Kontrollerna räknar rätt: HEA 100 över 24 m mellan två fästen

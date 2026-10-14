@@ -3,7 +3,7 @@
 // Spelläget har tre storlekar per material (Liten, Mellan, Stor), var och
 // en med ett steg under och ett över (Liten−, Liten, Liten+ … Stor+, 9
 // steg) som man når med −/+ under knapparna. Träet är för de kortare
-// broarna (56×180–90×345), stålet tar över med HEA 100–260. Var och en är en riktig profil, så
+// broarna (56×180–115×360), stålet tar över med HEA 100–260. Var och en är en riktig profil, så
 // att lösaren räknar med verkliga A, I, W, vikt och pris.
 // Enheter: SI (m, kg, N, Pa). Priserna är i spelets pengar, $$ (ungefär som
 // kronor).
@@ -117,7 +117,9 @@ const STORLEKAR = ['Liten', 'Mellan', 'Stor'];
 // ungefär 1,35 gånger styvare (I) än det förra, så att knäckningen inte tar
 // för stora kliv, och både pris och styvhet ökar för varje steg.
 const STEGEN = {
-    limtra: [[56, 180], [56, 200], [56, 215], [66, 225], [78, 230], [90, 245], [90, 270], [90, 305], [90, 345]]
+    // Sista steget (Stor+) är ett större kliv: precis nog för en rak balk
+    // över Bäcken (14 m), men över budget.
+    limtra: [[56, 180], [56, 200], [56, 215], [66, 225], [78, 230], [90, 245], [90, 270], [90, 305], [115, 360]]
         .map(([b, h]) => rektangel('limtra', b, h)),
     // HEA 100–400 i följd, böjning kring den styva axeln (W elastiskt, A_v =
     // livets area). HEB och HEM är tyngre för samma styvhet, så de skulle bli
