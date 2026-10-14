@@ -20,23 +20,23 @@ module.exports = function (S, kolla) {
         kolla(namn + ': lösningen ryms i budgeten', k <= bana.budget, k + ' av ' + bana.budget + ' $$');
         sim = korSim(nyRitning(bana), bana);
         kolla(namn + ': utan bro hamnar keIWs i vattnet', sim.resultat === 'vatten');
-        sim = korSim(enBalk(bana, 1), bana);
+        sim = korSim(enBalk(bana, 1), bana);         // 56×215
         kolla(namn + ': en liten balk går av', sim.resultat === 'vatten' && sim.brott > 0,
               sim.resultat + ', brott ' + sim.brott);
-        // Träet är för de kortare broarna: inte ens Stor+ räcker rakt över.
-        sim = korSim(enBalk(bana, 2.25), bana);
-        kolla(namn + ': en balk Stor+ av trä räcker inte rakt', sim.resultat === 'vatten',
+        // Träet är för de kortare broarna: inte ens den största räcker rakt över.
+        sim = korSim(enBalk(bana, 5), bana);
+        kolla(namn + ': den största träbalken räcker inte rakt', sim.resultat === 'vatten',
               sim.resultat + ', max ' + Math.round(sim.maxU * 100) + ' %');
-        // Stål Stor+ räcker rakt över Bäcken och Ravinen (men går över
-        // budget), inte längre.
-        sim = korSim(enBalk(bana, 2.25, 'stal'), bana);
+        // Det största stålet räcker rakt över Bäcken och Ravinen (men går
+        // över budget), inte längre.
+        sim = korSim(enBalk(bana, 5, 'stal'), bana);
         const raktStal = bana.spann <= 20;
-        kolla(namn + (raktStal ? ': en stålbalk Stor+ (HEA 200) håller' : ': en stålbalk Stor+ (HEA 200) räcker inte rakt'),
+        kolla(namn + (raktStal ? ': en stålbalk HEA 200 håller' : ': en stålbalk HEA 200 räcker inte rakt'),
               raktStal ? sim.resultat === 'klarade' && sim.brott === 0 : sim.resultat === 'vatten',
               sim.resultat + ', max ' + Math.round(sim.maxU * 100) + ' %');
         // Glidlagret: en klen balk kan inte hänga som en lina mellan fästena.
-        sim = korSim(enBalk(bana, 1, 'stal'), bana);
-        kolla(namn + ': en stålbalk Mellan (HEA 120) går av, ingen linverkan', sim.resultat === 'vatten' && sim.brott > 0,
+        sim = korSim(enBalk(bana, 2, 'stal'), bana);
+        kolla(namn + ': en stålbalk HEA 100 går av, ingen linverkan', sim.resultat === 'vatten' && sim.brott > 0,
               sim.resultat + ', brott ' + sim.brott);
         // Pelarna har glidlager: en klen väg mellan två pelare hänger inte
         // som en lina (Isaks HEA 100 över 24 m höll när pelarna låste x).
@@ -45,7 +45,7 @@ module.exports = function (S, kolla) {
             const nod = x => { let i = r.noder.findIndex(n => n.x === x && n.y === 0); if (i < 0) { r.noder.push({ x, y: 0, fast: false, styv: true }); i = r.noder.length - 1; } return i; };
             xs.forEach(x => nod(x));
             for (const x of [L / 4, 3 * L / 4]) Object.assign(r.noder[nod(x)], { fast: true, styv: false, pelare: true, lager: 'glid' });
-            for (let i = 0; i < 4; i++) r.balkar.push({ a: nod(xs[i]), b: nod(xs[i + 1]), storlek: 0.75, vag: true, material: 'stal' });
+            for (let i = 0; i < 4; i++) r.balkar.push({ a: nod(xs[i]), b: nod(xs[i + 1]), storlek: 2, vag: true, material: 'stal' });
             const p = korSim(r, bana);
             kolla(namn + ': HEA 100 mellan två pelare går av', p.resultat === 'vatten' && p.brott > 0, p.resultat + ', brott ' + p.brott);
         }
@@ -58,9 +58,9 @@ module.exports = function (S, kolla) {
                 r.balkar.push({ a: 0, b: 2, storlek: st, vag: true, material }, { a: 2, b: 1, storlek: st, vag: true, material });
                 return r;
             };
-            const t = korSim(rak(2.25, 'limtra'), bana), p = korSim(rak(1.25, 'stal'), bana), q = korSim(rak(1.75, 'stal'), bana);
-            const k = ritningensKostnad(rak(1.75, 'stal'), bana);
-            kolla(namn + ': en rak skarvad balk: trä Stor+ och HEA 140 går av, HEA 160 håller men går över budget',
+            const t = korSim(rak(5, 'limtra'), bana), p = korSim(rak(3, 'stal'), bana), q = korSim(rak(4, 'stal'), bana);
+            const k = ritningensKostnad(rak(4, 'stal'), bana);
+            kolla(namn + ': en rak skarvad balk: största träet och HEA 140 går av, HEA 160 håller men går över budget',
                   t.resultat === 'vatten' && p.resultat === 'vatten' && q.resultat === 'klarade' && q.brott === 0 && k > bana.budget,
                   'trä ' + t.resultat + ', HEA 140 ' + p.resultat + ', HEA 160 ' + q.resultat + ' för ' + k + ' $$');
         }

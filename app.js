@@ -57,7 +57,7 @@ let ritVag = true;            // ritar väg (som keIWs går på) eller balk
 let ritPelare = false;       // sätter pelare i stället (banor med pelare)
 let ritKabel = false;        // ritar kablar i stället (bara drag)
 let varnaNasta = false;      // varningen när man går vidare utan en bro som höll
-let storlek = 1;              // Mellan
+let storlek = 2;              // storleken man bygger med (0–5, knapparna 1–6)
 let ritMaterial = 'limtra';   // materialet man ritar väg och balk med (kabeln har sitt eget)
 let lageNu = 'bygg';
 let sim = null;
@@ -115,18 +115,25 @@ function lasBanaNr() {
 // balk behåller sin profil (gamla Pytte = nya Liten−; stål: HEA 100 =
 // Liten−), det som saknas blir närmaste steg. Version 6: stålet börjar med
 // IPE 80–120, HEA 100 är Mellan− (träets Stor+ blev 90×345 igen).
+// Version 7: 6 storlekar (0–5) i stället för 9 steg (se GAMLA_STEG).
 function uppgradera(r, b = bana) {
+    // De 9 stegen (0–8) sparades som 0–2 ± 0,25 (version 5 och 6).
+    const steg9 = s => Math.max(0, Math.min(8, 3 * Math.round(s) + Math.sign(s - Math.round(s)) + 1));
+    const storlek9 = k => Math.floor(k / 3) + (k % 3 - 1) * 0.25;
     if (!r.version) {
         for (const k of r.balkar) k.storlek = [1, 3, 4][k.storlek] ?? 2;
     }
     if ((r.version || 0) < 5) {
         for (const k of r.balkar) {
             const s = k.storlek, gammalt = 3 * Math.round(s) + Math.sign(s - Math.round(s)) + 1;
-            k.storlek = storlekAv(Math.max(0, Math.min(ANTAL_STEG - 1, gammalt - (k.material === 'stal' ? 0 : 1))));
+            k.storlek = storlek9(Math.max(0, Math.min(8, gammalt - (k.material === 'stal' ? 0 : 1))));
         }
     }
     if ((r.version || 0) < 6) {
-        for (const k of r.balkar) if (k.material === 'stal') k.storlek = storlekAv(Math.min(ANTAL_STEG - 1, stegAv(k.storlek) + 3));
+        for (const k of r.balkar) if (k.material === 'stal') k.storlek = storlek9(Math.min(8, steg9(k.storlek) + 3));
+    }
+    if ((r.version || 0) < 7) {
+        for (const k of r.balkar) k.storlek = nyttSteg(steg9(k.storlek), k.material || 'limtra');
     }
     for (const n of r.noder) {
         if (!n.fast) continue;
@@ -148,8 +155,8 @@ function uppgradera(r, b = bana) {
     for (const [x, y, lager] of b.fasten) {
         if (!r.noder.some(n => n.fast && n.x === x && n.y === y)) r.noder.push(fastNod(x, y, lager));
     }
-    for (const k of r.balkar) k.storlek = storlekAv(stegAv(k.storlek));
-    r.version = 6;
+    for (const k of r.balkar) k.storlek = Math.max(0, Math.min(ANTAL_STEG - 1, Math.round(k.storlek)));
+    r.version = 7;
     return r;
 }
 
@@ -1067,13 +1074,11 @@ function visaValjare() {
             + knapp('data-fb="styv"', 'Styv', valdN.styv && !lager, lager) + knapp('data-fb="ledad"', 'Ledad', !valdN.styv || lager, lager)
             + '</div>';
     } else {
+        // Storlekarna 1–6 på en rad, profilen och priset per meter längst till höger.
+        const p = profil(mat, st);
         html = typ + rad2
-            + '<div class="storlekar">' + STORLEKAR.map((namn, i) => knapp('data-s="' + i + '"', '<b>' + namn + '</b><small>'
-                + PROFILER[mat][i].namn + '</small><small>' + kr(PROFILER[mat][i].pris + (vag ? VAG.pris : 0)) + '/m</small>',
-                !gra && i === Math.round(st), gra)).join('') + '</div>'
-            + '<div class="fin"><button data-f="-1"' + (gra || stegAv(st) <= 0 ? ' disabled' : '') + '>−</button><span>'
-                + (gra ? 'Tryck på något för att välja det' : '<b>' + storleksNamn(st) + '</b> · ' + profil(mat, st).namn + ' · ' + kr(profil(mat, st).pris + (vag ? VAG.pris : 0)) + '/m')
-                + '</span><button data-f="1"' + (gra || stegAv(st) >= ANTAL_STEG - 1 ? ' disabled' : '') + '>+</button></div>';
+            + '<div class="storlekar">' + STEGEN[mat].map((x, i) => knapp('data-s="' + i + '"', i + 1, !gra && i === st, gra)).join('')
+            + '<span class="pris">' + (gra ? 'Välj något' : p.namn + '<br>' + kr(p.pris + (vag ? VAG.pris : 0)) + '/m') + '</span></div>';
     }
     if (valjareEl.innerHTML !== html) valjareEl.innerHTML = html;
     // Stående hålls panelens största höjd, så att spelytan inte hoppar.
@@ -1236,11 +1241,11 @@ function nordText() {
         return '<p' + kommerKlass(m) + '><b>' + { tra: 'Trä', stal: 'Stål', betong: 'Betong', vajer: 'Kabel' }[t] + '</b></p><ul'
             + kommerKlass(m) + '>' + BROTTREGLER[t].map(r => '<li>' + r + '</li>').join('') + '</ul>';
     }).join('');
-    const steg = Array.from({ length: ANTAL_STEG }, (_, k) => storlekAv(k));
+    const steg = Array.from({ length: ANTAL_STEG }, (_, k) => k);
     const profiler = Object.keys(PROFILER).map(nyckel => steg.map((s, i) => {
         const p = profil(nyckel, s);
         return '<tr' + kommerKlass(MATERIAL[nyckel]) + '>' + (i ? '' : '<th rowspan="' + steg.length + '">' + MATERIAL[nyckel].namn.split(' ')[0] + '</th>')
-            + '<td class="v">' + storleksNamn(s) + '</td><td class="v">' + p.namn + '</td><td>' + tal(p.massa, 1) + '</td><td>' + tal(p.pris) + '</td></tr>';
+            + '<td class="v">' + (s + 1) + '</td><td class="v">' + p.namn + '</td><td>' + tal(p.massa, 1) + '</td><td>' + tal(p.pris) + '</td></tr>';
     }).join('')).join('');
     return `
 <h4>Modellen</h4>
@@ -1352,7 +1357,7 @@ menyEl.addEventListener('click', e => {
     if (b.dataset.v === 'hamta') {
         const basta = lasBasta(banaNr);
         if (basta && lageNu === 'bygg') {
-            andra(() => { ritning = JSON.parse(JSON.stringify(basta.ritning)); vald = -1; valdNod = null; });
+            andra(() => { ritning = uppgradera(JSON.parse(JSON.stringify(basta.ritning))); vald = -1; valdNod = null; });
         }
     }
     stangMeny();
@@ -1473,12 +1478,6 @@ valjareEl.addEventListener('click', e => {
         const m = b.dataset.m;
         if (valdBalk) { if ((valdBalk.material || 'limtra') !== m) andra(() => { valdBalk.material = m; }); }
         else ritMaterial = m;
-    } else if (b.dataset.f) {
-        // Finjustering ett steg i taget (Liten−, Liten, Liten+, Mellan− …).
-        const fore = valdBalk ? valdBalk.storlek : storlek;
-        const s = storlekAv(Math.max(0, Math.min(ANTAL_STEG - 1, stegAv(fore) + +b.dataset.f)));
-        if (valdBalk) { if (s !== fore) andra(() => { valdBalk.storlek = s; }); }
-        else storlek = s;
     } else if (b.dataset.s !== undefined) {
         const s = +b.dataset.s;
         if (valdBalk) { if (valdBalk.storlek !== s) andra(() => { valdBalk.storlek = s; }); }

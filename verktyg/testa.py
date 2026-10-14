@@ -94,7 +94,7 @@ def tryck(sida, punkt):
 
 
 def valj(sida, typ, storlek):
-    """Bygger med väg/balk/kabel och storlek (0–2), via panelen."""
+    """Bygger med väg/balk/kabel och storlek (0–5, knapparna 1–6), via panelen."""
     oppna_valjaren(sida)
     sida.click(f'#valjare [data-t={typ}]')
     sida.click(f'#valjare [data-s="{storlek}"]')
@@ -149,27 +149,30 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
           x0 >= duk['x'] - 1 and x1 <= duk['x'] + duk['width'] + 1
           and y0 >= duk['y'] - 1 and y1 <= duk['y'] + duk['height'] + 1)
 
-    # Man bygger väg av Mellan från start. Panelen är alltid framme, med
+    # Man bygger väg av storlek 3 från start. Panelen är alltid framme, med
     # Välj, Riv och Riv allt, under spelytan (stående) eller bredvid
     # verktygen (liggande). Bygg en väg i två delar (Stor) genom att dra.
-    kolla(f'{namn}: man bygger väg, Mellan, från start', sida.evaluate('() => window.bro.verktyg') == 'rita'
-          and sida.locator('#valjare [data-t=vag].vald').count() == 1 and sida.locator('#valjare [data-s="1"].vald').count() == 1
+    kolla(f'{namn}: man bygger väg, storlek 3, från start', sida.evaluate('() => window.bro.verktyg') == 'rita'
+          and sida.locator('#valjare [data-t=vag].vald').count() == 1 and sida.locator('#valjare [data-s="2"].vald').count() == 1
           and sida.locator('#verktyg [data-v=bygga].vald').count() == 1)
     vb = sida.locator('#valjare').bounding_box()
-    kolla(f'{namn}: panelen är framme med Välj, Riv, Riv allt och tre storlekar, utanför spelytan',
+    rader = sida.evaluate("() => new Set([...document.querySelectorAll('#valjare button')].map(b => Math.round(b.getBoundingClientRect().top))).size")
+    kolla(f'{namn}: panelen är framme med Välj, Riv, Riv allt och sex storlekar på tre rader, utanför spelytan',
           sida.locator('#valjare [data-t=valj]').is_visible() and sida.locator('#valjare [data-t=riv]').is_disabled()
-          and sida.locator('#valjare [data-t=rivallt]').is_visible() and sida.locator('#valjare [data-s]').count() == 3
+          and sida.locator('#valjare [data-t=rivallt]').is_visible() and sida.locator('#valjare [data-s]').count() == 6
+          and sida.inner_text('#valjare [data-s="5"]') == '6' and rader == 3
           and (vb['y'] >= duk['y'] + duk['height'] - 1 if bredd < hojd else vb['x'] >= duk['x'] + duk['width'] - 1))
     bild(sida, bilder, f'{namn}-0-valjare')
-    sida.click('#valjare [data-s="2"]')
-    kolla(f'{namn}: storleken väljs i panelen', sida.locator('#valjare [data-s="2"].vald').count() == 1
+    sida.click('#valjare [data-s="4"]')
+    kolla(f'{namn}: storleken väljs i panelen, med profil och pris till höger', sida.locator('#valjare [data-s="4"].vald').count() == 1
+          and '90×270' in sida.inner_text('#valjare .pris') and '$$/m' in sida.inner_text('#valjare .pris')
           and sida.evaluate('() => window.bro.verktyg') == 'rita')
     dra(sida, (0, 0), (7, 0))
     dra(sida, (7, 0), (14, 0))
     r = sida.evaluate('() => window.bro.ritning')
     kolla(f'{namn}: två vägbalkar byggda', len(r['balkar']) == 2 and all(b['vag'] for b in r['balkar']),
           f"{len(r['balkar'])} balkar")
-    valj(sida, 'balk', 2)
+    valj(sida, 'balk', 4)
     dra(sida, (7, 0), (7, 4))
     tryck(sida, (7, 0))
     mitt = next(n for n in sida.evaluate('() => window.bro.ritning.noder') if n['x'] == 7 and n['y'] == 0)
@@ -188,13 +191,13 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     kolla(f'{namn}: ångra tar tillbaka den', antal_balkar(sida) == 3)
     tryck(sida, (7, 2))
     sida.click('#valjare [data-t=riv]')
-    valj(sida, 'vag', 2)
+    valj(sida, 'vag', 4)
     dra(sida, (-2, 1), (10, 4))                   # 12,4 m
     kolla(f'{namn}: för lång balk går inte', antal_balkar(sida) == 2)
 
     # Startpunkten: nära en knutpunkt börjar balken i den, fast närmaste
     # rutnätspunkt är en annan.
-    valj(sida, 'balk', 2)
+    valj(sida, 'balk', 4)
     sk = sida.evaluate('() => window.bro.kam.sk')
     d = min(0.9, 20 / sk)
     dra(sida, (7 + d, 0.15), (10, 3))
@@ -231,7 +234,7 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     kolla(f'{namn}: versionen syns', bool(__import__('re').fullmatch(r'v\d+-test', v)), v)
 
     # Ändra: en snedbalk som hamnade fel flyttas i ena änden.
-    valj(sida, 'balk', 2)
+    valj(sida, 'balk', 4)
     dra(sida, (7, 0), (4, 3))
     valj_lage(sida)
     tryck(sida, (5.5, 1.5))
@@ -247,17 +250,14 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     sida.click('#valjare [data-s="1"]')
     kolla(f'{namn}: väljaren byter storlek på vald balk',
           sida.evaluate('() => window.bro.ritning.balkar[0].storlek') == 1
-          and sida.evaluate('() => window.bro.ritning.balkar[1].storlek') == 2)
+          and sida.evaluate('() => window.bro.ritning.balkar[1].storlek') == 4)
     sida.click('#valjare [data-t=balk]')
     kolla(f'{namn}: och gör väg till balk', not sida.evaluate('() => window.bro.ritning.balkar[0].vag'))
     kolla(f'{namn}: trä och stål på Bäcken', sida.locator('#valjare [data-m]').count() == 2
           and sida.locator('#valjare [data-m=stal]').count() == 1 and sida.locator('#valjare [data-t=kabel]').count() == 0)
     kolla(f'{namn}: rubriken har spannet', 'Bäcken (14 m)' in sida.inner_text('#info'))
     bild(sida, bilder, f'{namn}-0-andra')
-    sida.click('#valjare [data-f="-1"]')
-    kolla(f'{namn}: − ger steget under (Mellan−)', sida.evaluate('() => window.bro.ritning.balkar[0].storlek') == 0.75
-          and 'Mellan−' in sida.inner_text('#valjare .fin'))
-    for _ in range(3):
+    for _ in range(2):
         sida.click('#verktyg [data-v=angra]')
     tryck(sida, (3, 3))                           # tomt: ingen vald
     dra(sida, (7, 0), (7, 1))                     # knutpunkten med alla balkar
@@ -282,7 +282,7 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     tryck(sida, (6, 1.5))
     sida.click('#valjare [data-t=riv]')
     kolla(f'{namn}: tillbaka till två vägbalkar', antal_balkar(sida) == 2
-          and all(b['vag'] and b['storlek'] == 2 for b in sida.evaluate('() => window.bro.ritning.balkar')))
+          and all(b['vag'] and b['storlek'] == 4 for b in sida.evaluate('() => window.bro.ritning.balkar')))
     sida.click('#valjare [data-t=valj]')
     kolla(f'{namn}: ett tryck till på Välj går tillbaka till att bygga',
           sida.evaluate('() => window.bro.verktyg') == 'rita')
@@ -307,7 +307,7 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     sida.click('#verktyg [data-v=panorera]')
     sida.click('#verktyg [data-v=bygga]')
     kolla(f'{namn}: och Bygg', not sida.evaluate('() => window.bro.panorera'))
-    valj(sida, 'vag', 2)
+    valj(sida, 'vag', 4)
 
     # Inzoomad: ett finger utanför rutnätet (här i berget) flyttar vyn,
     # bygger inget.
@@ -354,11 +354,11 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     bild(sida, bilder, f'{namn}-0-zoom')
     sida.mouse.wheel(0, 3000)
     sida.wait_for_timeout(100)
-    valj(sida, 'balk', 2)
+    valj(sida, 'balk', 4)
     dra(sida, (0, 0), (7, 2))
     dra(sida, (7, 2), (14, 0))
     dra(sida, (7, 0), (7, 2))
-    valj(sida, 'vag', 2)
+    valj(sida, 'vag', 4)
     bild(sida, bilder, f'{namn}-1-bygg')
 
     sida.click('#verktyg [data-v=kor]')
@@ -487,13 +487,16 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     sida.click('#verktyg [data-v=angra]')
     kolla(f'{namn}: ångra efter riv allt', antal_balkar(sida) > 1)
     # En ritning sparad före fästena på land får dem.
-    kolla(f'{namn}: gamla storlekar (15 steg) behåller profilen i de nio', sida.evaluate('''() =>
+    kolla(f'{namn}: gamla storlekar (15 och 9 steg) blir närmaste av de sex', sida.evaluate('''() =>
           uppgradera({ version: 4, noder: [], balkar: [{ storlek: 0 }, { storlek: 1.5 }, { storlek: 2 }, { storlek: 3.5 },
           { storlek: 0, material: 'stal' }, { storlek: -0.25, material: 'stal' }] }).balkar
-          .map(b => storleksNamn(b.storlek) + ' ' + profil(b.material || 'limtra', b.storlek).namn).join()''')
-          == 'Liten− 56×180,Mellan+ 90×245,Stor− 90×270,Stor+ 90×345,Mellan HEA 120,Mellan− HEA 100')
+          .map(b => b.storlek + ' ' + profil(b.material || 'limtra', b.storlek).namn).join()''')
+          == '0 56×180,3 90×245,4 90×270,5 90×345,3 HEA 140,2 HEA 100')
+    kolla(f'{namn}: ritningar med 9 steg får sex', sida.evaluate('''() =>
+          uppgradera({ version: 6, noder: [], balkar: [{ storlek: 0.75 }, { storlek: 1.75, material: 'stal' }] }).balkar
+          .map(b => b.storlek).join()''') == '2,4')
     kolla(f'{namn}: nya ritningar behåller storleken', sida.evaluate('''() =>
-          uppgradera({ version: 6, noder: [], balkar: [{ storlek: 0.75 }] }).balkar[0].storlek''') == 0.75)
+          uppgradera({ version: 7, noder: [], balkar: [{ storlek: 3 }] }).balkar[0].storlek''') == 3)
     kolla(f'{namn}: gamla ritningar tappar fästena som tagits bort', sida.evaluate('''() => { const b = BANOR[0];
         const gamla = [[0, 0, 'fast'], [0, -3], [14, 0, 'glid'], [14, -3], [-3, 0], [17, 0]];
         const r = uppgradera({ version: 4, noder: gamla.map(([x, y, l]) => fastNod(x, y, l)),
@@ -530,7 +533,7 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     kolla(f'{namn}: hela bana 2 syns, under infotexten',
           x0 >= duk['x'] - 1 and x1 <= duk['x'] + duk['width'] + 1
           and y0 >= info['y'] + info['height'] - 1 and y1 <= duk['y'] + duk['height'] + 1)
-    valj(sida, 'vag', 2)
+    valj(sida, 'vag', 4)
     dra(sida, (0, 0), (12, 0))
     kolla(f'{namn}: en 12 m balk går att bygga', antal_balkar(sida) == 1)
     sida.evaluate('() => { window.bro.ritning = window.bro.losningsRitning(); }')
@@ -578,8 +581,11 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
           sida.locator('#valjare [data-m=stal]').count() == 1
           and sida.locator('#valjare [data-m=betong]').count() == 0 and sida.locator('#valjare [data-t=kabel]').count() == 0)
     sida.click('#valjare [data-m=stal]')
-    kolla(f'{namn}: stål är IPE (Liten) och HEA', sida.locator('#valjare [data-m=stal].vald').count() == 1
-          and 'IPE 100' in sida.inner_text('#valjare [data-s="0"]') and 'HEA 180' in sida.inner_text('#valjare [data-s="2"]'))
+    sida.click('#valjare [data-s="1"]')
+    ipe = sida.inner_text('#valjare .pris')
+    sida.click('#valjare [data-s="5"]')
+    kolla(f'{namn}: stål är IPE och HEA', sida.locator('#valjare [data-m=stal].vald').count() == 1
+          and 'IPE 100' in ipe and 'HEA 200' in sida.inner_text('#valjare .pris'))
     sida.click('#valjare [data-m=limtra]')
     kolla(f'{namn}: lösningen på bana 4 (Dalgången) ryms i budgeten', sida.evaluate('() => window.bro.banaNr') == 3
           and sida.evaluate('() => window.bro.kostnad()') <= sida.evaluate('() => BANOR[3].budget'))
@@ -591,7 +597,7 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     sida.click('#info [data-v=nasta]')
     kolla(f'{namn}: pilen byter till bana 5 (Kanalen)', sida.evaluate('() => window.bro.banaNr') == 4
           and antal_balkar(sida) == 0)
-    valj(sida, 'vag', 2)
+    valj(sida, 'vag', 4)
     dra(sida, (0, 0), (3.7, 0.3))
     r = sida.evaluate('() => window.bro.ritning')
     kolla(f'{namn}: rutnätet på Kanalen är 2 m', antal_balkar(sida) == 1

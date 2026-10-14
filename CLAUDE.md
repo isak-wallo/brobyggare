@@ -17,9 +17,9 @@ Idéer och beslut i `IDEER.md` (läs den först).
 
 ## Filer
 
-- `material.js` – material (limträ GL30c, stål S355 med IPE/HEA, betong C35/45, kabel) och de 9
-  stegen per material (Liten−, Liten, Liten+ … Stor+; storlek 0–2 ± 0,25; trä 56×180–90×345,
-  stål IPE 80–120 och HEA 100–200),
+- `material.js` – material (limträ GL30c, stål S355 med IPE/HEA, betong C35/45, kabel) och de 6
+  storlekarna per material (storlek 0–5, knapparna 1–6; trä 56×180–90×345, stål IPE 80, IPE 100
+  och HEA 100, 140, 160, 200; ritningar före version 7 hade 9 steg, se GAMLA_STEG),
   vägbanan och förbanden (vikt och pris).
 - `fysik.js` – FE-lösaren: korotationella Euler–Bernoulli-element, Newmark
   + Newton–Raphson, bandad Cholesky med Cuthill–McKee, brott (spänning,

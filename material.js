@@ -1,11 +1,9 @@
 // Material och tvärsnitt.
 //
-// Spelläget har tre storlekar per material (Liten, Mellan, Stor), var och
-// en med ett steg under och ett över (Liten−, Liten, Liten+ … Stor+, 9
-// steg) som man når med −/+ under knapparna. Träet är för de kortare
-// broarna (56×180–90×345). Stålet är starkare: små IPE (Liten) och HEA
-// 100–200 (Mellan och Stor). Var och en är en riktig profil, så
-// att lösaren räknar med verkliga A, I, W, vikt och pris.
+// Spelläget har sex storlekar per material (1–6 på knapparna). Träet är för
+// de kortare broarna (56×180–90×345). Stålet är starkare: IPE 80 och 100,
+// sedan HEA 100–200. Var och en är en riktig profil, så att lösaren räknar
+// med verkliga A, I, W, vikt och pris.
 // Enheter: SI (m, kg, N, Pa). Priserna är i spelets pengar, $$ (ungefär som
 // kronor).
 //
@@ -112,43 +110,37 @@ function vajer(d) {
     };
 }
 
-const STORLEKAR = ['Liten', 'Mellan', 'Stor'];
-
-// De 9 stegen per material, från Liten− till Stor+. Varje steg är
-// ungefär 1,35 gånger styvare (I) än det förra, så att knäckningen inte tar
-// för stora kliv, och både pris och styvhet ökar för varje steg.
+// De 6 storlekarna per material. Varje steg är ungefär 1,3–2 gånger
+// styvare (I) än det förra, och både pris och styvhet ökar för varje steg.
 const STEGEN = {
-    limtra: [[56, 180], [56, 200], [56, 215], [66, 225], [78, 230], [90, 245], [90, 270], [90, 305], [90, 345]]
+    limtra: [[56, 180], [56, 215], [66, 225], [90, 245], [90, 270], [90, 345]]
         .map(([b, h]) => rektangel('limtra', b, h)),
-    // IPE 80–120 (Liten), sedan HEA 100–200 i följd. Böjning kring den
-    // styva axeln (W elastiskt, A_v = livets area). HEB och HEM är tyngre för
-    // samma styvhet, så de skulle bli dyrare men klenare än ett HEA-steg
-    // bredvid.
+    // IPE 80 och 100, sedan HEA 100–200. Böjning kring den styva axeln (W
+    // elastiskt, A_v = livets area). HEB och HEM är tyngre för samma
+    // styvhet, så de skulle bli dyrare men klenare än ett HEA-steg bredvid.
     stal: [iprofil('IPE 80', 7.64, 80.1, 20.0, 3.58, 80), iprofil('IPE 100', 10.3, 171, 34.2, 5.08, 100),
-           iprofil('IPE 120', 13.2, 318, 53.0, 6.31, 120),
-           iprofil('HEA 100', 21.2, 349, 72.8, 7.56, 96), iprofil('HEA 120', 25.3, 606, 106, 8.46, 114),
-           iprofil('HEA 140', 31.4, 1033, 155, 10.1, 133), iprofil('HEA 160', 38.8, 1673, 220, 13.2, 152),
-           iprofil('HEA 180', 45.3, 2510, 294, 14.5, 171), iprofil('HEA 200', 53.8, 3692, 389, 18.1, 190)],
+           iprofil('HEA 100', 21.2, 349, 72.8, 7.56, 96), iprofil('HEA 140', 31.4, 1033, 155, 10.1, 133),
+           iprofil('HEA 160', 38.8, 1673, 220, 13.2, 152), iprofil('HEA 200', 53.8, 3692, 389, 18.1, 190)],
     // Betong: rektanglar b × h, från en smal sträva till en rejäl pylon.
-    betong: [[200, 300], [250, 300], [250, 350], [300, 350], [300, 400], [350, 450], [400, 500], [400, 600], [450, 650]]
+    betong: [[200, 300], [250, 350], [300, 350], [350, 450], [400, 600], [450, 650]]
         .map(([b, h]) => rektangel('betong', b, h)),
-    vajer: [10, 12, 14, 16, 18, 20, 24, 28, 32].map(vajer)
+    vajer: [10, 14, 16, 20, 24, 32].map(vajer)
 };
 
-// I ritningen är storleken 0–2 (Liten–Stor), med − och + som ± 0,25
-// (Mellan− = 0,75, Mellan+ = 1,25).
-const ANTAL_STEG = 9;
-const stegAv = s => Math.max(0, Math.min(ANTAL_STEG - 1, 3 * Math.round(s) + Math.sign(s - Math.round(s)) + 1));     // 0–8
-const storlekAv = k => Math.floor(k / 3) + (k % 3 - 1) * 0.25;
+// I ritningen är storleken 0–5 (knapparna 1–6).
+const ANTAL_STEG = 6;
+const PROFILER = STEGEN;
+const profil = (material, s) => STEGEN[material][Math.max(0, Math.min(ANTAL_STEG - 1, Math.round(s)))];
 
-// Tre storlekar (knapparna) är mittensteget i varje grupp om tre.
-const PROFILER = Object.fromEntries(Object.entries(STEGEN).map(([m, lista]) => [m, lista.filter((p, k) => k % 3 === 1)]));
-
-// Profilen för en storlek och dess namn (Liten−, Liten, Liten+ …).
-const profil = (material, s) => STEGEN[material][stegAv(s)];
-const storleksNamn = s => {
-    const k = stegAv(s);
-    return STORLEKAR[Math.floor(k / 3)] + ['−', '', '+'][k % 3];
+// Före version 7 av ritningarna fanns 9 steg (0–8, sparade som 0–2 ± 0,25):
+// vilka av dem som blev kvar. Ett borttaget steg blir det närmaste (det
+// större om två är lika nära).
+const GAMLA_STEG = { limtra: [0, 2, 3, 5, 6, 8], stal: [0, 1, 3, 5, 6, 8], betong: [0, 2, 3, 5, 7, 8], vajer: [0, 2, 3, 5, 6, 8] };
+const nyttSteg = (k, material) => {
+    const kvar = GAMLA_STEG[material] || GAMLA_STEG.limtra;
+    let bast = 0;
+    kvar.forEach((g, i) => { if (Math.abs(g - k) <= Math.abs(kvar[bast] - k)) bast = i; });
+    return bast;
 };
 
 // Vägbanan: plankor ovanpå balken som keIWs går på. Väger och kostar per

@@ -11,8 +11,8 @@ utnyttjad (grön → gul → röd). Över 100 % går den sönder.
 
 - **Panelen** (alltid framme medan man bygger): välj väg (balk med vägbana
   som keIWs går på), balk (stöttor, fackverk), kabel (bara drag, för
-  snedkabel- och hängbroar) eller pelare, material och en av tre storlekar
-  Liten, Mellan och Stor (med − och +, nio steg). Riv och Riv allt finns alltid där.
+  snedkabel- och hängbroar) eller pelare, material med Riv och Riv allt, och
+  en av sex storlekar (1–6, profilen och priset per meter till höger).
 - **Tryck på en knutpunkt** när man bygger: växla mellan styvt (fyrkant) och ledat (ring).
 - **Välj** (i panelen): tryck på en balk, knutpunkt eller pelare för att
   ändra eller riva den, dra i balkens ändar eller i en knutpunkt för att

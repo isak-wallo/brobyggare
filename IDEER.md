@@ -549,3 +549,9 @@ den med balkarna) eller pelare, och ett drag i en knutpunkt flyttar den.
 Verktygsraden: Bygg, Panorera, Ångra, Kör (Stopp under provkörningen).
 v45-test: Nästa bana i rutan när bron höll; keIWs 1,35 gånger större fullt
 inzoomad på Bäcken (keiwsInzoomad).
+v47-test (Isak 2026-10-14): panelen på tre rader. Storleken är 6 knappar
+1–6 på en rad med profilen och priset per meter längst till höger (inga
+namn, inget −/+). Stegen: trä 56×180, 56×215, 66×225, 90×245, 90×270,
+90×345; stål IPE 80, IPE 100, HEA 100, 140, 160, 200; betong 200×300 …
+450×650; kabel Ø 10–32. Gamla ritningar (version 6, 9 steg) får närmaste
+steg (det större vid lika). Banornas lösningar behöll sina profiler.

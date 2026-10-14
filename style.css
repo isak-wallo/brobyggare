@@ -264,8 +264,19 @@ html, body {
     gap: 4px;
 }
 
+/* Storlekarna 1–6 på en rad, profilen och priset längst till höger. */
 #valjare .storlekar {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(6, 1fr) 84px;
+    align-items: center;
+}
+
+#valjare .pris {
+    padding-left: 4px;
+    color: #f2f4f5;
+    font-size: 12px;
+    line-height: 16px;
+    text-align: right;
+    white-space: nowrap;
 }
 
 /* Pelare: pris i stället för material och storlek. */
@@ -274,26 +285,6 @@ html, body {
     color: #f2f4f5;
     font-size: 13px;
     text-align: center;
-}
-
-/* Finjusteringen av en vald balk: − Liten+ · 78×250 · 180 $$/m + */
-#valjare .fin {
-    display: grid;
-    grid-template-columns: 48px 1fr 48px;
-    gap: 4px;
-    align-items: center;
-    margin-top: 6px;
-    color: #f2f4f5;
-    font-size: 13px;
-    text-align: center;
-}
-
-#valjare .fin button {
-    font-size: 20px;
-}
-
-#valjare .fin button:disabled {
-    opacity: 0.35;
 }
 
 #valjare button {
@@ -347,6 +338,15 @@ html, body {
 
     #valjare button.riv {
         padding: 0 8px;
+    }
+
+    #valjare .storlekar {
+        grid-template-columns: repeat(6, 1fr) 72px;
+        gap: 3px;
+    }
+
+    #valjare .pris {
+        font-size: 11px;
     }
 }
 
