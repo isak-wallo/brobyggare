@@ -207,24 +207,24 @@ html, body {
     }
 }
 
-/* Väljaren för väg/balk och storlek: under infotexten (stående; --info
-   sätts i app.js, och banan står under väljaren) eller uppe till höger
-   (liggande) */
+/* Panelen (Välj, Väg, Balk …, material, Riv och storlek): alltid framme,
+   ovanför verktygen när mobilen står och i en kolumn till vänster om dem
+   när den ligger. Under provkörningen syns den inte men har kvar sin plats,
+   så att spelytan inte hoppar. */
 #valjare {
-    position: absolute;
-    left: 8px;
-    right: 8px;
-    top: calc(var(--info, 110px) + 4px);
-    max-width: 460px;
-    margin: 0 auto;
-    padding: 8px;
-    border-radius: 14px;
-    background-color: rgba(47, 63, 76, 0.94);
-    box-shadow: 0 4px 16px rgba(47, 63, 76, 0.35);
+    flex: none;
+    padding: 8px 8px 0;
+    background-color: #2f3f4c;
 }
 
-#valjare.dold {
-    display: none;
+#valjare > * {
+    max-width: 460px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#valjare.vilar > * {
+    visibility: hidden;
 }
 
 #valjare button:disabled {
@@ -239,16 +239,29 @@ html, body {
     gap: 4px;
 }
 
-/* Kolumnerna i .typ sätts i app.js (Väg, Balk, Kabel, ev. Pelare och Riv). */
+/* Kolumnerna i .typ och .material sätts i app.js (Välj, Väg, Balk, ev.
+   Kabel och Pelare; materialen, eller vad som är valt, och Riv, Riv allt). */
 #valjare .typ {
     margin-bottom: 6px;
 }
 
-/* Så många lika breda kolumner som banan har material. */
 #valjare .material {
-    grid-auto-flow: column;
-    grid-auto-columns: 1fr;
     margin-bottom: 6px;
+}
+
+#valjare .etikett {
+    align-self: center;
+    padding-left: 6px;
+    color: #f2f4f5;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+/* Knutpunkten: styv eller ledad. */
+#valjare .forband {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
 }
 
 #valjare .storlekar {
@@ -315,17 +328,25 @@ html, body {
 }
 
 #valjare button.riv {
-    padding: 0 16px;
+    padding: 0 12px;
     background-color: #b5523f;
 }
 
-/* Liggande: uppe till höger under menyknappen, där det mest är himmel */
+/* Liggande: en kolumn mellan spelytan och verktygen. */
 @media (orientation: landscape) {
     #valjare {
-        left: auto;
-        right: 10px;
-        top: calc(max(8px, env(safe-area-inset-top)) + 40px);
-        width: min(400px, calc(100% - 20px));
+        width: 250px;
+        padding: 8px 0 8px 8px;
+        padding-top: max(8px, env(safe-area-inset-top));
+        overflow-y: auto;
+    }
+
+    #valjare button {
+        font-size: 13px;
+    }
+
+    #valjare button.riv {
+        padding: 0 8px;
     }
 }
 

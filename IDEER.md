@@ -540,3 +540,12 @@ Att fundera på efter utkastet:
 
 - Bara Bridge Constructor-stil, eller också ett "rita"-läge?
 - Hur många banor till första versionen? (förslag: 8–10 korta)
+
+v46-test (Isak 2026-10-14): en panel hela tiden i stället för Rita/Ändra.
+Panelen ligger under spelytan (stående) eller i en kolumn bredvid verktygen
+(liggande): Välj, Väg, Balk (Kabel, Pelare), material med Riv och Riv allt,
+storlek. Med Välj väljer ett tryck en balk, knutpunkt (styv/ledad, Riv tar
+den med balkarna) eller pelare, och ett drag i en knutpunkt flyttar den.
+Verktygsraden: Bygg, Panorera, Ångra, Kör (Stopp under provkörningen).
+v45-test: Nästa bana i rutan när bron höll; keIWs 1,35 gånger större fullt
+inzoomad på Bäcken (keiwsInzoomad).

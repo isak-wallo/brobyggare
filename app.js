@@ -51,20 +51,19 @@ let banaNr = lasBanaNr();
 let bana = BANOR[banaNr];
 let ritning = lasRitning();
 let historik = [];
-let verktyg = 'rita';         // 'rita' (nya balkar), 'andra' (flytta, byta, riva) eller
-                             // null (inget valt: ett finger flyttar vyn)
+let verktyg = 'rita';         // 'rita' (nya balkar) eller 'andra' (Välj: flytta, byta, riva)
+let panoreraLage = false;    // Panorera: ett finger flyttar vyn i stället för att bygga
 let ritVag = true;            // ritar väg (som keIWs går på) eller balk
 let ritPelare = false;       // sätter pelare i stället (banor med pelare)
 let ritKabel = false;        // ritar kablar i stället (bara drag)
-let valjareOppen = false;     // väljaren för väg/balk och storlek (verktyget Rita)
 let varnaNasta = false;      // varningen när man går vidare utan en bro som höll
 let storlek = 1;              // Mellan
 let ritMaterial = 'limtra';   // materialet man ritar väg och balk med (kabeln har sitt eget)
 let lageNu = 'bygg';
 let sim = null;
 let drag = null;              // {fran: [x, y], till: [x, y]} medan man drar
-let vald = -1;                // vald balk (verktyget Ändra)
-let valdPelare = null;        // eller vald pelare (knutpunkten)
+let vald = -1;                // vald balk (Välj)
+let valdNod = null;           // eller vald knutpunkt eller pelare
 let flytt = null;             // {balk, ande} eller {nod}, och {till: [x, y]}
 let ratta = null;             // {balk, t}: ny balk som började i en ny punkt
 let kam = { sk: 30, ox: 0, oy: 0 };
@@ -193,7 +192,7 @@ function bytBana(nr) {
     ritning = lasRitning();
     historik = [];
     drag = flytt = null;
-    vald = -1; valdPelare = null;
+    vald = -1; valdNod = null;
     ratta = null;
     zoom = 1;
     mitt = null;
@@ -260,7 +259,7 @@ function vaxlaPelare(x, y) {
         else if (n.pelare) { n.fast = false; n.styv = true; delete n.pelare; delete n.lager; stada(); }
         else Object.assign(n, { fast: true, styv: false, pelare: true, lager: 'glid' });
     });
-    vald = -1; valdPelare = null;
+    vald = -1; valdNod = null;
     return true;
 }
 
@@ -302,7 +301,17 @@ function rivBalk(i) {
         ritning.balkar.splice(i, 1);
         stada();
     });
-    vald = -1; valdPelare = null;
+    vald = -1; valdNod = null;
+}
+
+// Riv en knutpunkt (inte fästen): balkarna i den och den själv.
+function rivNod(i) {
+    if (i < 0 || ritning.noder[i].fast) return;
+    andra(() => {
+        ritning.balkar = ritning.balkar.filter(b => b.a !== i && b.b !== i);
+        stada();
+    });
+    vald = -1; valdNod = null;
 }
 
 // Tar bort balkar som blivit noll långa eller dubbla, och knutpunkter som
@@ -383,17 +392,10 @@ const kr = v => v.toLocaleString('sv-SE') + ' $$';
 const infoLuft = () => infoEl.offsetTop + infoEl.offsetHeight + 4;
 const staende = () => !matchMedia('(orientation: landscape)').matches;
 let luftNu = 0;
-let valjareHojd = 0;          // stående: platsen som hålls för väljaren
+let valjareHojd = 0;          // stående: panelens största höjd hittills (den hålls)
 
-// Luften ovanför banan: infotexten, och när mobilen står även väljaren
-// (som då alltid är framme medan man bygger). Platsen hålls även när den är
-// stängd, så att banan inte hoppar.
-function beraknaLuft() {
-    const info = infoLuft();
-    if (!staende()) return info;
-    if (valjareEl.offsetHeight) valjareHojd = valjareEl.offsetHeight;
-    return info + (valjareHojd ? valjareHojd + 8 : 0);
-}
+// Luften ovanför banan: infotexten (panelen ligger under spelytan).
+const beraknaLuft = infoLuft;
 
 function anpassa() {
     scen.style.setProperty('--info', infoLuft() + 'px');
@@ -681,7 +683,8 @@ function langdText(x1, y1, x2, y2, text, farg) {
     ctx.fillText(text, x, y);
 }
 
-// Verktyget Ändra: den valda balken lyses upp och får handtag i ändarna.
+// Välj: den valda balken lyses upp och får handtag i ändarna, en vald
+// knutpunkt eller pelare en ring.
 // Medan man drar visas var balkarna hamnar.
 function ritaVald() {
     const linje = (p, q) => {
@@ -701,8 +704,8 @@ function ritaVald() {
             ctx.beginPath(); ctx.arc(sx(n.x), sy(n.y), r, 0, 7); ctx.stroke();
         }
     }
-    if (verktyg === 'andra' && ritning.noder.includes(valdPelare)) {
-        const n = valdPelare, r = Math.max(11, 0.4 * kam.sk);
+    if (verktyg === 'andra' && ritning.noder.includes(valdNod)) {
+        const n = valdNod, r = Math.max(11, (n.pelare ? 0.4 : 0.3) * kam.sk);
         ctx.fillStyle = 'rgba(61, 139, 253, 0.35)';
         ctx.beginPath(); ctx.arc(sx(n.x), sy(n.y), r, 0, 7); ctx.fill();
         ctx.strokeStyle = '#3d8bfd'; ctx.lineWidth = 2.5;
@@ -971,11 +974,12 @@ const TIPS = {
     vag: 'Dra mellan två punkter: väg som keIWs går på. Tryck på en knutpunkt: styv/ledad.',
     balk: 'Dra mellan två punkter: balk. Tryck på en knutpunkt: styv/ledad.',
     kabel: 'Dra mellan två punkter: kabel. Den tar bara drag (slaknar i tryck) och spänns så att vägen ligger rakt.',
-    andra: 'Tryck på en balk eller pelare för att ändra eller riva den, eller dra en knutpunkt.',
+    andra: 'Välj: tryck på en balk, knutpunkt eller pelare för att ändra eller riva den. Dra en knutpunkt för att flytta den.',
     andraPelare: 'Riv tar bort pelaren (knutpunkten blir kvar om balkar sitter i den).',
-    andraVald: 'Dra i en ände, eller byt material, storlek (−/+ för stegen emellan) eller riv i rutan.',
+    andraNod: 'Dra knutpunkten för att flytta den, välj styv eller ledad, eller riv den med balkarna.',
+    andraVald: 'Dra i en ände, eller byt typ, material eller storlek. Tryck på Väg eller Balk när inget är valt för att bygga.',
     pelare: 'Tryck på en punkt över vattnet: pelare från botten med glidlager (inte i farleden). Tryck igen: bort.',
-    fri: 'Inget verktyg valt: dra med ett finger för att flytta vyn (zooma in först). Välj Väg eller Ändra för att bygga.'
+    panorera: 'Panorera: dra med ett finger för att flytta vyn (zooma in först). Tryck på Bygg för att bygga igen.'
 };
 
 // Infotexten: bana, kostnad och en tredje rad (tips medan man bygger,
@@ -993,75 +997,91 @@ function uppdateraInfo() {
         tredje = sim.brott ? '<span class="over">Bron gick sönder</span>'
             : 'Högsta utnyttjande ' + Math.round(sim.maxU * 100) + ' %';
     } else {
-        tredje = TIPS[!verktyg ? 'fri' : verktyg === 'andra' ? (vald >= 0 ? 'andraVald' : ritning.noder.includes(valdPelare) ? 'andraPelare' : 'andra') : ritPelare ? 'pelare' : ritKabel ? 'kabel' : ritVag ? 'vag' : 'balk'];
+        const n = ritning.noder.includes(valdNod) ? valdNod : null;
+        tredje = TIPS[panoreraLage ? 'panorera' : verktyg === 'andra' ? (vald >= 0 ? 'andraVald' : n ? (n.pelare ? 'andraPelare' : 'andraNod') : 'andra') : ritPelare ? 'pelare' : ritKabel ? 'kabel' : ritVag ? 'vag' : 'balk'];
     }
     infoEl.innerHTML = '<div class="rad">' + pil('forra', '‹', !bygger || banaNr === 0)
         + '<b>Bana ' + (banaNr + 1) + ' · ' + bana.namn + ' (' + bana.spann + ' m)</b>'
         + pil('nasta', '›', !bygger || banaNr === BANOR.length - 1) + '</div>'
         + '<div class="rad"><span class="' + (over ? 'over' : '') + '">' + kr(k) + '</span> av ' + kr(bana.budget) + '</div>'
         + '<div class="rad tredje' + (bygger && !varnaNasta ? ' tips' : '') + '">' + tredje + '</div>';
-    for (const v of ['rita', 'andra']) knappar[v].classList.toggle('vald', verktyg === v);
-    knappar.rita.innerHTML = ritPelare ? '<span>Pelare</span><small>Betong ▴</small>'
-        : ritKabel ? '<span>Kabel</span><small>' + profil('vajer', storlek).namn + ' · ' + storleksNamn(storlek) + ' ▴</small>'
-        : '<span>' + (ritVag ? 'Väg' : 'Balk') + '</span><small>' + MATERIAL[ritMaterial].kort + ' · ' + storleksNamn(storlek) + ' ▴</small>';
-    knappar.kor.textContent = lageNu === 'bygg' ? 'Kör' : 'Bygg';
+    knappar.bygga.classList.toggle('vald', !panoreraLage);
+    knappar.panorera.classList.toggle('vald', panoreraLage);
+    knappar.kor.textContent = lageNu === 'bygg' ? 'Kör' : 'Stopp';
     knappar.kor.classList.toggle('stopp', lageNu !== 'bygg');
-    for (const v of ['rita', 'andra']) knappar[v].disabled = lageNu !== 'bygg';
+    for (const v of ['bygga', 'panorera']) knappar[v].disabled = lageNu !== 'bygg';
     knappar.angra.disabled = lageNu !== 'bygg' || !historik.length;
     visaValjare();
     if (beraknaLuft() !== luftNu) anpassa();
 }
 
-// Väljaren: väg eller balk, material och storlek (med profil och pris per
-// meter). Med verktyget Rita gäller den det man ritar, med Ändra den valda
-// balken (och då går den att riva). När mobilen står är den alltid framme
-// medan Rita eller Ändra är valt (grå med Ändra tills man valt en balk); när
-// den ligger öppnas den med Väg-knappen och stängs när man valt.
+// Panelen, alltid framme medan man bygger (under spelytan när mobilen
+// står, till höger när den ligger). Överst Välj och det man bygger (Väg,
+// Balk, Kabel, Pelare), sedan material med Riv och Riv allt, och sist
+// storleken (med profil och pris per meter). Med Välj gäller panelen den
+// valda balken, knutpunkten eller pelaren, och är grå tills man valt något.
 function visaValjare() {
-    const valdBalk = verktyg === 'andra' && vald >= 0 ? ritning.balkar[vald] : null;
-    const valdP = verktyg === 'andra' && ritning.noder.includes(valdPelare) ? valdPelare : null;
-    const fast = staende() && !!verktyg;
-    const synlig = lageNu === 'bygg' && (valdBalk || valdP || fast || (verktyg === 'rita' && valjareOppen));
-    valjareEl.classList.toggle('dold', !synlig);
-    const gra = synlig && verktyg === 'andra' && !valdBalk;
-    valjareEl.classList.toggle('gra', gra);
-    if (!synlig) return;
-    const kabel = valdBalk ? arKabel(valdBalk) : ritKabel;
-    const vag = (valdBalk ? valdBalk.vag : ritVag) && !kabel, st = valdBalk ? valdBalk.storlek : storlek;
+    const valj = verktyg === 'andra';
+    const valdBalk = valj && vald >= 0 ? ritning.balkar[vald] : null;
+    const valdN = valj && ritning.noder.includes(valdNod) ? valdNod : null;
+    valjareEl.classList.toggle('vilar', lageNu !== 'bygg');
+    const gra = valj && !valdBalk && !valdN;
+    const kabel = valdBalk ? arKabel(valdBalk) : !valj && ritKabel;
+    const pelare = !valj && ritPelare;
+    const vag = (valdBalk ? valdBalk.vag : !valj && ritVag) && !kabel && !pelare;
+    const balk = (valdBalk ? !valdBalk.vag : !valj && !ritVag) && !kabel && !pelare;
+    const st = valdBalk ? valdBalk.storlek : storlek;
     const mat = kabel ? 'vajer' : valdBalk ? valdBalk.material || 'limtra' : ritMaterial;
-    const knapp = (data, text, vald) => '<button ' + data + (vald ? ' class="vald"' : '') + (gra ? ' disabled' : '') + '>' + text + '</button>';
-    const pelare = !valdBalk && ritPelare, medPelare = bana.pelare && !valdBalk && verktyg === 'rita';
-    // Väg, Balk, Kabel (och Pelare) lika breda, sedan Riv och Riv allt.
-    // Kabeln finns från Älven (eller om den valda balken redan är en kabel).
-    const medKabel = harMaterial('vajer') || kabel;
-    const kolumner = 'repeat(' + (2 + medKabel + !!medPelare) + ', 1fr)' + (verktyg === 'andra' ? ' auto auto' : '');
-    const typ = '<div class="typ" style="grid-template-columns: ' + kolumner + '">'
-        + knapp('data-t="vag"', 'Väg', vag && !pelare) + knapp('data-t="balk"', 'Balk', !vag && !kabel && !pelare)
-        + (medKabel ? knapp('data-t="kabel"', 'Kabel', kabel && !pelare) : '') + (medPelare ? knapp('data-t="pelare"', 'Pelare', pelare) : '')
-        // Med Ändra finns Riv och Riv allt alltid, gråa när det inte finns något att riva.
-        + (verktyg === 'andra' ? '<button data-t="riv" class="riv"' + (valdBalk || valdP ? '' : ' disabled') + '>Riv</button>'
-            + '<button data-t="rivallt" class="riv"' + (ritning.balkar.length || ritning.noder.some(n => n.pelare) ? '' : ' disabled')
-            + '>Riv allt</button>' : '')
+    const knapp = (data, text, arVald, av) => '<button ' + data + (arVald ? ' class="vald"' : '') + (av ? ' disabled' : '') + '>' + text + '</button>';
+    // Välj, Väg, Balk, Kabel (från Älven, eller om den valda redan är en
+    // kabel) och Pelare (banor med pelare), lika breda.
+    const medKabel = harMaterial('vajer') || kabel, medPelare = !!bana.pelare && !valdBalk;
+    const typ = '<div class="typ" style="grid-template-columns: repeat(' + (3 + medKabel + medPelare) + ', 1fr)">'
+        + knapp('data-t="valj"', 'Välj', valj)
+        + knapp('data-t="vag"', 'Väg', vag) + knapp('data-t="balk"', 'Balk', balk)
+        + (medKabel ? knapp('data-t="kabel"', 'Kabel', kabel) : '') + (medPelare ? knapp('data-t="pelare"', 'Pelare', pelare || (valdN && valdN.pelare)) : '')
         + '</div>';
-    if (pelare || valdP) {
-        const p = bana.pelare, html = typ + '<p class="pelarinfo">' + (valdP
-            ? 'Pelare ' + (valdP.y - p.botten) + ' m från botten: ' + kr(pelarensPris(bana, valdP.y)) + '. Riv tar bort den.'
+    // Material (eller vad som är valt) och Riv, Riv allt: gråa när det inte
+    // finns något att riva.
+    const kanRiva = valdBalk || (valdN && (valdN.pelare || !valdN.fast));
+    const material = Object.entries(MATERIAL).filter(([nyckel, m]) => !m.kommer && m.typ !== 'vajer' && (harMaterial(nyckel) || nyckel === mat));
+    const vanster = kabel || pelare || valdN
+        ? '<span class="etikett">' + (valdN ? (valdN.pelare ? 'Pelare' : 'Knutpunkt') : kabel ? 'Kabel' : 'Pelare') + '</span>'
+        : material.map(([nyckel, m]) => knapp('data-m="' + nyckel + '"', m.kort, nyckel === mat && !gra, gra)).join('');
+    const rad2 = '<div class="material" style="grid-template-columns: ' + (kabel || pelare || valdN ? '1fr' : 'repeat(' + material.length + ', 1fr)') + ' auto auto">'
+        + vanster
+        + knapp('data-t="riv" class="riv"', 'Riv', false, !kanRiva)
+        + knapp('data-t="rivallt" class="riv"', 'Riv allt', false, !ritning.balkar.length && !ritning.noder.some(n => n.pelare))
+        + '</div>';
+    let html;
+    if (pelare || (valdN && valdN.pelare)) {
+        const p = bana.pelare;
+        html = typ + rad2 + '<p class="pelarinfo">' + (valdN
+            ? 'Pelare ' + (valdN.y - p.botten) + ' m från botten: ' + kr(pelarensPris(bana, valdN.y)) + '. Riv tar bort den.'
             : 'Betongpelare från botten: ' + kr(p.pris) + ' + ' + kr(p.perMeter) + '/m (' + kr(pelarensPris(bana, 0))
               + ' upp till vägen), glidlager överst. Över vattnet, inte i farleden.') + '</p>';
-        if (valjareEl.innerHTML !== html) valjareEl.innerHTML = html;
-        return;
+    } else if (valdN) {
+        // Knutpunkten: styv eller ledad (brolagren är alltid ledade).
+        const lager = !!valdN.lager;
+        html = typ + rad2 + '<div class="forband">'
+            + knapp('data-fb="styv"', 'Styv', valdN.styv && !lager, lager) + knapp('data-fb="ledad"', 'Ledad', !valdN.styv || lager, lager)
+            + '</div>';
+    } else {
+        html = typ + rad2
+            + '<div class="storlekar">' + STORLEKAR.map((namn, i) => knapp('data-s="' + i + '"', '<b>' + namn + '</b><small>'
+                + PROFILER[mat][i].namn + '</small><small>' + kr(PROFILER[mat][i].pris + (vag ? VAG.pris : 0)) + '/m</small>',
+                !gra && i === Math.round(st), gra)).join('') + '</div>'
+            + '<div class="fin"><button data-f="-1"' + (gra || stegAv(st) <= 0 ? ' disabled' : '') + '>−</button><span>'
+                + (gra ? 'Tryck på något för att välja det' : '<b>' + storleksNamn(st) + '</b> · ' + profil(mat, st).namn + ' · ' + kr(profil(mat, st).pris + (vag ? VAG.pris : 0)) + '/m')
+                + '</span><button data-f="1"' + (gra || stegAv(st) >= ANTAL_STEG - 1 ? ' disabled' : '') + '>+</button></div>';
     }
-    // Kabeln har inget material att välja (bara storleken).
-    const html = typ
-        + (kabel ? '' : '<div class="material">' + Object.entries(MATERIAL).filter(([nyckel, m]) => !m.kommer && m.typ !== 'vajer' && (harMaterial(nyckel) || nyckel === mat))
-            .map(([nyckel, m]) => knapp('data-m="' + nyckel + '"', m.kort, nyckel === mat)).join('') + '</div>')
-        + '<div class="storlekar">' + STORLEKAR.map((namn, i) => knapp('data-s="' + i + '"', '<b>' + namn + '</b><small>'
-            + PROFILER[mat][i].namn + '</small><small>' + kr(PROFILER[mat][i].pris + (vag ? VAG.pris : 0)) + '/m</small>',
-            i === Math.round(st))).join('') + '</div>'
-        + '<div class="fin"><button data-f="-1"' + (gra || stegAv(st) <= 0 ? ' disabled' : '') + '>−</button><span><b>'
-            + storleksNamn(st) + '</b> · ' + profil(mat, st).namn + ' · ' + kr(profil(mat, st).pris + (vag ? VAG.pris : 0))
-            + '/m</span><button data-f="1"' + (gra || stegAv(st) >= ANTAL_STEG - 1 ? ' disabled' : '') + '>+</button></div>';
     if (valjareEl.innerHTML !== html) valjareEl.innerHTML = html;
+    // Stående hålls panelens största höjd, så att spelytan inte hoppar.
+    if (!staende()) { valjareHojd = 0; valjareEl.style.minHeight = ''; }
+    else if (valjareEl.offsetHeight > valjareHojd) {
+        valjareHojd = valjareEl.offsetHeight;
+        valjareEl.style.minHeight = valjareHojd + 'px';
+    }
 }
 
 function visaRuta(rubrik, text, knapptext) {
@@ -1332,7 +1352,7 @@ menyEl.addEventListener('click', e => {
     if (b.dataset.v === 'hamta') {
         const basta = lasBasta(banaNr);
         if (basta && lageNu === 'bygg') {
-            andra(() => { ritning = JSON.parse(JSON.stringify(basta.ritning)); vald = -1; valdPelare = null; });
+            andra(() => { ritning = JSON.parse(JSON.stringify(basta.ritning)); vald = -1; valdNod = null; });
         }
     }
     stangMeny();
@@ -1399,20 +1419,9 @@ document.getElementById('verktyg').addEventListener('click', e => {
     const b = e.target.closest('button');
     if (!b || b.disabled) return;
     const v = b.dataset.v;
-    if (v === 'rita') {
-        // Rita: ett tryck öppnar väljaren för väg/balk och storlek, ett tryck
-        // till (med väljaren öppen) väljer bort verktyget.
-        if (verktyg === 'rita' && (valjareOppen || staende())) { verktyg = null; valjareOppen = false; }
-        else { verktyg = 'rita'; valjareOppen = true; }
-        vald = -1; valdPelare = null;
-    }
-    else if (v === 'andra') {
-        // Ändra: ett tryck till väljer bort verktyget.
-        verktyg = verktyg === 'andra' ? null : 'andra';
-        vald = -1; valdPelare = null;
-        valjareOppen = false;
-    }
-    else if (v === 'angra' && historik.length) { ritning = uppgradera(JSON.parse(historik.pop())); vald = -1; valdPelare = null; ratta = null; sparaRitning(); }
+    if (v === 'bygga') panoreraLage = false;
+    else if (v === 'panorera') panoreraLage = true;
+    else if (v === 'angra' && historik.length) { ritning = uppgradera(JSON.parse(historik.pop())); vald = -1; valdNod = null; ratta = null; sparaRitning(); }
     else if (v === 'kor') { if (lageNu === 'bygg') kor(); else bygg(); }
     uppdateraInfo();
 });
@@ -1421,14 +1430,30 @@ valjareEl.addEventListener('click', e => {
     const b = e.target.closest('button');
     if (!b || lageNu !== 'bygg') return;
     const valdBalk = verktyg === 'andra' && vald >= 0 ? ritning.balkar[vald] : null;
-    const valdP = verktyg === 'andra' && ritning.noder.includes(valdPelare) ? valdPelare : null;
-    if (b.dataset.t === 'riv') {
+    const valdN = verktyg === 'andra' && ritning.noder.includes(valdNod) ? valdNod : null;
+    const t = b.dataset.t;
+    // Välj, Väg, Balk, Kabel och Pelare bygger (inte panorerar). Utan något
+    // valt går man från Välj till att bygga med det man tryckte på.
+    if (t && t !== 'riv' && t !== 'rivallt') {
+        panoreraLage = false;
+        if (t !== 'valj' && !valdBalk) { verktyg = 'rita'; vald = -1; valdNod = null; }
+    }
+    if (t === 'valj') {
+        verktyg = verktyg === 'andra' ? 'rita' : 'andra';
+        vald = -1; valdNod = null;
+    }
+    else if (t === 'riv') {
         if (valdBalk) rivBalk(vald);
-        else if (valdP) vaxlaPelare(valdP.x, valdP.y);      // knutpunkten blir kvar om balkar sitter i den
+        else if (valdN && valdN.pelare) vaxlaPelare(valdN.x, valdN.y);      // knutpunkten blir kvar om balkar sitter i den
+        else if (valdN) rivNod(ritning.noder.indexOf(valdN));
+    }
+    else if (b.dataset.fb) {
+        const styv = b.dataset.fb === 'styv', i = ritning.noder.indexOf(valdN);
+        if (valdN && valdN.styv !== styv) vaxlaForband(i);
     }
     else if (b.dataset.t === 'rivallt') {
         andra(() => { ritning = nyRitning(bana); });     // går att ångra
-        vald = -1; valdPelare = null;
+        vald = -1; valdNod = null;
     }
     else if (b.dataset.t === 'pelare') ritPelare = true;
     else if (b.dataset.t === 'kabel') {
@@ -1457,7 +1482,7 @@ valjareEl.addEventListener('click', e => {
     } else if (b.dataset.s !== undefined) {
         const s = +b.dataset.s;
         if (valdBalk) { if (valdBalk.storlek !== s) andra(() => { valdBalk.storlek = s; }); }
-        else { storlek = s; valjareOppen = false; }      // valt klart: tillbaka till ritandet
+        else storlek = s;
     }
     uppdateraInfo();
 });
@@ -1544,8 +1569,8 @@ duk.addEventListener('pointerdown', e => {
         panorera = { p: iDuken(e), mitt: vynsMitt() };
         return;
     }
-    // Inget verktyg valt: ett finger flyttar vyn var man än trycker.
-    if (!verktyg) {
+    // Panorera: ett finger flyttar vyn var man än trycker.
+    if (panoreraLage) {
         panorera = { p: iDuken(e), mitt: vynsMitt() };
         return;
     }
@@ -1559,10 +1584,9 @@ duk.addEventListener('pointerdown', e => {
         panorera = { p: iDuken(e), mitt: vynsMitt() };
         return;
     }
-    if (valjareOppen) { valjareOppen = false; uppdateraInfo(); }
     if (verktyg === 'andra') {
-        // Först handtagen på den valda balken, sedan knutpunkterna, annars
-        // väljs balken man tryckte på.
+        // Först handtagen på den valda balken, sedan knutpunkterna (ett tryck
+        // väljer, ett drag flyttar), annars väljs balken man tryckte på.
         const b = vald >= 0 ? ritning.balkar[vald] : null;
         for (const ande of b ? ['a', 'b'] : []) {
             const n = ritning.noder[b[ande]];
@@ -1576,8 +1600,8 @@ duk.addEventListener('pointerdown', e => {
             flytt = { nod, till: [ritning.noder[nod].x, ritning.noder[nod].y] };
             return;
         }
-        valdPelare = ritning.noder.find(n => n.pelare && Math.hypot(wx - n.x, wy - n.y) < nara * 0.8) || null;
-        vald = valdPelare ? -1 : narmasteBalk(wx, wy, Math.max(0.4, 16 / kam.sk));
+        valdNod = ritning.noder.find(n => n.pelare && Math.hypot(wx - n.x, wy - n.y) < nara * 0.8) || null;
+        vald = valdNod ? -1 : narmasteBalk(wx, wy, Math.max(0.4, 16 / kam.sk));
         uppdateraInfo();
         return;
     }
@@ -1636,9 +1660,20 @@ function slapp(e) {
     if (flytt) {
         const f = flytt;
         flytt = null;
-        if (f.nod !== undefined) flyttaNod(f.nod, f.till);
-        else flyttaAnde(f.balk, f.ande, f.till);
-        if (verktyg === 'rita') vald = -1; valdPelare = null;
+        if (f.nod !== undefined) {
+            // Ett tryck väljer knutpunkten, ett drag flyttar (och väljer) den.
+            const n = ritning.noder[f.nod];
+            if (n.x !== f.till[0] || n.y !== f.till[1]) flyttaNod(f.nod, f.till);
+            valdNod = ritning.noder.includes(n) ? n : null;
+            vald = -1;
+        }
+        else {
+            // Ett tryck på den valda balkens ände väljer knutpunkten där.
+            const n = ritning.noder[ritning.balkar[f.balk][f.ande]];
+            if (n.x !== f.till[0] || n.y !== f.till[1]) flyttaAnde(f.balk, f.ande, f.till);
+            else if (verktyg === 'andra') { valdNod = n; vald = -1; }
+        }
+        if (verktyg === 'rita') vald = -1;
         uppdateraInfo();
         return;
     }
@@ -1776,6 +1811,7 @@ if (TEST) {
         get keiwsPx() { return keiwsBild() * kam.sk; },
         get ritMaterial() { return ritMaterial; },
         get verktyg() { return verktyg; },
+        get panorera() { return panoreraLage; },
         get banaNr() { return banaNr; },
         get bygger() { return !!(sim && sim.bygge); },
         get version() { return version; },

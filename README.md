@@ -9,14 +9,16 @@ eller betong, plus kablar av stållina.
 mellan punkterna och tryck **Kör**. Färgen visar hur hårt balken är
 utnyttjad (grön → gul → röd). Över 100 % går den sönder.
 
-- **Rita** (t.ex. "Väg · Mellan"): tryck för att välja väg (balk med
-  vägbana som keIWs går på), balk (stöttor, fackverk) eller kabel (bara
-  drag, för snedkabel- och hängbroar), och en av tre
-  storlekar Liten, Mellan och Stor (med − och +, nio steg).
-- **Tryck på en knutpunkt:** växla mellan styvt (fyrkant) och ledat (ring).
-- **Ändra:** tryck på en balk och dra i dess ändar, byt storlek eller riv
-  den (eller riv allt), eller dra en knutpunkt.
-- **Ångra**. Två fingrar zoomar, ett finger utanför rutnätet flyttar vyn.
+- **Panelen** (alltid framme medan man bygger): välj väg (balk med vägbana
+  som keIWs går på), balk (stöttor, fackverk), kabel (bara drag, för
+  snedkabel- och hängbroar) eller pelare, material och en av tre storlekar
+  Liten, Mellan och Stor (med − och +, nio steg). Riv och Riv allt finns alltid där.
+- **Tryck på en knutpunkt** när man bygger: växla mellan styvt (fyrkant) och ledat (ring).
+- **Välj** (i panelen): tryck på en balk, knutpunkt eller pelare för att
+  ändra eller riva den, dra i balkens ändar eller i en knutpunkt för att
+  flytta. Välj igen (eller Väg, Balk … utan något valt) bygger igen.
+- **Bygg / Panorera** nedtill: med Panorera flyttar ett finger vyn.
+  **Ångra** och **Kör**. Två fingrar zoomar och flyttar vyn.
 - **Menyn** (☰): billigaste bron som höll och hur bron räknas.
 
 Spelas i webbläsaren, stående eller liggande. Idéer och beslut finns i
