@@ -131,43 +131,39 @@ html, body {
     font-weight: bold;
 }
 
-#verktyg {
-    display: flex;
+/* Styrningen under spelytan (stående) eller till höger (liggande): panelen
+   och Ångra/Kör bredvid, i en smal kolumn (stående) eller en rad under
+   (liggande). */
+#styrning {
+    flex: none;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 64px;
     gap: 4px;
     padding: 8px;
     padding-bottom: max(8px, env(safe-area-inset-bottom));
     background-color: #2f3f4c;
 }
 
+#verktyg {
+    display: grid;
+    grid-template-rows: 40px 1fr;
+    gap: 4px;
+}
+
 #verktyg button {
-    flex: 1;
     min-width: 0;
-    min-height: 48px;
-    padding: 4px 1px;
     border: none;
     border-radius: 10px;
     background-color: #4a5d6c;
     color: #f2f4f5;
     font: inherit;
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 600;
     cursor: pointer;
 }
 
-#verktyg button span,
-#verktyg button small {
-    display: block;
-}
-
-#verktyg button small {
-    font-size: 11px;
-    font-weight: 500;
-    opacity: 0.85;
-}
-
-#verktyg button.vald {
-    background-color: #e8b062;
-    color: #2f3f4c;
+#verktyg button[data-v=angra] {
+    font-size: 22px;
 }
 
 #verktyg button.kor {
@@ -189,21 +185,18 @@ html, body {
         flex-direction: row;
     }
 
-    #verktyg {
-        flex-direction: column;
-        width: 96px;
-        padding: 8px;
+    #styrning {
+        grid-template-columns: none;
+        grid-template-rows: minmax(0, 1fr) 48px;
+        width: 260px;
+        padding-top: max(8px, env(safe-area-inset-top));
         padding-right: max(8px, env(safe-area-inset-right));
+        padding-bottom: 8px;
     }
 
-    #verktyg button {
-        flex: 1;
-        min-height: 40px;
-        max-height: 60px;
-    }
-
-    #verktyg button.kor {
-        margin-top: auto;
+    #verktyg {
+        grid-template-rows: none;
+        grid-template-columns: 64px 1fr;
     }
 }
 
@@ -212,15 +205,7 @@ html, body {
    när den ligger. Under provkörningen syns den inte men har kvar sin plats,
    så att spelytan inte hoppar. */
 #valjare {
-    flex: none;
-    padding: 8px 8px 0;
-    background-color: #2f3f4c;
-}
-
-#valjare > * {
-    max-width: 460px;
-    margin-left: auto;
-    margin-right: auto;
+    min-width: 0;
 }
 
 #valjare.vilar > * {
@@ -281,9 +266,14 @@ html, body {
 
 /* Pelare: pris i stället för material och storlek. */
 #valjare .pelarinfo {
-    margin: 8px 4px 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 40px;
+    margin: 0 4px;
     color: #f2f4f5;
-    font-size: 13px;
+    font-size: 12px;
+    line-height: 13px;
     text-align: center;
 }
 
@@ -323,13 +313,40 @@ html, body {
     background-color: #b5523f;
 }
 
-/* Liggande: en kolumn mellan spelytan och verktygen. */
+/* Liggande: panelen vriden 90°, tre kolumner (typ, material och Riv,
+   storlek). */
 @media (orientation: landscape) {
     #valjare {
-        width: 250px;
-        padding: 8px 0 8px 8px;
-        padding-top: max(8px, env(safe-area-inset-top));
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 4px;
+        align-items: start;
         overflow-y: auto;
+    }
+
+    #valjare .typ,
+    #valjare .material,
+    #valjare .storlekar,
+    #valjare .forband {
+        grid-template-columns: minmax(0, 1fr) !important;
+        margin: 0;
+    }
+
+    #valjare .etikett {
+        padding: 6px 0;
+        text-align: center;
+    }
+
+    #valjare .pris {
+        padding: 2px 0 0;
+        text-align: center;
+        white-space: normal;
+    }
+
+    #valjare .pelarinfo {
+        height: auto;
+        margin: 0;
+        font-size: 11px;
     }
 
     #valjare button {
@@ -340,9 +357,8 @@ html, body {
         padding: 0 8px;
     }
 
-    #valjare .storlekar {
-        grid-template-columns: repeat(6, 1fr) 72px;
-        gap: 3px;
+    #valjare .storlekar button {
+        min-height: 34px;
     }
 
     #valjare .pris {
@@ -491,6 +507,10 @@ html, body {
 #meny button:disabled {
     opacity: 0.4;
     cursor: default;
+}
+
+#meny button[data-v=nollstall].saker {
+    background-color: #c0533f;
 }
 
 #meny .stang {

@@ -555,3 +555,9 @@ namn, inget −/+). Stegen: trä 56×180, 56×215, 66×225, 90×245, 90×270,
 90×345; stål IPE 80, IPE 100, HEA 100, 140, 160, 200; betong 200×300 …
 450×650; kabel Ø 10–32. Gamla ritningar (version 6, 9 steg) får närmaste
 steg (det större vid lika). Banornas lösningar behöll sina profiler.
+v48-test (Isak 2026-10-14): ingen verktygsrad. Ångra och Kör i en smal
+kolumn till höger om panelen (stående); liggande är panelen vriden 90°, tre
+kolumner, med Ångra och Kör på en rad under. Panorera är ✋ sist i första
+raden (ett verktyg: Välj, Väg, Balk … bygger igen). Rekord från före
+version 7 glöms; menyn har Nollställ rekordet (två tryck), och Hämta går
+även direkt efter ett prov.

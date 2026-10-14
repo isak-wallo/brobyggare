@@ -154,10 +154,11 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     # verktygen (liggande). Bygg en väg i två delar (Stor) genom att dra.
     kolla(f'{namn}: man bygger väg, storlek 3, från start', sida.evaluate('() => window.bro.verktyg') == 'rita'
           and sida.locator('#valjare [data-t=vag].vald').count() == 1 and sida.locator('#valjare [data-s="2"].vald').count() == 1
-          and sida.locator('#verktyg [data-v=bygga].vald').count() == 1)
+          and sida.locator('#valjare [data-t=panorera].vald').count() == 0)
     vb = sida.locator('#valjare').bounding_box()
-    rader = sida.evaluate("() => new Set([...document.querySelectorAll('#valjare button')].map(b => Math.round(b.getBoundingClientRect().top))).size")
-    kolla(f'{namn}: panelen är framme med Välj, Riv, Riv allt och sex storlekar på tre rader, utanför spelytan',
+    rader = sida.evaluate("([kant]) => new Set([...document.querySelectorAll('#valjare button')].map(b => Math.round(b.getBoundingClientRect()[kant]))).size",
+                          ['top' if bredd < hojd else 'left'])
+    kolla(f'{namn}: panelen är framme med Välj, Riv, Riv allt och sex storlekar på tre ' + ('rader' if bredd < hojd else 'kolumner') + ', utanför spelytan',
           sida.locator('#valjare [data-t=valj]').is_visible() and sida.locator('#valjare [data-t=riv]').is_disabled()
           and sida.locator('#valjare [data-t=rivallt]').is_visible() and sida.locator('#valjare [data-s]').count() == 6
           and sida.inner_text('#valjare [data-s="5"]') == '6' and rader == 3
@@ -286,9 +287,10 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     sida.click('#valjare [data-t=valj]')
     kolla(f'{namn}: ett tryck till på Välj går tillbaka till att bygga',
           sida.evaluate('() => window.bro.verktyg') == 'rita')
-    sida.click('#verktyg [data-v=panorera]')
-    kolla(f'{namn}: Panorera', sida.evaluate('() => window.bro.panorera')
-          and sida.locator('#verktyg [data-v=panorera].vald').count() == 1 and 'Panorera:' in sida.inner_html('#info'))
+    sida.click('#valjare [data-t=panorera]')
+    kolla(f'{namn}: ✋ panorerar', sida.evaluate('() => window.bro.panorera')
+          and sida.locator('#valjare [data-t=panorera].vald').count() == 1 and sida.locator('#valjare .typ .vald').count() == 1
+          and 'Panorera:' in sida.inner_html('#info'))
 
     # Panorera: inzoomad flyttar ett finger vyn även mitt i rutnätet.
     sida.mouse.move(*skarm(sida, (7, 0)))
@@ -303,10 +305,10 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     sida.wait_for_timeout(100)
     sida.click('#valjare [data-t=vag]')
     kolla(f'{namn}: Väg i panelen går tillbaka till att bygga', not sida.evaluate('() => window.bro.panorera')
-          and sida.locator('#verktyg [data-v=bygga].vald').count() == 1)
-    sida.click('#verktyg [data-v=panorera]')
-    sida.click('#verktyg [data-v=bygga]')
-    kolla(f'{namn}: och Bygg', not sida.evaluate('() => window.bro.panorera'))
+          and sida.locator('#valjare [data-t=panorera].vald').count() == 0)
+    sida.click('#valjare [data-t=panorera]')
+    sida.click('#valjare [data-t=panorera]')
+    kolla(f'{namn}: och ✋ igen', not sida.evaluate('() => window.bro.panorera'))
     valj(sida, 'vag', 4)
 
     # Inzoomad: ett finger utanför rutnätet (här i berget) flyttar vyn,
@@ -460,6 +462,9 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     sida.click('#meny [data-v=hamta]')
     kolla(f'{namn}: hämta ger den bästa ritningen och stänger menyn',
           antal_balkar(sida) > 1 and not sida.locator('#meny').is_visible())
+    kolla(f'{namn}: rekord från före de sex storlekarna (version 7) glöms', sida.evaluate('''() => {
+          localStorage.setItem('brobyggare-basta-Ån', JSON.stringify({ kostnad: 1, ritning: { version: 6, noder: [], balkar: [] } }));
+          return lasBasta(1) === null; }'''))
     valj_lage(sida)
     b = sida.evaluate('() => { const r = window.bro.ritning, b = r.balkar[0]; '
                       'return [(r.noder[b.a].x + r.noder[b.b].x) / 2, (r.noder[b.a].y + r.noder[b.b].y) / 2]; }')
@@ -680,7 +685,18 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     sida.wait_for_timeout(8000)
     bild(sida, bilder, f'{namn}-13-bil')
     kolla(f'{namn}: keIWs kör bil över hängbron på Havet', vanta_resultat(sida, 90).startswith('Bron höll!'))
-    sida.click('#ruta [data-v=bygg]')
+    # Rekordet går att hämta direkt efter provet, och att nollställa (två tryck).
+    sida.click('#menyknapp')
+    sida.click('#meny [data-v=hamta]')
+    kolla(f'{namn}: hämta rekordet efter provet går tillbaka till att bygga', sida.evaluate('() => window.bro.lage') == 'bygg'
+          and not sida.locator('#ruta').is_visible() and antal_balkar(sida) > 1)
+    sida.click('#menyknapp')
+    sida.click('#meny [data-v=nollstall]')
+    forst = 'Billigaste bron som höll' in sida.inner_text('#meny')
+    sida.click('#meny [data-v=nollstall]')
+    kolla(f'{namn}: nollställ rekordet frågar först, sedan är det borta', forst
+          and 'Ingen bro har hållit här än.' in sida.inner_text('#meny') and sida.evaluate('() => lasBasta(6)') is None)
+    sida.click('#meny [data-v=stang]')
     kolla(f'{namn}: inga JavaScript-fel', not js_fel, '; '.join(js_fel))
     sida.close()
 

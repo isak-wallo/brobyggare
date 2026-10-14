@@ -17,9 +17,12 @@ utnyttjad (grön → gul → röd). Över 100 % går den sönder.
 - **Välj** (i panelen): tryck på en balk, knutpunkt eller pelare för att
   ändra eller riva den, dra i balkens ändar eller i en knutpunkt för att
   flytta. Välj igen (eller Väg, Balk … utan något valt) bygger igen.
-- **Bygg / Panorera** nedtill: med Panorera flyttar ett finger vyn.
-  **Ångra** och **Kör**. Två fingrar zoomar och flyttar vyn.
-- **Menyn** (☰): billigaste bron som höll och hur bron räknas.
+- **✋** (sist i panelens första rad): ett finger flyttar vyn. ✋ igen,
+  Välj, Väg eller Balk bygger igen. Två fingrar zoomar och flyttar vyn.
+- **Ångra** och **Kör** bredvid panelen (en smal kolumn till höger när
+  mobilen står, en rad under när den ligger; panelen ligger då i tre kolumner).
+- **Menyn** (☰): billigaste bron som höll (hämta den eller nollställ
+  rekordet) och hur bron räknas.
 
 Spelas i webbläsaren, stående eller liggande. Idéer och beslut finns i
 [IDEER.md](IDEER.md).

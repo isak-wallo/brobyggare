@@ -176,11 +176,15 @@ function sparaRitning() {
 function lasBasta(nr) {
     try {
         const b = JSON.parse(localStorage.getItem(SPARA_BASTA + BANOR[nr].namn));
-        // Före brolagren (version 3) och de nya trämåtten (version 4)
-        // räknades bron annorlunda: börja om.
-        if (b && (b.ritning.version || 0) < 4) return null;
+        // Bron räknades annorlunda förr (brolagren i version 3, trämåtten i
+        // 4, de sex storlekarna i 7): börja om.
+        if (b && (b.ritning.version || 0) < 7) return null;
         return b;
     } catch (e) { return null; }
+}
+
+function glomBasta() {
+    try { localStorage.removeItem(SPARA_BASTA + bana.namn); } catch (e) { /* privat läge */ }
 }
 
 function sparaBasta(k) {
@@ -986,7 +990,7 @@ const TIPS = {
     andraNod: 'Dra knutpunkten för att flytta den, välj styv eller ledad, eller riv den med balkarna.',
     andraVald: 'Dra i en ände, eller byt typ, material eller storlek. Tryck på Väg eller Balk när inget är valt för att bygga.',
     pelare: 'Tryck på en punkt över vattnet: pelare från botten med glidlager (inte i farleden). Tryck igen: bort.',
-    panorera: 'Panorera: dra med ett finger för att flytta vyn (zooma in först). Tryck på Bygg för att bygga igen.'
+    panorera: 'Panorera: dra med ett finger för att flytta vyn (zooma in först). Tryck på ✋ igen, Välj, Väg eller Balk för att bygga.'
 };
 
 // Infotexten: bana, kostnad och en tredje rad (tips medan man bygger,
@@ -1012,20 +1016,18 @@ function uppdateraInfo() {
         + pil('nasta', '›', !bygger || banaNr === BANOR.length - 1) + '</div>'
         + '<div class="rad"><span class="' + (over ? 'over' : '') + '">' + kr(k) + '</span> av ' + kr(bana.budget) + '</div>'
         + '<div class="rad tredje' + (bygger && !varnaNasta ? ' tips' : '') + '">' + tredje + '</div>';
-    knappar.bygga.classList.toggle('vald', !panoreraLage);
-    knappar.panorera.classList.toggle('vald', panoreraLage);
     knappar.kor.textContent = lageNu === 'bygg' ? 'Kör' : 'Stopp';
     knappar.kor.classList.toggle('stopp', lageNu !== 'bygg');
-    for (const v of ['bygga', 'panorera']) knappar[v].disabled = lageNu !== 'bygg';
     knappar.angra.disabled = lageNu !== 'bygg' || !historik.length;
     visaValjare();
     if (beraknaLuft() !== luftNu) anpassa();
 }
 
-// Panelen, alltid framme medan man bygger (under spelytan när mobilen
-// står, till höger när den ligger). Överst Välj och det man bygger (Väg,
-// Balk, Kabel, Pelare), sedan material med Riv och Riv allt, och sist
-// storleken (med profil och pris per meter). Med Välj gäller panelen den
+// Panelen, alltid framme medan man bygger: tre rader under spelytan när
+// mobilen står, tre kolumner till höger när den ligger. Först Välj och det
+// man bygger (Väg, Balk, Kabel, Pelare) och ✋ (panorera), sedan material
+// med Riv och Riv allt, och sist storleken (med profil och pris per meter).
+// Ångra och Kör (#verktyg) ligger bredvid, till höger respektive under. Med Välj gäller panelen den
 // valda balken, knutpunkten eller pelaren, och är grå tills man valt något.
 function visaValjare() {
     const valj = verktyg === 'andra';
@@ -1041,12 +1043,15 @@ function visaValjare() {
     const mat = kabel ? 'vajer' : valdBalk ? valdBalk.material || 'limtra' : ritMaterial;
     const knapp = (data, text, arVald, av) => '<button ' + data + (arVald ? ' class="vald"' : '') + (av ? ' disabled' : '') + '>' + text + '</button>';
     // Välj, Väg, Balk, Kabel (från Älven, eller om den valda redan är en
-    // kabel) och Pelare (banor med pelare), lika breda.
+    // kabel), Pelare (banor med pelare) och ✋ (panorera), lika breda. Med
+    // ✋ är bara den markerad.
     const medKabel = harMaterial('vajer') || kabel, medPelare = !!bana.pelare && !valdBalk;
-    const typ = '<div class="typ" style="grid-template-columns: repeat(' + (3 + medKabel + medPelare) + ', 1fr)">'
-        + knapp('data-t="valj"', 'Välj', valj)
-        + knapp('data-t="vag"', 'Väg', vag) + knapp('data-t="balk"', 'Balk', balk)
-        + (medKabel ? knapp('data-t="kabel"', 'Kabel', kabel) : '') + (medPelare ? knapp('data-t="pelare"', 'Pelare', pelare || (valdN && valdN.pelare)) : '')
+    const pan = panoreraLage;
+    const typ = '<div class="typ" style="grid-template-columns: repeat(' + (4 + medKabel + medPelare) + ', 1fr)">'
+        + knapp('data-t="valj"', 'Välj', valj && !pan)
+        + knapp('data-t="vag"', 'Väg', vag && !pan) + knapp('data-t="balk"', 'Balk', balk && !pan)
+        + (medKabel ? knapp('data-t="kabel"', 'Kabel', kabel && !pan) : '') + (medPelare ? knapp('data-t="pelare"', 'Pelare', (pelare || (valdN && valdN.pelare)) && !pan) : '')
+        + knapp('data-t="panorera" aria-label="Panorera"', '✋', pan)
         + '</div>';
     // Material (eller vad som är valt) och Riv, Riv allt: gråa när det inte
     // finns något att riva.
@@ -1303,7 +1308,7 @@ function visaMeny() {
     const basta = b
         ? '<p>Billigaste bron som höll: <b>' + kr(b.kostnad) + '</b>'
             + (b.kostnad > bana.budget ? ' (över budget)' : '') + '.</p>'
-            + '<button data-v="hamta"' + (lageNu === 'bygg' ? '' : ' disabled') + '>Hämta den ritningen</button>'
+            + '<p><button data-v="hamta">Hämta den ritningen</button> <button data-v="nollstall">Nollställ rekordet</button></p>'
         : '<p>Ingen bro har hållit här än.</p>';
     menyEl.firstChild.innerHTML = '<button class="stang" data-v="stang">✕</button>'
         + '<h2>Brobyggare</h2>'
@@ -1354,9 +1359,17 @@ menyEl.addEventListener('click', e => {
     const b = e.target.closest('button');
     if (!b || b.disabled) return;
     if (b.dataset.v === 'dela') { delaKonstruktion(b); return; }
+    // Nollställ rekordet: två tryck, sedan glöms banans billigaste bro.
+    if (b.dataset.v === 'nollstall') {
+        if (!b.classList.contains('saker')) { b.classList.add('saker'); b.textContent = 'Säker? Tryck igen'; return; }
+        glomBasta();
+        visaMeny();
+        return;
+    }
     if (b.dataset.v === 'hamta') {
         const basta = lasBasta(banaNr);
-        if (basta && lageNu === 'bygg') {
+        if (basta) {
+            if (lageNu !== 'bygg') bygg(false);
             andra(() => { ritning = uppgradera(JSON.parse(JSON.stringify(basta.ritning))); vald = -1; valdNod = null; });
         }
     }
@@ -1424,9 +1437,7 @@ document.getElementById('verktyg').addEventListener('click', e => {
     const b = e.target.closest('button');
     if (!b || b.disabled) return;
     const v = b.dataset.v;
-    if (v === 'bygga') panoreraLage = false;
-    else if (v === 'panorera') panoreraLage = true;
-    else if (v === 'angra' && historik.length) { ritning = uppgradera(JSON.parse(historik.pop())); vald = -1; valdNod = null; ratta = null; sparaRitning(); }
+    if (v === 'angra' && historik.length) { ritning = uppgradera(JSON.parse(historik.pop())); vald = -1; valdNod = null; ratta = null; sparaRitning(); }
     else if (v === 'kor') { if (lageNu === 'bygg') kor(); else bygg(); }
     uppdateraInfo();
 });
@@ -1437,8 +1448,10 @@ valjareEl.addEventListener('click', e => {
     const valdBalk = verktyg === 'andra' && vald >= 0 ? ritning.balkar[vald] : null;
     const valdN = verktyg === 'andra' && ritning.noder.includes(valdNod) ? valdNod : null;
     const t = b.dataset.t;
-    // Välj, Väg, Balk, Kabel och Pelare bygger (inte panorerar). Utan något
-    // valt går man från Välj till att bygga med det man tryckte på.
+    // ✋ Panorera: av och på. Välj, Väg, Balk, Kabel och Pelare bygger
+    // igen. Utan något valt går man från Välj till att bygga med det man
+    // tryckte på.
+    if (t === 'panorera') { panoreraLage = !panoreraLage; uppdateraInfo(); return; }
     if (t && t !== 'riv' && t !== 'rivallt') {
         panoreraLage = false;
         if (t !== 'valj' && !valdBalk) { verktyg = 'rita'; vald = -1; valdNod = null; }

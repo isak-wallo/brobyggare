@@ -28,7 +28,8 @@ Idéer och beslut i `IDEER.md` (läs den först).
 - `spel.js` – provkörningen utan ritning: keIWs som rörlig last, faller
   utan vägbana, marken (`markY`) stoppar fallande bitar. Testerna kör den i node.
 - `app.js` – ritning, verktyg, bygga med fingret, kamera och layout
-  (stående: verktyg nedtill; liggande: till höger).
+  (`#styrning` = panelen + Ångra/Kör; stående: nedtill, panelen i tre rader;
+  liggande: till höger, panelen i tre kolumner).
 - `figur_data.js` – keIWs rektanglar och animationer. Kopierad från
   flappy-keiws (samma fil); ändra inte för hand.
 
