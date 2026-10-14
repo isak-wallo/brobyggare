@@ -502,6 +502,17 @@ finns kvar blir närmaste steg. Bäckens fackverk blev Liten− rakt igenom
 stället för 90×345): precis nog för en rak skarvad balk över Bäcken, men
 den kostar 11 280 $$, över budgeten.
 
+v44-test (Isak 2026-10-14): stål och trä finns från första banan (stål är
+starkare än trä, det står i texten). Träets Stor+ tillbaka till 90×345.
+Stålet: Liten = IPE 80/100/120, Mellan och Stor = HEA 100–200. Gamla
+ritningar (version 6) flyttar stålet tre steg upp så att profilen blir
+densamma. Rubriken visar spannet: "Bana 1 · Bäcken (14 m)". Bäcken: budget
+12 000, fackverket av trä kostar 10 550 $$ (marginal 1 450); en rak skarvad
+balk måste vara av stål, HEA 160 (12 540 $$, över budget), HEA 140 och trä
+går av. Ravinen: rak skarvad HEA 200 håller men kostar 21 100 $$ (budget
+16 000). Havet: vägen är HEA 200 (största stålet nu), med pelare var 10 m
+under sidospannen (814 260 av 820 000 $$, 95 %).
+
 Beslut 2026-10-13: linverkan hanteras bara med glidlager (brofästen och
 pelare). Kontrollerna räknar rätt: HEA 100 över 24 m mellan två fästen
 som låser x sjunker 0,42 m och bär som en lina (ca 370 kN drag, 65 %

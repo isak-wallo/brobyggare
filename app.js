@@ -114,7 +114,8 @@ function lasBanaNr() {
 // från banan (version 3). Version 4: nya trämått (samma storleksnamn).
 // Version 5: 9 steg (Liten−–Stor+) i stället för 15 (Pytte−–Jätte+); varje
 // balk behåller sin profil (gamla Pytte = nya Liten−; stål: HEA 100 =
-// Liten−), det som saknas blir närmaste steg.
+// Liten−), det som saknas blir närmaste steg. Version 6: stålet börjar med
+// IPE 80–120, HEA 100 är Mellan− (träets Stor+ blev 90×345 igen).
 function uppgradera(r, b = bana) {
     if (!r.version) {
         for (const k of r.balkar) k.storlek = [1, 3, 4][k.storlek] ?? 2;
@@ -124,6 +125,9 @@ function uppgradera(r, b = bana) {
             const s = k.storlek, gammalt = 3 * Math.round(s) + Math.sign(s - Math.round(s)) + 1;
             k.storlek = storlekAv(Math.max(0, Math.min(ANTAL_STEG - 1, gammalt - (k.material === 'stal' ? 0 : 1))));
         }
+    }
+    if ((r.version || 0) < 6) {
+        for (const k of r.balkar) if (k.material === 'stal') k.storlek = storlekAv(Math.min(ANTAL_STEG - 1, stegAv(k.storlek) + 3));
     }
     for (const n of r.noder) {
         if (!n.fast) continue;
@@ -146,7 +150,7 @@ function uppgradera(r, b = bana) {
         if (!r.noder.some(n => n.fast && n.x === x && n.y === y)) r.noder.push(fastNod(x, y, lager));
     }
     for (const k of r.balkar) k.storlek = storlekAv(stegAv(k.storlek));
-    r.version = 5;
+    r.version = 6;
     return r;
 }
 
@@ -262,7 +266,7 @@ function vaxlaPelare(x, y) {
 
 const rutnat = () => bana.rutnat || 1;   // m mellan punkterna man bygger på
 const maxZoom = () => bana.maxZoom || MAX_ZOOM;
-const harMaterial = nyckel => (bana.material || ['limtra']).includes(nyckel);
+const harMaterial = nyckel => (bana.material || ['limtra', 'stal']).includes(nyckel);
 const arKabel = b => b.material === 'vajer';
 
 // Längsta balken (eller kabeln, som får vara längre) på banan.
@@ -991,7 +995,7 @@ function uppdateraInfo() {
         tredje = TIPS[!verktyg ? 'fri' : verktyg === 'andra' ? (vald >= 0 ? 'andraVald' : ritning.noder.includes(valdPelare) ? 'andraPelare' : 'andra') : ritPelare ? 'pelare' : ritKabel ? 'kabel' : ritVag ? 'vag' : 'balk'];
     }
     infoEl.innerHTML = '<div class="rad">' + pil('forra', '‹', !bygger || banaNr === 0)
-        + '<b>Bana ' + (banaNr + 1) + ' · ' + bana.namn + '</b>'
+        + '<b>Bana ' + (banaNr + 1) + ' · ' + bana.namn + ' (' + bana.spann + ' m)</b>'
         + pil('nasta', '›', !bygger || banaNr === BANOR.length - 1) + '</div>'
         + '<div class="rad"><span class="' + (over ? 'over' : '') + '">' + kr(k) + '</span> av ' + kr(bana.budget) + '</div>'
         + '<div class="rad tredje' + (bygger && !varnaNasta ? ' tips' : '') + '">' + tredje + '</div>';

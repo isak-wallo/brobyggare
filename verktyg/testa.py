@@ -250,8 +250,9 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
           and sida.evaluate('() => window.bro.ritning.balkar[1].storlek') == 2)
     sida.click('#valjare [data-t=balk]')
     kolla(f'{namn}: och gör väg till balk', not sida.evaluate('() => window.bro.ritning.balkar[0].vag'))
-    kolla(f'{namn}: bara trä på Bäcken', sida.locator('#valjare [data-m]').count() == 1
-          and sida.locator('#valjare [data-m=limtra]').count() == 1 and sida.locator('#valjare [data-t=kabel]').count() == 0)
+    kolla(f'{namn}: trä och stål på Bäcken', sida.locator('#valjare [data-m]').count() == 2
+          and sida.locator('#valjare [data-m=stal]').count() == 1 and sida.locator('#valjare [data-t=kabel]').count() == 0)
+    kolla(f'{namn}: rubriken har spannet', 'Bäcken (14 m)' in sida.inner_text('#info'))
     bild(sida, bilder, f'{namn}-0-andra')
     sida.click('#valjare [data-f="-1"]')
     kolla(f'{namn}: − ger steget under (Mellan−)', sida.evaluate('() => window.bro.ritning.balkar[0].storlek') == 0.75
@@ -423,7 +424,7 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     sida.click('#menyknapp')
     text = sida.locator('#meny').inner_text()
     kolla(f'{namn}: menyn visar billigaste bron och förklaringen',
-          'Billigaste bron som höll' in text and '(budget 11 000 $$)' in text.replace(' ', ' ') and 'Hur funkar det?' in text
+          'Billigaste bron som höll' in text and '(budget 12 000 $$)' in text.replace(' ', ' ') and 'Hur funkar det?' in text
           and 'Förutsättningar – för nördar' in text and 'Version v' in text)
     sida.click('#meny [data-v=dela]')
     dela = sida.locator('#meny .dela').input_value()
@@ -470,9 +471,9 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
           uppgradera({ version: 4, noder: [], balkar: [{ storlek: 0 }, { storlek: 1.5 }, { storlek: 2 }, { storlek: 3.5 },
           { storlek: 0, material: 'stal' }, { storlek: -0.25, material: 'stal' }] }).balkar
           .map(b => storleksNamn(b.storlek) + ' ' + profil(b.material || 'limtra', b.storlek).namn).join()''')
-          == 'Liten− 56×180,Mellan+ 90×245,Stor− 90×270,Stor+ 115×360,Liten HEA 120,Liten− HEA 100')
+          == 'Liten− 56×180,Mellan+ 90×245,Stor− 90×270,Stor+ 90×345,Mellan HEA 120,Mellan− HEA 100')
     kolla(f'{namn}: nya ritningar behåller storleken', sida.evaluate('''() =>
-          uppgradera({ version: 5, noder: [], balkar: [{ storlek: 0.75 }] }).balkar[0].storlek''') == 0.75)
+          uppgradera({ version: 6, noder: [], balkar: [{ storlek: 0.75 }] }).balkar[0].storlek''') == 0.75)
     kolla(f'{namn}: gamla ritningar tappar fästena som tagits bort', sida.evaluate('''() => { const b = BANOR[0];
         const gamla = [[0, 0, 'fast'], [0, -3], [14, 0, 'glid'], [14, -3], [-3, 0], [17, 0]];
         const r = uppgradera({ version: 4, noder: gamla.map(([x, y, l]) => fastNod(x, y, l)),
@@ -522,14 +523,15 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     kolla(f'{namn}: bana 1 har kvar sin ritning', sida.evaluate('() => window.bro.banaNr') == 0
           and antal_balkar(sida) == 1)
 
-    # Bana 3, Ravinen (torr, mjuka sluttningar): bara trä, ett fäste på var
+    # Bana 3, Ravinen (torr, mjuka sluttningar): trä och stål, ett fäste på var
     # sluttning. Lösningen ryms i budgeten.
     sida.click('#info [data-v=nasta]')
     sida.click('#info [data-v=nasta]')
     sida.evaluate('() => { window.bro.ritning = window.bro.losningsRitning(); }')
     oppna_valjaren(sida)
     sida.click('#valjare [data-t=vag]')
-    kolla(f'{namn}: Ravinen har bara trä', sida.locator('#valjare [data-m=stal]').count() == 0)
+    kolla(f'{namn}: Ravinen har trä och stål, inte betong', sida.locator('#valjare [data-m=stal]').count() == 1
+          and sida.locator('#valjare [data-m=betong]').count() == 0)
     kolla(f'{namn}: lösningen på bana 3 (Ravinen) ryms i budgeten', sida.evaluate('() => window.bro.banaNr') == 2
           and sida.evaluate('() => window.bro.kostnad()') <= sida.evaluate('() => BANOR[2].budget'))
     kolla(f'{namn}: inga knutpunkter i sluttningen', sida.evaluate('() => tillaten(2, -1) && !tillaten(2, -2) && tillaten(4, -5)'))
@@ -540,17 +542,17 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     kolla(f'{namn}: pilen varnar när ingen bro har hållit', sida.evaluate('() => window.bro.banaNr') == 2
           and 'Ingen bro har hållit här än' in sida.inner_text('#info'), sida.inner_text('#info'))
 
-    # Bana 4, Dalgången: stålet kommer, lösningen (båge) ryms i budgeten.
+    # Bana 4, Dalgången: lösningen (båge) ryms i budgeten.
     sida.click('#info [data-v=nasta]')
     sida.evaluate('() => { window.bro.ritning = window.bro.losningsRitning(); }')
     oppna_valjaren(sida)
     sida.click('#valjare [data-t=vag]')
-    kolla(f'{namn}: stålet kommer på Dalgången, betong och kabel inte än',
+    kolla(f'{namn}: stål på Dalgången, betong och kabel inte än',
           sida.locator('#valjare [data-m=stal]').count() == 1
           and sida.locator('#valjare [data-m=betong]').count() == 0 and sida.locator('#valjare [data-t=kabel]').count() == 0)
     sida.click('#valjare [data-m=stal]')
-    kolla(f'{namn}: stål är HEA', 'Stål' in sida.inner_text('#verktyg [data-v=rita]')
-          and 'HEA 240' in sida.inner_text('#valjare [data-s="2"]'))
+    kolla(f'{namn}: stål är IPE (Liten) och HEA', 'Stål' in sida.inner_text('#verktyg [data-v=rita]')
+          and 'IPE 100' in sida.inner_text('#valjare [data-s="0"]') and 'HEA 180' in sida.inner_text('#valjare [data-s="2"]'))
     sida.click('#valjare [data-m=limtra]')
     kolla(f'{namn}: lösningen på bana 4 (Dalgången) ryms i budgeten', sida.evaluate('() => window.bro.banaNr') == 3
           and sida.evaluate('() => window.bro.kostnad()') <= sida.evaluate('() => BANOR[3].budget'))

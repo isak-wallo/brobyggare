@@ -3,7 +3,8 @@
 // Spelläget har tre storlekar per material (Liten, Mellan, Stor), var och
 // en med ett steg under och ett över (Liten−, Liten, Liten+ … Stor+, 9
 // steg) som man når med −/+ under knapparna. Träet är för de kortare
-// broarna (56×180–115×360), stålet tar över med HEA 100–260. Var och en är en riktig profil, så
+// broarna (56×180–90×345). Stålet är starkare: små IPE (Liten) och HEA
+// 100–200 (Mellan och Stor). Var och en är en riktig profil, så
 // att lösaren räknar med verkliga A, I, W, vikt och pris.
 // Enheter: SI (m, kg, N, Pa). Priserna är i spelets pengar, $$ (ungefär som
 // kronor).
@@ -117,18 +118,17 @@ const STORLEKAR = ['Liten', 'Mellan', 'Stor'];
 // ungefär 1,35 gånger styvare (I) än det förra, så att knäckningen inte tar
 // för stora kliv, och både pris och styvhet ökar för varje steg.
 const STEGEN = {
-    // Sista steget (Stor+) är ett större kliv: precis nog för en rak balk
-    // över Bäcken (14 m), men över budget.
-    limtra: [[56, 180], [56, 200], [56, 215], [66, 225], [78, 230], [90, 245], [90, 270], [90, 305], [115, 360]]
+    limtra: [[56, 180], [56, 200], [56, 215], [66, 225], [78, 230], [90, 245], [90, 270], [90, 305], [90, 345]]
         .map(([b, h]) => rektangel('limtra', b, h)),
-    // HEA 100–400 i följd, böjning kring den styva axeln (W elastiskt, A_v =
-    // livets area). HEB och HEM är tyngre för samma styvhet, så de skulle bli
-    // dyrare men klenare än ett HEA-steg bredvid.
-    stal: [iprofil('HEA 100', 21.2, 349, 72.8, 7.56, 96), iprofil('HEA 120', 25.3, 606, 106, 8.46, 114),
+    // IPE 80–120 (Liten), sedan HEA 100–200 i följd. Böjning kring den
+    // styva axeln (W elastiskt, A_v = livets area). HEB och HEM är tyngre för
+    // samma styvhet, så de skulle bli dyrare men klenare än ett HEA-steg
+    // bredvid.
+    stal: [iprofil('IPE 80', 7.64, 80.1, 20.0, 3.58, 80), iprofil('IPE 100', 10.3, 171, 34.2, 5.08, 100),
+           iprofil('IPE 120', 13.2, 318, 53.0, 6.31, 120),
+           iprofil('HEA 100', 21.2, 349, 72.8, 7.56, 96), iprofil('HEA 120', 25.3, 606, 106, 8.46, 114),
            iprofil('HEA 140', 31.4, 1033, 155, 10.1, 133), iprofil('HEA 160', 38.8, 1673, 220, 13.2, 152),
-           iprofil('HEA 180', 45.3, 2510, 294, 14.5, 171), iprofil('HEA 200', 53.8, 3692, 389, 18.1, 190),
-           iprofil('HEA 220', 64.3, 5410, 515, 20.7, 210), iprofil('HEA 240', 76.8, 7763, 675, 25.2, 230),
-           iprofil('HEA 260', 86.8, 10450, 836, 28.8, 250)],
+           iprofil('HEA 180', 45.3, 2510, 294, 14.5, 171), iprofil('HEA 200', 53.8, 3692, 389, 18.1, 190)],
     // Betong: rektanglar b × h, från en smal sträva till en rejäl pylon.
     betong: [[200, 300], [250, 300], [250, 350], [300, 350], [300, 400], [350, 450], [400, 500], [400, 600], [450, 650]]
         .map(([b, h]) => rektangel('betong', b, h)),

@@ -2,7 +2,7 @@
 
 Ett 2D-webbspel där man bygger broar som keIWs tar sig över. Broarna
 räknas med en riktig liten FE-lösare (korotationella balkelement,
-implicit tidsstegning), och balkarna är riktiga profiler i limträ, stål (HEA)
+implicit tidsstegning), och balkarna är riktiga profiler i limträ, stål (IPE och HEA)
 eller betong, plus kablar av stållina.
 
 **Utkast:** sju banor (12 m till 400 m spann, vatten och torra dalar), byt med pilarna. Dra balkar

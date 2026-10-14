@@ -8,8 +8,8 @@
 //   kant:   vattenbanornas kanter: m i sidled per m ner (branta, rundade
 //           överst); dal: {djup, bredd} för landbanornas mjuka dal (se
 //           markY i spel.js)
-//   material: vilka material som finns (bara limträ om det saknas); stålet
-//           kommer på Dalgången, betongen och kablarna på Älven
+//   material: vilka material som finns (trä och stål om det saknas);
+//           betongen och kablarna kommer på Älven
 //   fasten: fästpunkterna i berget [x, y] eller [x, y, lager]. Vägbanans
 //           fästen är brolager (alltid ledade): 'fast' låser x och y,
 //           'glid' bara y (rör sig fritt i sidled, som på riktiga broar,
@@ -36,12 +36,13 @@ const BANOR = [
     {
         namn: 'Bäcken',
         // 14 m: längre än en balk (12 m), så man måste skarva. En rak balk
-        // måste vara Stor+ och går över budget, ett litet fackverk ryms.
+        // måste vara av stål (HEA 160) och går över budget, ett litet
+        // fackverk av trä ryms med marginal.
         spann: 14,
         fasten: [[0, 0, 'fast'], [14, 0, 'glid']],
         kant: 1 / 3,
         vatten: -2,
-        budget: 11000,
+        budget: 12000,
         keiws: 2,
         omrade: { x0: -3, x1: 17, y0: -1, y1: 7 },
         vy: { x0: -4, x1: 18, y0: -3, y1: 7.5 },
@@ -105,7 +106,7 @@ const BANOR = [
     },
     {
         // En bred och djup dalgång utan vatten, med långa sluttningar där
-        // man kan ställa stöd. Här kommer stålet.
+        // man kan ställa stöd.
         namn: 'Dalgången',
         spann: 60,
         rutnat: 2,
@@ -207,13 +208,13 @@ const BANOR = [
                 [120, 10], [120, 20], [120, 30]
             ],
             balkar: [
-                [0, 6, 0.25, true, 'stal'], [6, 7, 0.25, true, 'stal'], [7, 8, 0.25, true, 'stal'], [8, 9, 0.25, true, 'stal'], [9, 10, 0.25, true, 'stal'],
-                [10, 11, 0.25, true, 'stal'], [11, 12, 0.25, true, 'stal'], [12, 13, 0.25, true, 'stal'], [13, 14, 0.25, true, 'stal'], [14, 15, 0.25, true, 'stal'],
-                [15, 16, 0.25, true, 'stal'], [16, 17, 0.25, true, 'stal'], [17, 18, 0.25, true, 'stal'], [18, 19, 0.25, true, 'stal'], [19, 20, 0.25, true, 'stal'],
-                [20, 21, 0.25, true, 'stal'], [21, 22, 0.25, true, 'stal'], [22, 23, 0.25, true, 'stal'], [23, 24, 0.25, true, 'stal'], [24, 25, 0.25, true, 'stal'],
-                [25, 26, 0.25, true, 'stal'], [26, 27, 0.25, true, 'stal'], [27, 28, 0.25, true, 'stal'], [28, 29, 0.25, true, 'stal'], [29, 30, 0.25, true, 'stal'],
-                [30, 31, 0.25, true, 'stal'], [31, 32, 0.25, true, 'stal'], [32, 33, 0.25, true, 'stal'], [33, 34, 0.25, true, 'stal'], [34, 35, 0.25, true, 'stal'],
-                [35, 36, 0.25, true, 'stal'], [36, 1, 0.25, true, 'stal'], [4, 13, -0.25, false, 'betong'], [13, 37, -0.25, false, 'betong'], [37, 38, -0.25, false, 'betong'],
+                [0, 6, 1.25, true, 'stal'], [6, 7, 1.25, true, 'stal'], [7, 8, 1.25, true, 'stal'], [8, 9, 1.25, true, 'stal'], [9, 10, 1.25, true, 'stal'],
+                [10, 11, 1.25, true, 'stal'], [11, 12, 1.25, true, 'stal'], [12, 13, 1.25, true, 'stal'], [13, 14, 1.25, true, 'stal'], [14, 15, 1.25, true, 'stal'],
+                [15, 16, 1.25, true, 'stal'], [16, 17, 1.25, true, 'stal'], [17, 18, 1.25, true, 'stal'], [18, 19, 1.25, true, 'stal'], [19, 20, 1.25, true, 'stal'],
+                [20, 21, 1.25, true, 'stal'], [21, 22, 1.25, true, 'stal'], [22, 23, 1.25, true, 'stal'], [23, 24, 1.25, true, 'stal'], [24, 25, 1.25, true, 'stal'],
+                [25, 26, 1.25, true, 'stal'], [26, 27, 1.25, true, 'stal'], [27, 28, 1.25, true, 'stal'], [28, 29, 1.25, true, 'stal'], [29, 30, 1.25, true, 'stal'],
+                [30, 31, 1.25, true, 'stal'], [31, 32, 1.25, true, 'stal'], [32, 33, 1.25, true, 'stal'], [33, 34, 1.25, true, 'stal'], [34, 35, 1.25, true, 'stal'],
+                [35, 36, 1.25, true, 'stal'], [36, 1, 1.25, true, 'stal'], [4, 13, -0.25, false, 'betong'], [13, 37, -0.25, false, 'betong'], [37, 38, -0.25, false, 'betong'],
                 [38, 39, -0.25, false, 'betong'], [39, 11, -0.25, false, 'vajer'], [39, 15, -0.25, false, 'vajer'], [39, 9, -0.25, false, 'vajer'], [39, 17, -0.25, false, 'vajer'],
                 [39, 7, -0.25, false, 'vajer'], [39, 19, -0.25, false, 'vajer'], [39, 0, -0.25, false, 'vajer'], [39, 21, -0.25, false, 'vajer'], [5, 29, -0.25, false, 'betong'],
                 [29, 40, -0.25, false, 'betong'], [40, 41, -0.25, false, 'betong'], [41, 42, -0.25, false, 'betong'], [42, 27, -0.25, false, 'vajer'], [42, 31, -0.25, false, 'vajer'],
@@ -247,27 +248,27 @@ const BANOR = [
         losning: {
             // Hängbro: pyloner av betong Stor+ (90 m), huvudkabel Stor+
             // förankrad på land, hängare Liten− var 20 m, väg av stål
-            // Stor− och pelare under sidospannen (774 260 $$).
+            // Stor+ (HEA 200) och pelare var 10 m under sidospannen (814 260 $$).
             noder: [
-                [0, 0], [400, 0], [-40, 0], [440, 0], [80, -30, 'styv'], [320, -30, 'styv'], [10, 0], [20, 0, 'pelare'],
-                [30, 0], [40, 0, 'pelare'], [50, 0], [60, 0, 'pelare'], [70, 0], [80, 0], [90, 0], [100, 0],
+                [0, 0], [400, 0], [-40, 0], [440, 0], [80, -30, 'styv'], [320, -30, 'styv'], [10, 0, 'pelare'], [20, 0, 'pelare'],
+                [30, 0, 'pelare'], [40, 0, 'pelare'], [50, 0, 'pelare'], [60, 0, 'pelare'], [70, 0, 'pelare'], [80, 0], [90, 0], [100, 0],
                 [110, 0], [120, 0], [130, 0], [140, 0], [150, 0], [160, 0], [170, 0], [180, 0],
                 [190, 0], [200, 0], [210, 0], [220, 0], [230, 0], [240, 0], [250, 0], [260, 0],
-                [270, 0], [280, 0], [290, 0], [300, 0], [310, 0], [320, 0], [330, 0], [340, 0, 'pelare'],
-                [350, 0], [360, 0, 'pelare'], [370, 0], [380, 0, 'pelare'], [390, 0], [80, -20], [80, -10], [80, 20],
+                [270, 0], [280, 0], [290, 0], [300, 0], [310, 0], [320, 0], [330, 0, 'pelare'], [340, 0, 'pelare'],
+                [350, 0, 'pelare'], [360, 0, 'pelare'], [370, 0, 'pelare'], [380, 0, 'pelare'], [390, 0, 'pelare'], [80, -20], [80, -10], [80, 20],
                 [80, 40], [80, 60], [320, -20], [320, -10], [320, 20], [320, 40], [320, 60], [100, 40],
                 [120, 30], [140, 20], [160, 20], [180, 10], [200, 10], [220, 10], [240, 20], [260, 20],
                 [280, 30], [300, 40]
             ],
             balkar: [
-                [0, 6, 1.75, true, 'stal'], [6, 7, 1.75, true, 'stal'], [7, 8, 1.75, true, 'stal'], [8, 9, 1.75, true, 'stal'], [9, 10, 1.75, true, 'stal'],
-                [10, 11, 1.75, true, 'stal'], [11, 12, 1.75, true, 'stal'], [12, 13, 1.75, true, 'stal'], [13, 14, 1.75, true, 'stal'], [14, 15, 1.75, true, 'stal'],
-                [15, 16, 1.75, true, 'stal'], [16, 17, 1.75, true, 'stal'], [17, 18, 1.75, true, 'stal'], [18, 19, 1.75, true, 'stal'], [19, 20, 1.75, true, 'stal'],
-                [20, 21, 1.75, true, 'stal'], [21, 22, 1.75, true, 'stal'], [22, 23, 1.75, true, 'stal'], [23, 24, 1.75, true, 'stal'], [24, 25, 1.75, true, 'stal'],
-                [25, 26, 1.75, true, 'stal'], [26, 27, 1.75, true, 'stal'], [27, 28, 1.75, true, 'stal'], [28, 29, 1.75, true, 'stal'], [29, 30, 1.75, true, 'stal'],
-                [30, 31, 1.75, true, 'stal'], [31, 32, 1.75, true, 'stal'], [32, 33, 1.75, true, 'stal'], [33, 34, 1.75, true, 'stal'], [34, 35, 1.75, true, 'stal'],
-                [35, 36, 1.75, true, 'stal'], [36, 37, 1.75, true, 'stal'], [37, 38, 1.75, true, 'stal'], [38, 39, 1.75, true, 'stal'], [39, 40, 1.75, true, 'stal'],
-                [40, 41, 1.75, true, 'stal'], [41, 42, 1.75, true, 'stal'], [42, 43, 1.75, true, 'stal'], [43, 44, 1.75, true, 'stal'], [44, 1, 1.75, true, 'stal'],
+                [0, 6, 2.25, true, 'stal'], [6, 7, 2.25, true, 'stal'], [7, 8, 2.25, true, 'stal'], [8, 9, 2.25, true, 'stal'], [9, 10, 2.25, true, 'stal'],
+                [10, 11, 2.25, true, 'stal'], [11, 12, 2.25, true, 'stal'], [12, 13, 2.25, true, 'stal'], [13, 14, 2.25, true, 'stal'], [14, 15, 2.25, true, 'stal'],
+                [15, 16, 2.25, true, 'stal'], [16, 17, 2.25, true, 'stal'], [17, 18, 2.25, true, 'stal'], [18, 19, 2.25, true, 'stal'], [19, 20, 2.25, true, 'stal'],
+                [20, 21, 2.25, true, 'stal'], [21, 22, 2.25, true, 'stal'], [22, 23, 2.25, true, 'stal'], [23, 24, 2.25, true, 'stal'], [24, 25, 2.25, true, 'stal'],
+                [25, 26, 2.25, true, 'stal'], [26, 27, 2.25, true, 'stal'], [27, 28, 2.25, true, 'stal'], [28, 29, 2.25, true, 'stal'], [29, 30, 2.25, true, 'stal'],
+                [30, 31, 2.25, true, 'stal'], [31, 32, 2.25, true, 'stal'], [32, 33, 2.25, true, 'stal'], [33, 34, 2.25, true, 'stal'], [34, 35, 2.25, true, 'stal'],
+                [35, 36, 2.25, true, 'stal'], [36, 37, 2.25, true, 'stal'], [37, 38, 2.25, true, 'stal'], [38, 39, 2.25, true, 'stal'], [39, 40, 2.25, true, 'stal'],
+                [40, 41, 2.25, true, 'stal'], [41, 42, 2.25, true, 'stal'], [42, 43, 2.25, true, 'stal'], [43, 44, 2.25, true, 'stal'], [44, 1, 2.25, true, 'stal'],
                 [4, 45, 2, false, 'betong'], [45, 46, 2, false, 'betong'], [46, 13, 2, false, 'betong'], [13, 47, 2, false, 'betong'], [47, 48, 2, false, 'betong'],
                 [48, 49, 2, false, 'betong'], [5, 50, 2, false, 'betong'], [50, 51, 2, false, 'betong'], [51, 37, 2, false, 'betong'], [37, 52, 2, false, 'betong'],
                 [52, 53, 2, false, 'betong'], [53, 54, 2, false, 'betong'], [2, 49, 2.25, false, 'vajer'], [49, 55, 2.25, false, 'vajer'], [55, 56, 2.25, false, 'vajer'],
@@ -283,7 +284,7 @@ const BANOR = [
 
 // En banas fästpunkter som noder i en ny ritning.
 function nyRitning(bana) {
-    return { version: 5, noder: bana.fasten.map(([x, y, lager]) => fastNod(x, y, lager)), balkar: [] };
+    return { version: 6, noder: bana.fasten.map(([x, y, lager]) => fastNod(x, y, lager)), balkar: [] };
 }
 
 // Vad en ritning kostar: balkarna (och vägbanan) per meter, förbanden och
@@ -314,7 +315,7 @@ function fastNod(x, y, lager) {
 function losningsRitning(bana) {
     const l = bana.losning;
     return {
-        version: 5,
+        version: 6,
         noder: l.noder.map(([x, y, typ], i) => i < bana.fasten.length ? Object.assign(fastNod(x, y, bana.fasten[i][2]), typ === 'styv' ? { styv: true } : {})
             : typ === 'pelare' ? { x, y, fast: true, styv: false, pelare: true, lager: 'glid' } : { x, y, fast: false, styv: true }),
         balkar: l.balkar.map(([a, b, storlek, vag, material = 'limtra']) => ({ a, b, storlek, vag: !!vag, material }))
