@@ -637,3 +637,7 @@ v59-test: Ån omgjord: 26 m, bara trä, vatten 5–9 m djupt i en skål (ingen k
 under land), fästen 3 m ner i slänterna, budget 26 000 (lösningen 24 480). Bäcken och Ån har
 ojämn mark (`profil`: punkter, mjukt emellan med monoton kubisk interpolation; markY,
 kantAvstand per sida). Sparat på Ån kastas (ordning 4).
+
+v60-test: största zoom lika på alla banor: skärmens kortaste sida visar 10 m (NARMAST; minst 3
+rutor, Älven 15 m, Havet 30 m), samma pixlar per meter stående och liggande. Isak tyckte 10 m
+i bredd stående var lagom. Banornas maxZoom borttaget.

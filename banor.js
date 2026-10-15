@@ -2,8 +2,8 @@
 //
 //   spann:  avståndet mellan klippkanterna (vänster kant vid x = 0)
 //   rutnat: m mellan punkterna man bygger på (1 om det saknas)
-//   element, maxLangd, maxKabel, maxZoom: för de stora banorna (fysikens
-//           elementlängd, längsta balk och kabel i m, största zoom)
+//   element, maxLangd, maxKabel: för de stora banorna (fysikens
+//           elementlängd, längsta balk och kabel i m)
 //   ö:      bredden på ön till höger (annars fortsätter landet)
 //   kant:   vattenbanornas kanter: m i sidled per m ner (branta, rundade
 //           överst); dal: {djup, bredd} för landbanornas mjuka dal (se
@@ -204,7 +204,6 @@ const BANOR = [
         element: 2.5,
         maxLangd: 20,
         maxKabel: 100,
-        maxZoom: 12,
         fasten: [[0, 0, 'fast'], [160, 0, 'glid'], [-5, 0], [165, 0], [40, -8], [120, -8]],
         kant: 0.4,
         vatten: -8,
@@ -252,7 +251,6 @@ const BANOR = [
         element: 5,
         maxLangd: 30,
         maxKabel: 150,
-        maxZoom: 16,
         fasten: [[0, 0, 'fast'], [400, 0, 'glid'], [-40, 0], [440, 0], [80, -30], [320, -30]],
         kant: 0.4,
         vatten: -30,

@@ -428,15 +428,18 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
         const h = (typ, id, px, py) => duk.dispatchEvent(new PointerEvent(typ, {
             pointerId: id, pointerType: 'touch', clientX: px + ox, clientY: py + oy, bubbles: true }));
         h('pointerdown', 11, x - 40, y); h('pointerdown', 12, x + 40, y);
-        for (let k = 1; k <= 5; k++) { h('pointermove', 11, x - 40 - 16 * k, y); h('pointermove', 12, x + 40 + 16 * k, y); }
-        h('pointerup', 11, x - 120, y); h('pointerup', 12, x + 120, y);
+        for (let k = 1; k <= 5; k++) { h('pointermove', 11, x - 40 - 2 * k, y); h('pointermove', 12, x + 40 + 2 * k, y); }
+        h('pointerup', 11, x - 50, y); h('pointerup', 12, x + 50, y);
     }''', [x - box['x'], y - box['y'], box['x'], box['y']])
     x2, y2 = skarm(sida, (7, 2))
     zoom = sida.evaluate('() => window.bro.zoom')
-    kolla(f'{namn}: nyp med två fingrar zoomar (3×), punkten står kvar, inget byggs',
-          abs(zoom - 3) < 0.05 and abs(x2 - x) < 2 and abs(y2 - y) < 2 and antal_balkar(sida) == 2,
+    kolla(f'{namn}: nyp med två fingrar zoomar (1,25×), punkten står kvar, inget byggs',
+          abs(zoom - 1.25) < 0.02 and abs(x2 - x) < 2 and abs(y2 - y) < 2 and antal_balkar(sida) == 2,
           f'zoom {zoom:.2f}')
     bild(sida, bilder, f'{namn}-0-zoom')
+    m = sida.evaluate('''() => { const z = zoom; zoom = 99; sattKamera();
+        const m = Math.min(innerWidth, innerHeight) / kam.sk; zoom = z; sattKamera(); return m; }''')
+    kolla(f'{namn}: största zoom visar 10 m på skärmens kortaste sida', abs(m - 10) < 0.01, m)
     sida.mouse.wheel(0, 3000)
     sida.wait_for_timeout(100)
     valj(sida, 'balk')

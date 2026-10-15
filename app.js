@@ -17,7 +17,9 @@ const BYGG_HALL = 250;       // ms: håll still så länge på tom yta för att 
 const START_NARA = 24;       // px: så nära en knutpunkt börjar en ny balk i den
 const RATTA_TID = 2.5;       // s som en ny balks startände går att dra rätt
 const MAX_STEG = 8;          // fysiksteg per bildruta (annars går det långsamt)
-const MAX_ZOOM = 6;          // (om banan inte säger annat)
+// Största zoom: lika många pixlar per meter på alla banor och åt båda hållen
+// (skärmens kortaste sida visar NARMAST m, men minst 3 rutor på de grova rutnäten).
+const NARMAST = 10;
 const HALL_TID = 300;        // ms: så länge man håller på en balk eller knutpunkt för att välja den (och på Riv)
 const BYGG_PER_BALK = 0.2;   // s per balk när keIWs bygger ...
 const BYGG_MIN = 1.0;        // ... men hela bygget tar minst ...
@@ -293,7 +295,7 @@ function vaxlaPelare(x, y) {
 }
 
 const rutnat = () => bana.rutnat || 1;   // m mellan punkterna man bygger på
-const maxZoom = () => bana.maxZoom || MAX_ZOOM;
+const maxZoom = () => Math.max(1, Math.min(innerWidth, innerHeight) / Math.max(NARMAST, 3 * rutnat()) / bas.sk);
 const harMaterial = nyckel => (bana.material || ['limtra', 'stal']).includes(nyckel);
 const arKabel = b => b.material === 'vajer';
 const ritStorlek = () => ritProfil[ritKabel ? 'vajer' : ritMaterial];
@@ -955,7 +957,7 @@ const KEIWS_UTZOOMAD = 0.7;  // så stor som inzoomad (största zoom) när man s
 // inzoomad, lite mindre utzoomad (jämnt emellan, räknat på log-zoom).
 // Banans keiwsInzoomad gör honom större än så vid största zoom.
 const keiwsBild = () => KEIWS_BILD * keiwsHojd(bana) / zoom
-    * (KEIWS_UTZOOMAD + ((bana.keiwsInzoomad || 1) - KEIWS_UTZOOMAD) * Math.log(zoom) / Math.log(maxZoom()));
+    * (KEIWS_UTZOOMAD + ((bana.keiwsInzoomad || 1) - KEIWS_UTZOOMAD) * Math.log(zoom) / Math.log(Math.max(1.01, maxZoom())));
 
 // Rektanglar [x0, y0, x1, y1, färg, del] med fötternas mitt i (x, y).
 function ritaFigur(rekt, x, y, lyft) {
