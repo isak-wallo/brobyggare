@@ -1623,7 +1623,10 @@ const balkNamn = i => {
 function forloppRuta() {
     const f = sim.forlopp[forlopp.nr], n = sim.forlopp.length, m = sim.m;
     const fler = n >= FORLOPP_MAX ? '+' : '';
-    const rader = f.brutna.slice(0, 3).map(b => balkNamn(b.balk) + ': ' + b.orsak + ' ' + Math.round(b.u * 100) + ' %');
+    // Var på balken (en balk är flera element och kan gå av på flera ställen):
+    // elementets mitt, räknat från vänstra kanten.
+    const var_ = b => { const e = m.element[b.el]; return tal((m.punkter[e.i].x0 + m.punkter[e.j].x0) / 2, 1) + ' m'; };
+    const rader = f.brutna.slice(0, 3).map(b => balkNamn(b.balk) + ' vid ' + var_(b) + ': ' + b.orsak + ' ' + Math.round(b.u * 100) + ' %');
     if (f.brutna.length > 3) rader.push('och ' + (f.brutna.length - 3) + ' till');
     let valt = 'Tryck på en balk för att se dess utnyttjande.';
     if (forlopp.valt >= 0) {

@@ -650,3 +650,10 @@ utnyttjande just då. Sparas i sim.forlopp (forloppBild, högst 40). Rutan ligge
 Bitar som flög iväg när bron rasade (Isaks bro över Ån): knäckta strävor gjorde
 Newtonmatrisen indefinit och Cholesky gav skräp. Nu förstoras diagonalen tills den går att
 faktorisera (bara vägen dit ändras), och ett Newtonsteg flyttar högst MAX_DU = 0,2 m.
+
+v62-test: "7 brott" på Isaks bro över Ån: en balk är flera element (ca 0,75 m) och kan gå av
+på flera ställen, men de flesta brotten kom efter att keIWs ramlat i, när bitarna slog i
+slänten. Nu går inget sönder efter Plask, och lösa bitar (som inte sitter ihop med något
+fäste, iFastet) går inte sönder; Förloppet visar var på balken det gick (x = … m).
+Ån: budget 18 500 (var 26 000); Isaks bro (tre vägbalkar 56×315 på två strävor 42×270 från
+fästena i slänterna, 17 420) är lösningen.

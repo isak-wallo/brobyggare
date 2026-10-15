@@ -220,10 +220,14 @@ function simSteg(sim, dt = DT) {
     steg(sim.m, dt);
     lagerStopp(sim);
     berget(sim);
-    const n = brott(sim.m);
+    // När keIWs har ramlat i är provet avgjort: inget mer går sönder (bitarna
+    // som faller och slår i marken skulle annars smulas sönder i onödan).
+    let n = 0;
+    if (!sim.resultat) n = brott(sim.m);
+    else { montera(sim.m, false); utnyttjande(sim.m); sim.m.brutna = []; }
     sim.brott += n;
     if (n && sim.forlopp.length < FORLOPP_MAX) sim.forlopp.push(forloppBild(sim));
-    for (const e of sim.m.element) if (!e.dod) sim.maxU = Math.max(sim.maxU, e.u, sim.m.balkar[e.balk].uk);
+    if (!sim.resultat) for (const e of sim.m.element) if (!e.dod) sim.maxU = Math.max(sim.maxU, e.u, sim.m.balkar[e.balk].uk);
     sim.t += dt;
 }
 

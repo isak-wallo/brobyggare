@@ -458,21 +458,34 @@ function utnyttjande(m) {
     }
 }
 
+// Vilka punkter som fortfarande sitter ihop med ett fäste (genom hela element).
+function iFastet(m) {
+    const rot = m.punkter.map((p, i) => i);
+    const hitta = i => { while (rot[i] !== i) i = rot[i] = rot[rot[i]]; return i; };
+    for (const e of m.element) if (!e.dod) rot[hitta(e.i)] = hitta(e.j);
+    const fasta = new Set(m.punkter.map((p, i) => p.fast ? hitta(i) : -1));
+    return m.punkter.map((p, i) => fasta.has(hitta(i)));
+}
+
 // Tar bort det som går sönder: i varje balk det värst utnyttjade elementet
 // över 1, och mittelementet om balken knäcks. Returnerar antal brott; vad
-// som gick sönder hamnar i m.brutna ({ el, balk, u, orsak }).
+// som gick sönder hamnar i m.brutna ({ el, balk, u, orsak }). Bitar som
+// lossnat helt (inte sitter ihop med något fäste) går inte sönder mer: de
+// faller, och när de slår i marken skulle de annars smulas sönder.
 function brott(m) {
     montera(m, false);
     utnyttjande(m);
     m.brutna = [];
+    let fast = null;
+    const kvar = e => !e.dod && (fast || (fast = iFastet(m)))[e.i];
     m.balkar.forEach((balk, bi) => {
         let varst = -1;
         for (const i of balk.element) {
             const e = m.element[i];
-            if (!e.dod && e.u > 1 && (varst < 0 || e.u > m.element[varst].u)) varst = i;
+            if (e.u > 1 && (varst < 0 || e.u > m.element[varst].u) && kvar(e)) varst = i;
         }
         let orsak = varst >= 0 ? brottOrsak(m.element[varst], balk) : null, u = varst >= 0 ? m.element[varst].u : 0;
-        if (varst < 0 && balk.uk > 1 && !balk.knackt) {
+        if (varst < 0 && balk.uk > 1 && !balk.knackt && kvar(m.element[balk.element[balk.element.length >> 1]])) {
             balk.knackt = true;
             varst = balk.element[balk.element.length >> 1];
             orsak = 'knäckning';
