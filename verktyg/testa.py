@@ -78,11 +78,14 @@ def skarm(sida, varld):
     return box['x'] + k['ox'] + varld[0] * k['sk'], box['y'] + k['oy'] - varld[1] * k['sk']
 
 
-def dra(sida, fran, till, vanta=290):
-    """Bygger: håller still en kort stund (mer än BYGG_HALL men mindre än
-    HALL_TID; på tom yta börjar balken då, från
-    en knutpunkt direkt) och drar. vanta=0: ett vanligt drag (panorerar på
-    tom yta)."""
+def dra(sida, fran, till, vanta=None):
+    """Bygger: från en knutpunkt direkt, på tom yta efter att ha hållit still
+    en kort stund (mer än BYGG_HALL men mindre än HALL_TID), och drar.
+    vanta=0: ett vanligt drag (panorerar på tom yta)."""
+    if vanta is None:
+        nara = sida.evaluate('''([x, y]) => { const s = BANOR[window.bro.banaNr].rutnat || 1;
+            return window.bro.ritning.noder.some(n => Math.hypot(n.x - x, n.y - y) < 0.95 * s); }''', list(fran))
+        vanta = 0 if nara else 275
     x1, y1 = skarm(sida, fran)
     x2, y2 = skarm(sida, till)
     sida.mouse.move(x1, y1)
@@ -447,6 +450,11 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     bild(sida, bilder, f'{namn}-2-prov')
     hojder.append(info_h())
     kolla(f'{namn}: infotexten har samma höjd hela tiden', len(set(hojder)) == 1, str(hojder))
+    rader = sida.evaluate("""() => [...document.querySelectorAll('#info .rad')].map(r => {
+        const b = r.getBoundingClientRect(); return { y: b.top, text: r.textContent }; })""")
+    if namn == 'staende':
+        kolla(f'{namn}: utnyttjandet står på en rad under budgeten',
+              len(rader) == 3 and 'utnyttjande' in rader[2]['text'] and rader[2]['y'] > rader[1]['y'] + 10, str(rader))
     rubrik = vanta_resultat(sida)
     kolla(f'{namn}: vägen med en stolpe och två snedbalkar ovanpå håller', rubrik.startswith('Bron höll!'), rubrik)
     k = sida.evaluate('() => window.bro.sim.keiws')
@@ -458,8 +466,29 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
           f"ruta {rb['y']:.0f}–{rb['y'] + rb['height']:.0f}, keIWs {fy - fig:.0f}–{fy:.0f}")
     bild(sida, bilder, f'{namn}-3-holl')
 
-    # Den sparade lösningen (fackverk av små balkar).
     sida.click('#ruta [data-v=bygg]')
+    spara = sida.evaluate('() => JSON.stringify(window.bro.ritning)')
+
+    # När vägen når hela vägen mellan brolagren byts typen till balk.
+    sida.evaluate('() => { const f = window.bro.ritning.noder.filter(n => n.fast); window.bro.ritning = { noder: f, balkar: [] }; }')
+    valj(sida, 'vag')
+    dra(sida, (0, 0), (7, 0))
+    halv = sida.evaluate('() => window.bro.ritVag')
+    dra(sida, (7, 0), (14, 0))
+    kolla(f'{namn}: vägen hel mellan lagren byter till balk', halv and not sida.evaluate('() => window.bro.ritVag'))
+    # Något valt och ett tryck på något annat: väljs direkt.
+    hall(sida, (3.5, 0))
+    forsta = sida.evaluate('() => window.bro.vald')
+    tryck(sida, (10.5, 0))
+    kolla(f'{namn}: ett tryck på en annan balk väljer den direkt',
+          forsta == 0 and sida.evaluate('() => window.bro.vald') == 1, str(sida.evaluate('() => window.bro.vald')))
+    tryck(sida, (7, 0))
+    kolla(f'{namn}: och på en knutpunkt väljer den', sida.evaluate('() => window.bro.vald') == -1
+          and sida.evaluate('() => window.bro.valt'))
+    avmarkera(sida)
+    sida.evaluate(f'() => {{ window.bro.ritning = JSON.parse({spara!r}); }}')
+
+    # Den sparade lösningen (fackverk av små balkar).
     sida.evaluate('() => { window.bro.ritning = window.bro.losningsRitning(); }')
     bild(sida, bilder, f'{namn}-4-fackverk')
     sida.click('#verktyg [data-v=kor]')

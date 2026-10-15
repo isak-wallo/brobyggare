@@ -609,3 +609,9 @@ en linje mellan raderna i profilrutan, knappen till den öppna rutan har
 gul ram, och HALL_TID 450 → 350 ms.
 
 v53-test: Bäcken har bara trä (Isak valde bana 1, inte 1–2); stålet kommer på Ån.
+
+v54-test: under provkörningen står bygget/utnyttjandet på en egen rad under budgeten (båda
+lägena). Hålltiden 300 ms. Är något redan valt väljer ett tryck på en annan balk eller
+knutpunkt den direkt. När vägbanan blir hel mellan brolagren byts verktyget till balk.
+Fråga: trä i bredd lönar sig bara vid maxhöjd (I och W växer med h², priset med b·h, ingen
+vippning i 2D).

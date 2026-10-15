@@ -60,10 +60,21 @@ html, body {
     margin-bottom: 2px;
 }
 
+/* Under provkörningen: bygget och utnyttjandet på en rad under kostnaden,
+   utanför infotextens höjd (så att banan står still). */
+#info .rad.under {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+}
+
 @media (orientation: landscape) {
     #info {
         height: 34px;
         overflow: hidden;
+        overflow-x: clip;       /* klipp raden i sidled, men låt raden under synas */
+        overflow-y: visible;
         white-space: nowrap;
     }
 
@@ -71,6 +82,11 @@ html, body {
         display: inline-block;
         margin-right: 14px;
         vertical-align: middle;
+    }
+
+    #info .rad.under {
+        display: block;
+        margin-right: 0;
     }
 }
 
