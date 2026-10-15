@@ -19,6 +19,8 @@
 //           är ett fundament (ritas som betong ner till botten).
 //   vatten: vattenytan, keIWs som hamnar där har misslyckats
 //   torr:   inget vatten, bara marken i dalen (vatten = dalens botten)
+//   botten: en grund botten under vattnet (annars fortsätter kanterna
+//           neråt); keIWs har ändå misslyckats när han når vattnet
 //   budget: i $$ (spelets pengar); man får bygga över, men då blir det
 //           inga stjärnor
 //   keiws:  keIWs höjd i meter (bara utseendet, större på långa banor)
@@ -43,6 +45,7 @@ const BANOR = [
         fasten: [[0, 0, 'fast'], [14, 0, 'glid']],
         kant: 1 / 3,
         vatten: -2,
+        botten: -3,
         budget: 12000,
         keiws: 2,
         keiwsInzoomad: 1.35,

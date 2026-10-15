@@ -78,8 +78,9 @@ def skarm(sida, varld):
     return box['x'] + k['ox'] + varld[0] * k['sk'], box['y'] + k['oy'] - varld[1] * k['sk']
 
 
-def dra(sida, fran, till, vanta=320):
-    """Bygger: håller still en kort stund (på tom yta börjar balken då, från
+def dra(sida, fran, till, vanta=290):
+    """Bygger: håller still en kort stund (mer än BYGG_HALL men mindre än
+    HALL_TID; på tom yta börjar balken då, från
     en knutpunkt direkt) och drar. vanta=0: ett vanligt drag (panorerar på
     tom yta)."""
     x1, y1 = skarm(sida, fran)

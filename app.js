@@ -18,7 +18,7 @@ const START_NARA = 24;       // px: så nära en knutpunkt börjar en ny balk i 
 const RATTA_TID = 2.5;       // s som en ny balks startände går att dra rätt
 const MAX_STEG = 8;          // fysiksteg per bildruta (annars går det långsamt)
 const MAX_ZOOM = 6;          // (om banan inte säger annat)
-const HALL_TID = 450;        // ms: så länge man håller på en balk eller knutpunkt för att välja den (och på Riv)
+const HALL_TID = 350;        // ms: så länge man håller på en balk eller knutpunkt för att välja den (och på Riv)
 const BYGG_PER_BALK = 0.2;   // s per balk när keIWs bygger ...
 const BYGG_MIN = 1.0;        // ... men hela bygget tar minst ...
 const BYGG_MAX = 3.0;        // ... och högst så här länge (s)
@@ -425,6 +425,7 @@ const kr = v => v.toLocaleString('sv-SE') + ' $$';
 const infoLuft = () => infoEl.offsetTop + infoEl.offsetHeight + 4;
 const staende = () => !matchMedia('(orientation: landscape)').matches;
 let luftNu = 0;
+let markYta = [];             // marken på skärmen [X, y, Y] (ritaBakgrund), för vattnet
 
 // Luften ovanför banan: infotexten (panelen ligger under spelytan).
 const beraknaLuft = infoLuft;
@@ -505,6 +506,7 @@ function ritaBakgrund() {
     for (const [X, , Y] of yta) ctx.lineTo(X, Y);
     ctx.lineTo(w + steg, djupt);
     ctx.fill();
+    markYta = yta;
     ctx.strokeStyle = FARG.gras;
     ctx.lineWidth = 0.25 * kam.sk;
     ctx.beginPath();
@@ -521,6 +523,15 @@ function ritaVatten(t) {
     const w = duk.width / dpr, h = duk.height / dpr;
     const y0 = sy(bana.vatten);
     if (bana.torr) return;                // dalens botten är mark
+    ctx.save();
+    if (bana.botten !== undefined) {
+        // Grunt: vattnet bara ovanför marken, så att botten syns.
+        ctx.beginPath();
+        ctx.moveTo(markYta[0][0], -1);
+        for (const [X, , Y] of markYta) ctx.lineTo(X, Y);
+        ctx.lineTo(markYta[markYta.length - 1][0], -1);
+        ctx.clip();
+    }
     ctx.fillStyle = FARG.vatten;
     ctx.beginPath();
     ctx.moveTo(0, h);
@@ -529,6 +540,7 @@ function ritaVatten(t) {
     }
     ctx.lineTo(w, h);
     ctx.fill();
+    ctx.restore();
 }
 
 // Pelarna: betong från botten, med en svart rund topp (glidlagret) som
@@ -1059,8 +1071,7 @@ function visaValjare() {
     valjareEl.classList.toggle('vilar', lageNu !== 'bygg');
     const n = valdKnut(), a = aktuellt();
     valjareEl.classList.toggle('redigerar', !!(a.balk || n));
-    const val = (p, liten, stor, av) => '<button data-p="' + p + '"' + (popup && popup.typ === p ? ' class="oppen"' : '')
-        + (av ? ' disabled' : '') + '><small>' + liten + '</small><b>' + stor + '</b></button>';
+    const val = (p, liten, stor, av) => '<button data-p="' + p + '"' + (av ? ' disabled' : '') + '><small>' + liten + '</small><b>' + stor + '</b></button>';
     let html;
     if (n && n.pelare) {
         html = '<div class="etikett"><small>Pelare</small><b>' + (n.y - bana.pelare.botten) + ' m från botten · '
@@ -1081,6 +1092,7 @@ function visaValjare() {
             + val('profil', 'Profil · ' + kr(p.pris + (a.typ === 'vag' ? VAG.pris : 0)) + '/m', p.namn);
     }
     if (valjareEl.innerHTML !== html) valjareEl.innerHTML = html;
+    markeraAnkare();
 }
 
 // Rutan med val, vid knappen den hör till (ovanför när mobilen står, till
@@ -1119,13 +1131,27 @@ function visaPopup(typ, ankare) {
     } else if (typ === 'banor') {
         html = '<div class="lista">' + BANOR.map((b, i) => {
             const basta = lasBasta(i);
-            return knapp('data-bana="' + i + '"', (i + 1) + ' · ' + b.namn + ' (' + b.spann + ' m)'
-                + (basta ? '<small>✓ ' + kr(basta.kostnad) + '</small>' : ''), i === banaNr);
+            return knapp('data-bana="' + i + '"', '<span class="nr">' + (i + 1) + '</span><span>' + b.namn
+                + ' <small>' + b.spann + ' m</small></span><small>' + (basta ? '✓ ' + kr(basta.kostnad) : '') + '</small>', i === banaNr);
         }).join('') + '</div>';
     }
     popupEl.className = 'popup-' + typ;
     if (popupEl.innerHTML !== html) popupEl.innerHTML = html;
     placeraPopup();
+    markeraAnkare();
+}
+
+// Knappen som rutan hör till syns tydligt (där stänger man den). Utan
+// klasser kvar tas attributet bort, så att panelen inte ritas om i onödan
+// (då försvinner ett tryck på knappen som ersätts).
+function markeraAnkare() {
+    const a = popup && document.querySelector(popup.ankare);
+    for (const b of document.querySelectorAll('button.oppen')) {
+        if (b === a) continue;
+        b.classList.remove('oppen');
+        if (!b.classList.length) b.removeAttribute('class');
+    }
+    if (a) a.classList.add('oppen');
 }
 
 function placeraPopup() {
@@ -1145,6 +1171,7 @@ function stangPopup() {
     if (!popup) return;
     popup = null;
     popupEl.className = 'dold';
+    markeraAnkare();
     visaValjare();
 }
 

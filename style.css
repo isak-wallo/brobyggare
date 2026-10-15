@@ -210,8 +210,20 @@ html, body {
     text-overflow: ellipsis;
 }
 
+/* Knappen som den öppna rutan hör till (tryck igen för att stänga). */
+#valjare button.oppen,
+#valjare.redigerar button.oppen,
+#verktyg button.oppen {
+    box-shadow: inset 0 0 0 3px #e8b062;
+}
+
 #valjare button.oppen {
-    background-color: #5f7687;
+    background-color: #6c8597;
+}
+
+#info button.namn.oppen {
+    background-color: rgba(232, 176, 98, 0.3);
+    box-shadow: inset 0 0 0 2px #e8b062;
 }
 
 /* En vald balk, knutpunkt eller pelare: panelen gäller den. */
@@ -303,6 +315,12 @@ html, body {
     margin-top: 6px;
 }
 
+#popup .rad + .rad {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(242, 244, 245, 0.2);
+}
+
 #popup .rad > span {
     font-size: 12px;
     opacity: 0.8;
@@ -340,12 +358,18 @@ html, body {
     font-size: 13px;
 }
 
+/* Banorna: numret, namnet med spannet och bästa priset i tre kolumner. */
 #popup .lista button {
-    display: flex;
+    display: grid;
+    grid-template-columns: 1.4em minmax(0, 1fr) auto;
     align-items: center;
-    justify-content: center;
     gap: 10px;
     min-height: 34px;
+    text-align: left;
+}
+
+#popup .lista .nr {
+    text-align: right;
 }
 
 #popup .lista small {

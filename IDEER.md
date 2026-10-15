@@ -601,3 +601,9 @@ dimensionerades om och budgetarna höjdes:
   68 000 (55 000), Älven väg IPE 220 228 850 av 240 000 (175 000), Havet
   väg IPE 330 och hängare Ø 14 961 250 av 1 000 000 (820 000).
 - Stålförbanden blev dyra (Älven, IPE 220: ca 2 000 $$ och 160 kg per knut i vägen).
+
+v52-test (Isak 2026-10-15): en rak balk på Bäcken får gärna gå (för att
+komma in i spelet). Bäcken har en grund botten (`botten` i banor.js, 1 m
+vatten). Banlistan i tre kolumner (nummer, namn med spann, bästa pris),
+en linje mellan raderna i profilrutan, knappen till den öppna rutan har
+gul ram, och HALL_TID 450 → 350 ms.

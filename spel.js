@@ -31,8 +31,9 @@ const keiwsFart = bana => 1.8 * keiwsHojd(bana);      // m/s
 
 // Marken: höjden vid x. Utanför spannet är det land (y = 0, eller vatten
 // bortom ön). Vattenbanorna har branta kanter (`kant`: m i sidled per m
-// ner, rundade överst), landbanorna en mjuk dal (`dal`: {djup, bredd}, där
-// kanten går ner som en cosinusvåg över bredden). -Infinity: inget berg.
+// ner, rundade överst, ner till `botten` om banan har en), landbanorna en
+// mjuk dal (`dal`: {djup, bredd}, där kanten går ner som en cosinusvåg över
+// bredden). -Infinity: inget berg.
 function markY(bana, x) {
     const L = bana.spann;
     if (bana.ö && x >= L + bana.ö) return -Infinity;
@@ -44,7 +45,8 @@ function markY(bana, x) {
     }
     const k = bana.kant || 0;          // rundad över den översta halvmetern
     if (k <= 0) return -Infinity;
-    return d <= k ? -d * d / (2 * k * k) : -(d - k / 2) / k;
+    const y = d <= k ? -d * d / (2 * k * k) : -(d - k / 2) / k;
+    return bana.botten === undefined ? y : Math.max(y, bana.botten);
 }
 
 // Hur långt in från kanten marken når på djupet t > 0 (markY baklänges).
@@ -55,6 +57,7 @@ function kantAvstand(bana, t) {
     }
     const k = bana.kant || 0;
     if (k <= 0) return 0;
+    if (bana.botten !== undefined && t >= -bana.botten) return Infinity;
     return t <= 0.5 ? Math.sqrt(2 * k * k * t) : k * t + k / 2;
 }
 
