@@ -575,3 +575,14 @@ fäste bygger direkt; ett drag på tom yta panorerar; håller man still 0,25 s
 på tom yta börjar balken där (en blå prick, det surrar). Nedersta raden är
 Ångra, Riv, Kör i text, i samma rutnät som Material, Typ, Profil (liggande
 lika höga rader). Banlistan: lägre knappar med centrerad text.
+
+## Nästa: balansen (Isak 2026-10-15, pausat medan vi gör GIF:ar)
+
+En rak träbalk på bana 1 blev billigare än ett litet fackverk
+(bärförmågan växer med höjden², priset bara med höjden). Beslutat, alla tre:
+- keIWs väger 500 kg (i dag 100 kg, ca 3 % av lasten mot vägens 200 kg/m).
+  Bilen (Älven, Havet) höjs i samma takt, t.ex. 2,5 ton; LEKMAN-texten
+  ("tio gånger så mycket") och banornas budgetar och lösningar ses över.
+- Förbanden kostar efter den största balken i knuten (plåtar, dymlingar).
+- Höga limträ dyrare per m³ över ca 405 mm: större maskiner och verktyg för
+  att tillverka och hantera dem.
