@@ -212,6 +212,7 @@ function bytBana(nr) {
     banaNr = nr;
     bana = BANOR[nr];
     ritning = lasRitning();
+    ritVag = !vagenHel();
     historik = [];
     drag = flytt = null;
     vald = -1; valdNod = null;
@@ -322,7 +323,8 @@ function laggTillBalk(p, q) {
     const L = Math.hypot(q[0] - p[0], q[1] - p[1]);
     if (L < 1e-6 || L > maxLangd(ritKabel) + 1e-6 || genomFarleden(p, q)) return false;
     // Blev vägen hel med den här balken byts typen till balk (det man oftast
-    // bygger sedan); väljer man väg igen får man fortsätta med väg.
+    // bygger sedan; likaså när banan laddas, och efter Ångra); väljer man väg
+    // igen får man fortsätta med väg.
     const vag = ritVag && !ritKabel, varHel = vag && vagenHel();
     andra(() => {
         const idx = ([x, y]) => {
@@ -1521,6 +1523,7 @@ menyEl.addEventListener('click', e => {
         if (basta) {
             if (lageNu !== 'bygg') bygg(false);
             andra(() => { ritning = uppgradera(JSON.parse(JSON.stringify(basta.ritning))); vald = -1; valdNod = null; });
+            ritVag = !vagenHel();
         }
     }
     stangMeny();
@@ -1606,7 +1609,10 @@ verktygEl.addEventListener('click', e => {
     rivHall = null;
     stangPopup();
     if (v === 'riv') rivValt();
-    else if (v === 'angra' && historik.length) { ritning = uppgradera(JSON.parse(historik.pop())); vald = -1; valdNod = null; ratta = null; sparaRitning(); }
+    else if (v === 'angra' && historik.length) {
+        ritning = uppgradera(JSON.parse(historik.pop())); vald = -1; valdNod = null; ratta = null; sparaRitning();
+        if (vagenHel()) ritVag = false;
+    }
     else if (v === 'kor') { if (lageNu === 'bygg') kor(); else bygg(); }
     uppdateraInfo();
 });
@@ -1638,6 +1644,7 @@ popupEl.addEventListener('click', e => {
     if (d.v === 'rivallt') {
         andra(() => { ritning = nyRitning(bana); });     // går att ångra
         vald = -1; valdNod = null;
+        ritVag = true; ritKabel = ritPelare = false;
         stangPopup();
         uppdateraInfo();
         return;
@@ -2030,6 +2037,8 @@ function loop(nu) {
 
 new ResizeObserver(anpassa).observe(scen);
 lasHistorik();
+// Finns vägen redan hela vägen bygger man balkar.
+ritVag = !vagenHel();
 anpassa();
 uppdateraInfo();
 requestAnimationFrame(loop);

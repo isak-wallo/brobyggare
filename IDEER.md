@@ -627,3 +627,8 @@ still när rutan öppnas, men det syns mer mark under.
 v57-test: med en balk vald och rutan för material, typ eller profil öppen väljer ett tryck
 på en annan balk den direkt, och rutan står kvar (nu för den balken). Tryck på tom yta eller
 en knutpunkt stänger rutan som förut.
+
+v58-test: bytet till balk gällde bara när vägen blev hel, inte om den redan var det när
+sidan eller banan laddades (Isak byggde fortfarande väg i fackverket). Nu: Väg om vägen inte
+är hel och annars Balk när sidan laddas, vid byte av bana och Hämta bästa; Balk efter Ångra
+om vägen är hel; Väg efter Riv allt.

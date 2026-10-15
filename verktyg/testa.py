@@ -485,6 +485,11 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     halv = sida.evaluate('() => window.bro.ritVag')
     dra(sida, (7, 0), (14, 0))
     kolla(f'{namn}: vägen hel mellan lagren byter till balk', halv and not sida.evaluate('() => window.bro.ritVag'))
+    valj(sida, 'vag')
+    sida.reload()
+    sida.wait_for_function('() => window.bro')
+    kolla(f'{namn}: med hel väg börjar man med balk efter omladdning', not sida.evaluate('() => window.bro.ritVag')
+          and 'Balk' in panel('typ'))
     # Något valt och ett tryck på något annat: väljs direkt.
     hall(sida, (3.5, 0))
     forsta = sida.evaluate('() => window.bro.vald')
