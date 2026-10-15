@@ -623,3 +623,7 @@ gamla ritningar blir bredare. Isak valde slankhetskravet framför dyrare höga b
 v56-test: stående ligger banan så högt att profilrutan (den högsta rutan, mätt i en osynlig
 kopia: stålets HEA eller trä) får plats under den; resten av luften blir himmel. Banan står
 still när rutan öppnas, men det syns mer mark under.
+
+v57-test: med en balk vald och rutan för material, typ eller profil öppen väljer ett tryck
+på en annan balk den direkt, och rutan står kvar (nu för den balken). Tryck på tom yta eller
+en knutpunkt stänger rutan som förut.

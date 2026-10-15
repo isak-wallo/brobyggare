@@ -491,6 +491,11 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     tryck(sida, (10.5, 0))
     kolla(f'{namn}: ett tryck på en annan balk väljer den direkt',
           forsta == 0 and sida.evaluate('() => window.bro.vald') == 1, str(sida.evaluate('() => window.bro.vald')))
+    sida.click('#valjare [data-p=profil]')
+    tryck(sida, (3.5, 0))
+    kolla(f'{namn}: med profilrutan öppen väljer ett tryck en annan balk, rutan står kvar',
+          sida.evaluate('() => window.bro.vald') == 0 and sida.evaluate('() => window.bro.popup') == 'profil')
+    sida.click('#valjare [data-p=profil]')
     tryck(sida, (7, 0))
     kolla(f'{namn}: och på en knutpunkt väljer den', sida.evaluate('() => window.bro.vald') == -1
           and sida.evaluate('() => window.bro.valt'))

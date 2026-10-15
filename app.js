@@ -503,6 +503,17 @@ const iDuken = e => {
     const r = duk.getBoundingClientRect();
     return [e.clientX - r.left, e.clientY - r.top];
 };
+// Det man trycker på för att välja: en pelare, en knutpunkt (inte fästena)
+// eller en balk ({ nod } eller { balk: index }), annars null.
+function traffat(wx, wy, nara = Math.max(0.45, 22 / kam.sk)) {
+    const pel = ritning.noder.find(n => n.pelare && Math.hypot(wx - n.x, wy - n.y) < nara * 0.8);
+    if (pel) return { nod: pel };
+    const nod = narmasteNod(wx, wy, nara * 0.8);
+    if (nod >= 0) return { nod: ritning.noder[nod] };
+    const balk = narmasteBalk(wx, wy, Math.max(0.4, 16 / kam.sk));
+    return balk >= 0 ? { balk } : null;
+}
+
 const tillVarld = e => {
     const [px, py] = iDuken(e);
     return [(px - kam.ox) / kam.sk, (kam.oy - py) / kam.sk];
@@ -1689,12 +1700,17 @@ infoEl.addEventListener('click', e => {
 });
 
 // Ett tryck utanför rutan med val stänger den (och gör inget mer på spelytan).
+// Är en balk vald och rutan gäller den (material, typ, profil) väljer ett
+// tryck på en annan balk den i stället, och rutan står kvar för den.
 let stangdeRutan = false;
 document.addEventListener('pointerdown', e => {
     stangdeRutan = false;
     if (popup && !e.target.closest('#popup') && !e.target.closest(popup.ankare)) {
-        stangPopup();
         stangdeRutan = !!e.target.closest('#duk');
+        const t = stangdeRutan && lageNu === 'bygg' && !pekare.size && valdBalken()
+            && ['material', 'typ', 'profil'].includes(popup.typ) && traffat(...tillVarld(e));
+        if (t && t.balk >= 0 && t.balk !== vald) { vald = t.balk; uppdateraInfo(); return; }
+        stangPopup();
     }
 }, true);
 
@@ -1850,11 +1866,8 @@ duk.addEventListener('pointerdown', e => {
     // Det man håller på väljs efter en stund: en pelare, en knutpunkt (inte
     // fästena) eller en balk.
     slappHall();
-    const pel = ritning.noder.find(n => n.pelare && Math.hypot(wx - n.x, wy - n.y) < nara * 0.8);
-    const nod = narmasteNod(wx, wy, nara * 0.8);
-    const balk = pel || nod >= 0 ? -1 : narmasteBalk(wx, wy, Math.max(0.4, 16 / kam.sk));
-    if (pel || nod >= 0 || balk >= 0) {
-        hall = pel ? { nod: pel } : nod >= 0 ? { nod: ritning.noder[nod] } : { balk };
+    hall = traffat(wx, wy, nara);
+    if (hall) {
         hall.p = iDuken(e);
         // Var något annat valt väljs det här direkt med ett tryck.
         hall.direkt = avmarkera && (hall.nod ? hall.nod !== valdN : ritning.balkar[hall.balk] !== valdB);
