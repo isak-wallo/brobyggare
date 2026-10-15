@@ -632,3 +632,8 @@ v58-test: bytet till balk gällde bara när vägen blev hel, inte om den redan v
 sidan eller banan laddades (Isak byggde fortfarande väg i fackverket). Nu: Väg om vägen inte
 är hel och annars Balk när sidan laddas, vid byte av bana och Hämta bästa; Balk efter Ångra
 om vägen är hel; Väg efter Riv allt.
+
+v59-test: Ån omgjord: 26 m, bara trä, vatten 5–9 m djupt i en skål (ingen kant som fortsätter
+under land), fästen 3 m ner i slänterna, budget 26 000 (lösningen 24 480). Bäcken och Ån har
+ojämn mark (`profil`: punkter, mjukt emellan med monoton kubisk interpolation; markY,
+kantAvstand per sida). Sparat på Ån kastas (ordning 4).

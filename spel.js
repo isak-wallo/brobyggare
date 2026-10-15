@@ -33,11 +33,13 @@ const keiwsFart = bana => 1.8 * keiwsHojd(bana);      // m/s
 // bortom ön). Vattenbanorna har branta kanter (`kant`: m i sidled per m
 // ner, rundade överst, ner till `botten` om banan har en), landbanorna en
 // mjuk dal (`dal`: {djup, bredd}, där kanten går ner som en cosinusvåg över
-// bredden). -Infinity: inget berg.
+// bredden). Banor med `profil` har en ojämn mark ritad punkt för punkt
+// (profilY). -Infinity: inget berg.
 function markY(bana, x) {
     const L = bana.spann;
     if (bana.ö && x >= L + bana.ö) return -Infinity;
     if (x <= 0 || x >= L) return 0;
+    if (bana.profil) return profilY(bana, x);
     const d = Math.min(x, L - x);
     if (bana.dal) {
         const { djup, bredd } = bana.dal;
@@ -49,8 +51,36 @@ function markY(bana, x) {
     return bana.botten === undefined ? y : Math.max(y, bana.botten);
 }
 
-// Hur långt in från kanten marken når på djupet t > 0 (markY baklänges).
-function kantAvstand(bana, t) {
+// Profilen: punkterna [x, y] från vänstra kanten (0, 0) till den högra
+// (spann, 0), mjukt emellan (kubisk, monoton mellan punkterna så att inget
+// sticker ut, vågrät vid kanterna så att de blir rundade).
+function profilY(bana, x) {
+    const p = bana.profil, n = p.length;
+    if (!bana.profilLutning) {
+        const d = p.slice(1).map((q, i) => (q[1] - p[i][1]) / (q[0] - p[i][0]));
+        bana.profilLutning = p.map((q, i) => i === 0 || i === n - 1 || d[i - 1] * d[i] <= 0 ? 0
+            : 2 / (1 / d[i - 1] + 1 / d[i]));
+    }
+    const m = bana.profilLutning;
+    let i = 0, j = n - 1;
+    while (j - i > 1) { const k = (i + j) >> 1; if (p[k][0] <= x) i = k; else j = k; }
+    const h = p[j][0] - p[i][0], s = (x - p[i][0]) / h;
+    const h00 = (1 + 2 * s) * (1 - s) ** 2, h10 = s * (1 - s) ** 2, h01 = s * s * (3 - 2 * s), h11 = s * s * (s - 1);
+    return h00 * p[i][1] + h10 * h * m[i] + h01 * p[j][1] + h11 * h * m[j];
+}
+
+// Hur långt in från kanten (den högra med hoger) marken når på djupet t > 0
+// (markY baklänges); Infinity under botten.
+function kantAvstand(bana, t, hoger = false) {
+    if (bana.profil) {
+        const L = bana.spann, X = d => hoger ? L - d : d;
+        let d = 0;
+        while (d < L && markY(bana, X(d)) >= -t) d += 0.05;
+        if (d >= L) return Infinity;
+        let a = Math.max(0, d - 0.05), b = d;
+        for (let k = 0; k < 20; k++) { const c = (a + b) / 2; if (markY(bana, X(c)) >= -t) a = c; else b = c; }
+        return b;
+    }
     if (bana.dal) {
         const { djup, bredd } = bana.dal;
         return t >= djup ? Infinity : bredd / Math.PI * Math.acos(1 - 2 * t / djup);
@@ -170,7 +200,7 @@ function berget(sim) {
         if (y >= g) continue;
         const ix = 2 * p, iy = 2 * p + 1;
         // I sidled: ut till kanten på samma höjd (mot spannets mitt).
-        const a = y < 0 ? kantAvstand(b, -y) : 0, mot = x < L / 2 ? 1 : -1;
+        const a = y < 0 ? kantAvstand(b, -y, x > L / 2) : 0, mot = x < L / 2 ? 1 : -1;
         const sida = Math.max(0, x < L / 2 ? a - x : x - (L - a));
         if (g - y <= sida) {
             m.q[iy] += g - y; m.v[iy] = Math.max(0, m.v[iy]); m.a[iy] = 0;

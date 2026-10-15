@@ -9,7 +9,7 @@
 //           överst); dal: {djup, bredd} för landbanornas mjuka dal (se
 //           markY i spel.js)
 //   material: vilka material som finns (trä och stål om det saknas);
-//           Bäcken har bara trä, betongen och kablarna kommer på Älven
+//           Bäcken och Ån har bara trä, betongen och kablarna kommer på Älven
 //   fasten: fästpunkterna i berget [x, y] eller [x, y, lager]. Vägbanans
 //           fästen är brolager (alltid ledade): 'fast' låser x och y,
 //           'glid' bara y (rör sig fritt i sidled, som på riktiga broar,
@@ -21,6 +21,9 @@
 //   torr:   inget vatten, bara marken i dalen (vatten = dalens botten)
 //   botten: en grund botten under vattnet (annars fortsätter kanterna
 //           neråt); keIWs har ändå misslyckats när han når vattnet
+//   profil: i stället för kant och botten: marken som punkter [x, y] från
+//           (0, 0) till (spann, 0), ojämna kanter och botten (mjukt
+//           emellan, se profilY i spel.js)
 //   budget: i $$ (spelets pengar); man får bygga över, men då blir det
 //           inga stjärnor
 //   keiws:  keIWs höjd i meter (bara utseendet, större på långa banor)
@@ -40,19 +43,21 @@ const BANOR = [
         namn: 'Bäcken',
         // 14 m: längre än en balk (12 m), så man måste skarva. Bara trä.
         // En rak balk måste vara grov (90×450) och går ändå (stålet, som
-        // kommer på Ån, skulle behöva HEA 200 och gå över budget); ett litet
+        // kommer på Ravinen, skulle behöva HEA 200 och gå över budget); ett litet
         // fackverk är billigast.
         spann: 14,
         material: ['limtra'],
         fasten: [[0, 0, 'fast'], [14, 0, 'glid']],
-        kant: 1 / 3,
+        // Branta kanter, en grund botten som går lite upp och ner.
+        profil: [[0, 0], [0.25, -0.35], [0.5, -1.05], [0.75, -1.85], [1.25, -2.55], [2.2, -2.95], [4, -3.15],
+                 [6, -2.95], [7.6, -3.3], [9.6, -3.1], [11.4, -2.9], [12.4, -2.55], [13.0, -1.75],
+                 [13.45, -0.9], [13.75, -0.3], [14, 0]],
         vatten: -2,
-        botten: -3,
         budget: 12000,
         keiws: 2,
         keiwsInzoomad: 1.35,
         omrade: { x0: -3, x1: 17, y0: -1, y1: 7 },
-        vy: { x0: -4, x1: 18, y0: -3, y1: 7.5 },
+        vy: { x0: -4, x1: 18, y0: -3.5, y1: 7.5 },
         losning: {
             // Väg 2 (56×215) med ett fackverk av 1 (56×180) ovanpå, 2 m högt (10 830 $$).
             noder: [
@@ -65,22 +70,28 @@ const BANOR = [
         }
     },
     {
-        // Som Bäcken, men dubbelt så långt spann.
+        // Ett bredare och djupare vatten (5–9 m), också bara trä. Ett fäste
+        // 3 m ner i vardera slänten.
         namn: 'Ån',
-        spann: 24,
-        fasten: [[0, 0, 'fast'], [1, -3], [24, 0, 'glid'], [23, -3]],
-        kant: 1 / 3,
-        vatten: -6,
+        spann: 26,
+        material: ['limtra'],
+        fasten: [[0, 0, 'fast'], [1, -3], [26, 0, 'glid'], [25, -3]],
+        profil: [[0, 0], [0.3, -0.4], [0.7, -1.5], [0.9, -2.4], [1.15, -3], [1.6, -4.2], [1.9, -5.5], [2.6, -6.8],
+                 [3.2, -8.2], [4.5, -9.4], [6, -10.3], [8, -11.4], [10.5, -12.2], [13, -12.8], [15.5, -12.4],
+                 [17.5, -11.6], [19.5, -10.9], [21.5, -9.8], [23, -8.6], [23.8, -7.2], [24.2, -5.8], [24.55, -4.3],
+                 [24.85, -3], [25.15, -2], [25.45, -1], [25.75, -0.35], [26, 0]],
+        vatten: -4,
         budget: 26000,
         keiws: 3.5,
-        omrade: { x0: -3, x1: 27, y0: -5, y1: 9 },
-        vy: { x0: -7, x1: 31, y0: -6.5, y1: 9.5 },
+        omrade: { x0: -3, x1: 29, y0: -4, y1: 9 },
+        vy: { x0: -7, x1: 33, y0: -13.5, y1: 9.5 },
         losning: {
-            // Fackverk av 1 (56×180): väg överst, underram 3 m ner (22 650 $$).
-            noder: [[0, 0], [1, -3], [24, 0], [23, -3], [4, 0], [8, 0], [12, 0], [16, 0], [20, 0],
-                    [4, -3], [8, -3], [12, -3], [16, -3], [20, -3]],
+            // Fackverk: väg 2 (56×215) överst, resten 1 (56×180), underram
+            // 3 m ner mellan fästena (24 480 $$).
+            noder: [[0, 0], [1, -3], [26, 0], [25, -3], [4, 0], [8, 0], [13, 0], [18, 0], [22, 0],
+                    [4, -3], [8, -3], [13, -3], [18, -3], [22, -3]],
             balkar: [
-                [0, 4, 0, true], [4, 5, 0, true], [5, 6, 0, true], [6, 7, 0, true], [7, 8, 0, true], [8, 2, 0, true],
+                [0, 4, 1, true], [4, 5, 1, true], [5, 6, 1, true], [6, 7, 1, true], [7, 8, 1, true], [8, 2, 1, true],
                 [1, 9, 0], [9, 10, 0], [10, 11, 0], [11, 12, 0], [12, 13, 0], [13, 3, 0],
                 [4, 9, 0], [5, 10, 0], [6, 11, 0], [7, 12, 0], [8, 13, 0],
                 [1, 4, 0], [9, 5, 0], [10, 6, 0], [6, 12, 0], [7, 13, 0], [8, 3, 0]

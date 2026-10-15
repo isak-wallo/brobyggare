@@ -85,24 +85,29 @@ let laddaOmSen = false;       // ny version finns: ladda om när det passar
 // man var på.
 // Förut sparades allt per banans nummer, i två olika ordningar (före och
 // efter v37). Nu per namn, så att banorna kan byta plats. Dalgången
-// ritades om helt (v39): det som sparats där kastas.
+// ritades om helt (v39), och Ån (v59, 26 m): det som sparats där kastas.
 function flyttaSparat() {
     try {
         const ordning = localStorage.getItem('brobyggare-ordning');
-        if (ordning === '3') return;
+        if (ordning === '4') return;
+        if (ordning === '3') {
+            for (const nyckel of [SPARA, SPARA_BASTA]) localStorage.removeItem(nyckel + 'Ån');
+            localStorage.setItem('brobyggare-ordning', '4');
+            return;
+        }
         const forr = ordning === '2' ? ['Bäcken', 'Ån', 'Dalgången', 'Kanalen', 'Älven', 'Havet']
             : ['Bäcken', 'Ån', 'Kanalen', 'Dalgången', 'Älven', 'Havet'];
         for (const nyckel of [SPARA, SPARA_BASTA]) {
             forr.forEach((namn, nr) => {
                 const v = localStorage.getItem(nyckel + nr);
                 localStorage.removeItem(nyckel + nr);
-                if (v !== null && namn !== 'Dalgången') localStorage.setItem(nyckel + namn, v);
+                if (v !== null && namn !== 'Dalgången' && namn !== 'Ån') localStorage.setItem(nyckel + namn, v);
             });
         }
         const nr = localStorage.getItem(SPARA_BANA);
         if (nr !== null && forr[nr]) localStorage.setItem(SPARA_BANA, forr[nr]);
         sessionStorage.removeItem(SPARA_HISTORIK);
-        localStorage.setItem('brobyggare-ordning', '3');
+        localStorage.setItem('brobyggare-ordning', '4');
     } catch (e) { /* privat läge */ }
 }
 
@@ -560,8 +565,8 @@ function ritaVatten(t) {
     const y0 = sy(bana.vatten);
     if (bana.torr) return;                // dalens botten är mark
     ctx.save();
-    if (bana.botten !== undefined) {
-        // Grunt: vattnet bara ovanför marken, så att botten syns.
+    if (bana.botten !== undefined || bana.profil) {
+        // Med botten: vattnet bara ovanför marken, så att botten syns.
         ctx.beginPath();
         ctx.moveTo(markYta[0][0], -1);
         for (const [X, , Y] of markYta) ctx.lineTo(X, Y);
@@ -609,7 +614,7 @@ function ritaFundament() {
     for (const [x, y] of bana.fasten) {
         if (x <= 0 || x >= bana.spann) continue;
         const b = Math.max(10, 3 * rutnat() / 2 * kam.sk), X = sx(x), Y = sy(y);
-        const botten = bana.torr ? sy(y - 1.5 * rutnat()) : botten0;
+        const botten = bana.torr || bana.profil ? sy(y - 1.5 * rutnat()) : botten0;
         ctx.fillStyle = FARG.betong;
         ctx.fillRect(X - b / 2, Y, b, botten - Y);
         ctx.fillStyle = FARG.betongMork;

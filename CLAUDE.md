@@ -26,7 +26,7 @@ Idéer och beslut i `IDEER.md` (läs den först).
 - `fysik.js` – FE-lösaren: korotationella Euler–Bernoulli-element, Newmark
   + Newton–Raphson, bandad Cholesky med Cuthill–McKee, brott (spänning,
   skjuvning, Euler-knäckning). SI-enheter, y uppåt.
-- `banor.js` – banorna (spann, fästpunkter, marken (`kant`/`dal`), budget, en sparad lösning).
+- `banor.js` – banorna (spann, fästpunkter, marken (`kant`/`dal`, eller `profil`: ojämn mark punkt för punkt), budget, en sparad lösning).
 - `spel.js` – provkörningen utan ritning: keIWs som rörlig last, faller
   utan vägbana, marken (`markY`) stoppar fallande bitar. Testerna kör den i node.
 - `app.js` – ritning, verktyg, bygga med fingret, kamera och layout
