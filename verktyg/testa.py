@@ -322,7 +322,7 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     sida.click('#valjare [data-p=material]')
     mat = sida.locator('#popup [data-m]').count(), sida.locator('#popup [data-m=stal]').count()
     sida.click('#valjare [data-p=typ]')
-    kolla(f'{namn}: trä och stål på Bäcken, ingen kabel', mat == (2, 1) and sida.evaluate('() => window.bro.popup') == 'typ'
+    kolla(f'{namn}: bara trä på Bäcken, ingen kabel', mat == (1, 0) and sida.evaluate('() => window.bro.popup') == 'typ'
           and sida.locator('#popup [data-t=kabel]').count() == 0 and sida.locator('#popup [data-t=pelare]').count() == 0)
     sida.click('#valjare [data-p=typ]')
     kolla(f'{namn}: rubriken har spannet', 'Bäcken (14 m)' in sida.inner_text('#info'))

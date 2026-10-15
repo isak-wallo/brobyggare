@@ -607,3 +607,5 @@ komma in i spelet). Bäcken har en grund botten (`botten` i banor.js, 1 m
 vatten). Banlistan i tre kolumner (nummer, namn med spann, bästa pris),
 en linje mellan raderna i profilrutan, knappen till den öppna rutan har
 gul ram, och HALL_TID 450 → 350 ms.
+
+v53-test: Bäcken har bara trä (Isak valde bana 1, inte 1–2); stålet kommer på Ån.

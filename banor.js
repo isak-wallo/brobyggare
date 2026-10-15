@@ -9,7 +9,7 @@
 //           överst); dal: {djup, bredd} för landbanornas mjuka dal (se
 //           markY i spel.js)
 //   material: vilka material som finns (trä och stål om det saknas);
-//           betongen och kablarna kommer på Älven
+//           Bäcken har bara trä, betongen och kablarna kommer på Älven
 //   fasten: fästpunkterna i berget [x, y] eller [x, y, lager]. Vägbanans
 //           fästen är brolager (alltid ledade): 'fast' låser x och y,
 //           'glid' bara y (rör sig fritt i sidled, som på riktiga broar,
@@ -38,10 +38,12 @@
 const BANOR = [
     {
         namn: 'Bäcken',
-        // 14 m: längre än en balk (12 m), så man måste skarva. En rak balk
-        // måste vara av grovt trä (90×450) eller stål (HEA 200, över
-        // budget); ett litet fackverk av trä är billigast.
+        // 14 m: längre än en balk (12 m), så man måste skarva. Bara trä.
+        // En rak balk måste vara grov (90×450) och går ändå (stålet, som
+        // kommer på Ån, skulle behöva HEA 200 och gå över budget); ett litet
+        // fackverk är billigast.
         spann: 14,
+        material: ['limtra'],
         fasten: [[0, 0, 'fast'], [14, 0, 'glid']],
         kant: 1 / 3,
         vatten: -2,
