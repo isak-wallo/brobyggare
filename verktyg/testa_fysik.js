@@ -160,6 +160,24 @@ const mat = MATERIAL.limtra;
     kolla('spänd kabel i drag', Nd > 0.95 * P, (Nd / P * 100).toFixed(1) + ' % av lasten');
 }
 
+// Isaks bro över Ån (v60): när strävorna knäcktes blev styvheten indefinit
+// och bitarna flög iväg (miljontals m/s). Inget ska röra sig orimligt fort.
+{
+    const nySim = S('nySim'), simSteg = S('simSteg'), bana = S('BANOR').find(b => b.namn === 'Ån');
+    const n = (x, y, lager) => ({ x, y, fast: !!lager || y < 0, styv: false, ...(lager && lager !== true ? { lager } : {}) });
+    const ritning = { version: 7, noder: [n(0, 0, 'fast'), n(1, -3, true), n(26, 0, 'glid'), n(25, -3, true), n(9, 0), n(17, 0)],
+        balkar: [[0, 4, '56×315', true], [5, 2, '56×315', true], [5, 4, '56×315', true], [1, 4, '42×225'], [3, 5, '42×225']]
+            .map(([a, b, storlek, vag]) => ({ a, b, storlek, vag: !!vag, material: 'limtra' })) };
+    const sim = nySim(ritning, bana);
+    let vmax = 0;
+    while (!sim.resultat && sim.t < 12) {
+        simSteg(sim);
+        for (let p = 0; p < sim.m.np; p++) vmax = Math.max(vmax, Math.hypot(sim.m.v[2 * p], sim.m.v[2 * p + 1]));
+    }
+    kolla('en bro som rasar: bitarna faller, flyger inte', sim.brott > 0 && sim.resultat === 'vatten' && vmax < 40,
+          'brott ' + sim.brott + ', högsta fart ' + vmax.toFixed(1) + ' m/s');
+}
+
 require(path.join(__dirname, 'testa_banor.js'))(S, kolla);
 
 console.log(fel ? fel + ' FEL' : 'Allt OK');

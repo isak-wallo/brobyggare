@@ -641,3 +641,12 @@ kantAvstand per sida). Sparat på Ån kastas (ordning 4).
 v60-test: största zoom lika på alla banor: skärmens kortaste sida visar 10 m (NARMAST; minst 3
 rutor, Älven 15 m, Havet 30 m), samma pixlar per meter stående och liggande. Isak tyckte 10 m
 i bredd stående var lagom. Banornas maxZoom borttaget.
+
+v61-test: Förlopp efter Plask: knappen Förlopp i resultatrutan, sedan brott för brott (‹ ›,
+Klar). Bron visas som den var vid brottet, det som gick sönder rött och inringat, med orsak
+(drag, tryck, böjning, skjuvning, knäckning) och utnyttjande; ett tryck på en balk visar dess
+utnyttjande just då. Sparas i sim.forlopp (forloppBild, högst 40). Rutan ligger nedtill
+(stående) eller upptill (liggande).
+Bitar som flög iväg när bron rasade (Isaks bro över Ån): knäckta strävor gjorde
+Newtonmatrisen indefinit och Cholesky gav skräp. Nu förstoras diagonalen tills den går att
+faktorisera (bara vägen dit ändras), och ett Newtonsteg flyttar högst MAX_DU = 0,2 m.

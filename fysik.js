@@ -23,6 +23,7 @@ const NEWMARK_GAMMA = 0.6;    // > 1/2 dämpar bort de högsta frekvenserna
 const DAMPNING = 0.4;         // 1/s, massproportionell dämpning
 const MAX_ITER = 8;
 const TOL = 1e-7;             // m, Newton är klar när ändringen är mindre
+const MAX_DU = 0.2;           // m (och rad), längsta Newtonsteget i ett tidssteg
 const SLAK = 1e-6;            // en slak kabel (i tryck) har så här lite av sin styvhet kvar
 
 // Ritningen → en beräkningsmodell.
@@ -306,26 +307,42 @@ function steg(m, dt) {
             v[d] = vn[d] + dt * ((1 - NEWMARK_GAMMA) * an[d] + NEWMARK_GAMMA * a[d]);
         }
     };
-    let iter = 0;
-    while (iter < MAX_ITER) {
-        iter++;
-        uppdatera();
+    // Styvheten med massan (och skift gånger diagonalen).
+    const bygg = skift => {
         montera(m, true);
         for (let d = 0; d < ntot; d++) {
             const p = eq[d];
             if (p < 0) continue;
             m.R[p] = yttre(m, d, m.tyngd, 1) - m.fint[d] - massa[d] * (a[d] + DAMPNING * v[d]);
-            m.K[p * w + m.band] += massa[d] * (c1 + kv);
+            m.K[p * w + m.band] = (m.K[p * w + m.band] + massa[d] * (c1 + kv)) * (1 + skift);
         }
-        if (!cholesky(m.K, m.neq, m.band)) m.indefinit = true;
+    };
+    let iter = 0;
+    while (iter < MAX_ITER) {
+        iter++;
+        uppdatera();
+        // En knäckt eller hoptryckt bit kan göra styvheten indefinit (negativ
+        // geometrisk styvhet): då en större diagonal i Newtonmatrisen (bara
+        // vägen dit ändras, inte jämvikten), annars flyger bitarna iväg.
+        let skift = 0;
+        bygg(0);
+        while (!cholesky(m.K, m.neq, m.band) && skift < 1e3) {
+            m.indefinit = true;
+            skift = skift ? skift * 10 : 0.1;
+            bygg(skift);
+        }
         m.du.set(m.R);
         cholLos(m.K, m.neq, m.band, m.du);
         let max = 0;
+        for (let p = 0; p < m.neq; p++) max = Math.max(max, Math.abs(m.du[p]));
+        // Inget enskilt Newtonsteg flyttar något mer än MAX_DU.
+        const f = max > MAX_DU ? MAX_DU / max : 1;
+        max = 0;
         for (let d = 0; d < ntot; d++) {
             const p = eq[d];
             if (p < 0) continue;
-            q[d] += m.du[p];
-            if (d < 2 * m.np) max = Math.max(max, Math.abs(m.du[p]));
+            q[d] += f * m.du[p];
+            if (d < 2 * m.np) max = Math.max(max, Math.abs(f * m.du[p]));
         }
         if (max < TOL) break;
     }
@@ -414,6 +431,18 @@ const BROTT = {
     vajer: (N, M, V, p, mat) => Math.max(0, N) / (p.A * mat.fu)
 };
 
+// Vad som tog ut elementet mest: 'drag', 'tryck', 'böjning' eller 'skjuvning'.
+function brottOrsak(e, balk) {
+    const p = balk.prof, mat = balk.mat, M = Math.max(Math.abs(e.M1), Math.abs(e.M2));
+    if (mat.typ === 'vajer') return 'drag';
+    const stal = mat.typ === 'stal';
+    const n = Math.abs(e.N) / (p.A * (stal ? mat.fy : e.N >= 0 ? mat.ft : mat.fc));
+    const b = M / (p.W * (stal ? mat.fy : mat.fm));
+    const v = stal ? Math.abs(e.V) / (p.Av * mat.fv) : 1.5 * Math.abs(e.V) / (p.A * mat.fv);
+    if (v > n + b) return 'skjuvning';
+    return b >= n ? 'böjning' : e.N >= 0 ? 'drag' : 'tryck';
+}
+
 // Utnyttjandegraden i varje element och knäckning i varje balk (efter
 // montera, så att N och M är aktuella).
 //   element: BROTT efter materialet (trä: drag/tryck N/(A·f) + böjning
@@ -430,22 +459,29 @@ function utnyttjande(m) {
 }
 
 // Tar bort det som går sönder: i varje balk det värst utnyttjade elementet
-// över 1, och mittelementet om balken knäcks. Returnerar antal brott.
+// över 1, och mittelementet om balken knäcks. Returnerar antal brott; vad
+// som gick sönder hamnar i m.brutna ({ el, balk, u, orsak }).
 function brott(m) {
     montera(m, false);
     utnyttjande(m);
-    let antal = 0;
-    for (const balk of m.balkar) {
-        let varst = null;
+    m.brutna = [];
+    m.balkar.forEach((balk, bi) => {
+        let varst = -1;
         for (const i of balk.element) {
             const e = m.element[i];
-            if (!e.dod && e.u > 1 && (!varst || e.u > varst.u)) varst = e;
+            if (!e.dod && e.u > 1 && (varst < 0 || e.u > m.element[varst].u)) varst = i;
         }
-        if (!varst && balk.uk > 1 && !balk.knackt) {
+        let orsak = varst >= 0 ? brottOrsak(m.element[varst], balk) : null, u = varst >= 0 ? m.element[varst].u : 0;
+        if (varst < 0 && balk.uk > 1 && !balk.knackt) {
             balk.knackt = true;
-            varst = m.element[balk.element[balk.element.length >> 1]];
+            varst = balk.element[balk.element.length >> 1];
+            orsak = 'knäckning';
+            u = balk.uk;
         }
-        if (varst && !varst.dod) { varst.dod = true; antal++; }
-    }
-    return antal;
+        if (varst >= 0 && !m.element[varst].dod) {
+            m.element[varst].dod = true;
+            m.brutna.push({ el: varst, balk: bi, u, orsak });
+        }
+    });
+    return m.brutna.length;
 }

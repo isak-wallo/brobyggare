@@ -25,10 +25,12 @@ Idéer och beslut i `IDEER.md` (läs den först).
   `forbandet(ritning, i)` växer med den grövsta balkens dragkraft A·f i knuten).
 - `fysik.js` – FE-lösaren: korotationella Euler–Bernoulli-element, Newmark
   + Newton–Raphson, bandad Cholesky med Cuthill–McKee, brott (spänning,
-  skjuvning, Euler-knäckning). SI-enheter, y uppåt.
+  skjuvning, Euler-knäckning). SI-enheter, y uppåt. Blir Newtonmatrisen indefinit
+  (knäckta bitar) förstoras diagonalen; ett Newtonsteg högst MAX_DU.
 - `banor.js` – banorna (spann, fästpunkter, marken (`kant`/`dal`, eller `profil`: ojämn mark punkt för punkt), budget, en sparad lösning).
 - `spel.js` – provkörningen utan ritning: keIWs som rörlig last, faller
-  utan vägbana, marken (`markY`) stoppar fallande bitar. Testerna kör den i node.
+  utan vägbana, marken (`markY`) stoppar fallande bitar. Brotten sparas i `sim.forlopp`
+  (Förlopp i app.js stegar igenom dem). Testerna kör den i node.
 - `app.js` – ritning, verktyg, bygga med fingret, kamera och layout
   (`#styrning` = panelen Material/Typ/Profil + Ångra/Riv/Kör i samma rutnät; stående: två
   rader nedtill; liggande: två kolumner till höger; `#popup` = rutan med val).

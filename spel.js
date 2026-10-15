@@ -101,7 +101,8 @@ function nySim(ritning, bana) {
     return {
         bana, m, statisk, t: 0, brott: 0, maxU: 0,
         keiws: { x: keiwsStart(bana), y: 0, vy: 0, lage: 'vantar', luft: 0, gatt: 0 },
-        resultat: null      // 'klarade' eller 'vatten', med tiden i sim.slutTid
+        resultat: null,     // 'klarade' eller 'vatten', med tiden i sim.slutTid
+        forlopp: []         // brotten i ordning (forloppBild), för att stega igenom efteråt
     };
 }
 
@@ -219,9 +220,25 @@ function simSteg(sim, dt = DT) {
     steg(sim.m, dt);
     lagerStopp(sim);
     berget(sim);
-    sim.brott += brott(sim.m);
+    const n = brott(sim.m);
+    sim.brott += n;
+    if (n && sim.forlopp.length < FORLOPP_MAX) sim.forlopp.push(forloppBild(sim));
     for (const e of sim.m.element) if (!e.dod) sim.maxU = Math.max(sim.maxU, e.u, sim.m.balkar[e.balk].uk);
     sim.t += dt;
+}
+
+// Ett ögonblick då något gick sönder: vad (m.brutna), tiden, alla lägen,
+// utnyttjandet i varje element och balk (de som just gick sönder med sitt
+// värde före brottet) och keIWs. Bara de första FORLOPP_MAX.
+const FORLOPP_MAX = 40;
+function forloppBild(sim) {
+    const m = sim.m;
+    return {
+        t: sim.t, brutna: m.brutna, q: Float64Array.from(m.q),
+        dod: Uint8Array.from(m.element, e => e.dod ? 1 : 0),
+        u: Float32Array.from(m.element, e => e.u), uk: Float32Array.from(m.balkar, b => b.uk),
+        keiws: { x: sim.keiws.x, y: sim.keiws.y, lage: sim.keiws.lage }
+    };
 }
 
 // Kör en hel provkörning utan att rita (för testerna). Slutar när keIWs

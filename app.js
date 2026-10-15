@@ -68,6 +68,7 @@ let popup = null;             // {typ, ankare}: rutan med val (material, typ, pr
 let hall = null;              // {nod} eller {balk}, p, timer: man håller fingret på något
 let lageNu = 'bygg';
 let sim = null;
+let forlopp = null;           // {nr, valt}: man stegar igenom brotten efter provkörningen (valt = balk)
 let drag = null;              // {fran: [x, y], till: [x, y]} medan man drar
 let vald = -1;                // vald balk (håll fingret på den)
 let valdNod = null;           // eller vald knutpunkt eller pelare
@@ -908,6 +909,18 @@ function ritaPoff(x, y, t) {
 function ritaProv() {
     if (sim.bygge) { ritaBygget(); return; }
     const m = sim.m;
+    // Förloppet: den valda balken ljusblå under, som när man bygger.
+    if (forlopp && forlopp.valt >= 0) {
+        ctx.strokeStyle = 'rgba(61, 139, 253, 0.45)';
+        ctx.lineWidth = bredd_(m.balkar[forlopp.valt].prof) + 10;
+        ctx.lineCap = 'round';
+        for (const i of m.balkar[forlopp.valt].element) {
+            const e = m.element[i];
+            if (e.dod) continue;
+            const [x1, y1] = lage(m, e.i), [x2, y2] = lage(m, e.j);
+            ctx.beginPath(); ctx.moveTo(sx(x1), sy(y1)); ctx.lineTo(sx(x2), sy(y2)); ctx.stroke();
+        }
+    }
     // Varje balk: först kanten som en hel linje (för de bitar som sitter
     // ihop), sedan varje element i sin färg. Då syns inga skarvar.
     m.balkar.forEach(balk => {
@@ -942,6 +955,16 @@ function ritaProv() {
         const [x, y] = n.lager ? [n.x, n.y] : lage(m, m.nodPunkt[i]);
         ritaNod(x, y, n);
     });
+    // Förloppet: en röd ring runt det som just gick sönder.
+    if (forlopp) {
+        ctx.strokeStyle = '#d0503c';
+        ctx.lineWidth = 3;
+        for (const b of sim.forlopp[forlopp.nr].brutna) {
+            const e = m.element[b.el], [x1, y1] = lage(m, e.i), [x2, y2] = lage(m, e.j);
+            const r = Math.max(14, 0.6 * Math.hypot(x2 - x1, y2 - y1) * kam.sk);
+            ctx.beginPath(); ctx.arc(sx((x1 + x2) / 2), sy((y1 + y2) / 2), r, 0, 7); ctx.stroke();
+        }
+    }
 }
 
 // ---------- keIWs ----------
@@ -1294,7 +1317,8 @@ function byggLage(bygge) {
 // Inzoomad hoppar keIWs över bygget (virveln skulle flyga ur bild) och
 // kameran följer honom över bron.
 function kor() {
-    doljRuta();
+    forlopp = null;
+    rutaEl.className = 'dold';
     stangPopup();
     sim = nySim(ritning, bana);
     byggVy = { zoom, mitt };
@@ -1315,7 +1339,8 @@ function byggKlart() {
 
 // omladdning = false: ingen ny version laddas här (Nästa bana byter bana först).
 function bygg(omladdning = true) {
-    doljRuta();
+    forlopp = null;
+    rutaEl.className = 'dold';
     sim = null;
     lageNu = 'bygg';
     if (byggVy) {
@@ -1566,9 +1591,76 @@ function visaResultat() {
             [['bygg', 'Bygg vidare'], banaNr < BANOR.length - 1 ? ['nasta', 'Nästa bana'] : ['kor', 'Kör igen']]);
     } else {
         visaRuta(bana.torr ? 'Aj!<br>keIWs ramlade ner i dalen.' : 'Plask!<br>keIWs ramlade i vattnet.', sim.brott ? 'Bron gick sönder.' : 'Vägen räckte inte hela vägen över.',
-            [['bygg', 'Bygg om'], ['kor', 'Kör igen']]);
+            [['bygg', 'Bygg om'], ['kor', 'Kör igen']].concat(sim.forlopp.length ? [['forlopp', 'Förlopp']] : []));
     }
     placeraRuta();
+}
+
+// Förloppet: bron som den var när brott nr gick sönder (det som gick
+// sönder står kvar, rött och inringat). Ett tryck på en balk visar hur
+// mycket den var utnyttjad då. Klar: tillbaka till slutet.
+function visaForlopp(nr) {
+    if (!forlopp) { sim.slutBild = forloppBild(sim); sim.slutBild.brutna = []; }
+    stallTill(sim.forlopp[nr], true);
+    forlopp = { nr, valt: forlopp ? forlopp.valt : -1 };
+    forloppRuta();
+}
+
+function stallTill(f, medBrutna) {
+    const m = sim.m, nya = new Set(medBrutna ? f.brutna.map(b => b.el) : []);
+    m.q.set(f.q);
+    m.v.fill(0);
+    m.element.forEach((e, i) => { e.dod = !!f.dod[i] && !nya.has(i); e.u = f.u[i]; });
+    m.balkar.forEach((b, i) => { b.uk = f.uk[i]; });
+    Object.assign(sim.keiws, f.keiws);
+}
+
+const balkNamn = i => {
+    const b = ritning.balkar[i];
+    return TYPNAMN[arKabel(b) ? 'kabel' : b.vag ? 'vag' : 'balk'] + ' ' + profil(b.material || 'limtra', b.storlek).namn;
+};
+
+function forloppRuta() {
+    const f = sim.forlopp[forlopp.nr], n = sim.forlopp.length, m = sim.m;
+    const fler = n >= FORLOPP_MAX ? '+' : '';
+    const rader = f.brutna.slice(0, 3).map(b => balkNamn(b.balk) + ': ' + b.orsak + ' ' + Math.round(b.u * 100) + ' %');
+    if (f.brutna.length > 3) rader.push('och ' + (f.brutna.length - 3) + ' till');
+    let valt = 'Tryck på en balk för att se dess utnyttjande.';
+    if (forlopp.valt >= 0) {
+        const balk = m.balkar[forlopp.valt];
+        const u = Math.max(balk.uk, ...balk.element.map(i => m.element[i].u));
+        valt = '<b>' + balkNamn(forlopp.valt) + '</b>: ' + Math.round(u * 100) + ' %'
+            + (balk.uk >= u && u > 0 ? ' (knäckning)' : '');
+    }
+    rutaEl.innerHTML = '<h1>Brott ' + (forlopp.nr + 1) + ' av ' + n + fler + '</h1><p>'
+        + (f.t < START_TID ? 'Under egentyngden' : tal(f.t - START_TID, 1) + ' s efter att keIWs började gå') + '<br>' + rader.join('<br>') + '</p><p class="valt">' + valt + '</p>'
+        + '<button data-v="forlopp-forra"' + (forlopp.nr ? '' : ' disabled') + '>‹</button> '
+        + '<button data-v="forlopp-nasta"' + (forlopp.nr < n - 1 ? '' : ' disabled') + '>›</button> '
+        + '<button data-v="forlopp-klar">Klar</button>';
+    rutaEl.className = 'forlopp';
+    rutaEl.style.top = rutaEl.style.left = '';
+}
+
+function stangForlopp() {
+    if (!forlopp) return;
+    forlopp = null;
+    stallTill(sim.slutBild, false);
+    rutaEl.className = '';
+}
+
+// Balken närmast punkten i förloppets läge (de böjda elementen), eller -1.
+function forloppBalk(wx, wy) {
+    const m = sim.m;
+    let bast = -1, bastD = Math.max(0.4, 16 / kam.sk);
+    for (const e of m.element) {
+        if (e.dod) continue;
+        const [x1, y1] = lage(m, e.i), [x2, y2] = lage(m, e.j);
+        const dx = x2 - x1, dy = y2 - y1;
+        const t = Math.max(0, Math.min(1, ((wx - x1) * dx + (wy - y1) * dy) / (dx * dx + dy * dy || 1)));
+        const d = Math.hypot(wx - x1 - t * dx, wy - y1 - t * dy);
+        if (d < bastD) { bastD = d; bast = e.balk; }
+    }
+    return bast;
 }
 
 // Rutan ska inte skymma keIWs (som jublar på andra sidan): ligger han
@@ -1741,7 +1833,12 @@ document.addEventListener('pointerdown', e => {
 
 rutaEl.addEventListener('click', e => {
     const b = e.target.closest('button');
-    if (!b) return;
+    if (!b || b.disabled) return;
+    const v = b.dataset.v;
+    if (v === 'forlopp') { visaForlopp(0); return; }
+    if (v === 'forlopp-forra' || v === 'forlopp-nasta') { visaForlopp(forlopp.nr + (v === 'forlopp-nasta' ? 1 : -1)); return; }
+    if (v === 'forlopp-klar') { stangForlopp(); visaResultat(); return; }
+    stangForlopp();
     if (b.dataset.v === 'kor') kor();
     else if (b.dataset.v === 'nasta') { bygg(false); bytBana(banaNr + 1); }
     else bygg();
@@ -1935,6 +2032,14 @@ duk.addEventListener('pointermove', e => {
 });
 
 function slapp(e) {
+    // Förloppet: ett tryck (utan att dra) väljer balken där.
+    if (forlopp && panorera && pekare.size === 1) {
+        const p = iDuken(e);
+        if (Math.hypot(p[0] - panorera.p[0], p[1] - panorera.p[1]) < 8) {
+            forlopp.valt = forloppBalk(...tillVarld(e));
+            forloppRuta();
+        }
+    }
     // Ett tryck (utan att röra fingret) på något annat än det som var valt.
     const direkt = hall && hall.direkt && lageNu === 'bygg' && pekare.size === 1 ? hall : null;
     slappHall();
@@ -2019,7 +2124,7 @@ function loop(nu) {
     if (lageNu === 'prov' && sim && sim.bygge) {
         sim.bygge.t += dt;
         if (sim.bygge.t >= sim.bygge.slut) byggKlart();
-    } else if (lageNu === 'prov' && sim) {
+    } else if (lageNu === 'prov' && sim && !forlopp) {
         if (sim.poff !== undefined) sim.poff += dt;
         ackumulerat += dt;
         let n = 0;
@@ -2107,6 +2212,7 @@ if (TEST) {
         get ritMaterial() { return ritMaterial; },
         get ritVag() { return ritVag; },
         get popup() { return popup && popup.typ; },
+        get forlopp() { return forlopp && { nr: forlopp.nr, valt: forlopp.valt, antal: sim.forlopp.length }; },
         get valt() { return !!(valdBalken() || valdKnut()); },
         get ritProfil() { return ritProfil; },
         get panorerar() { return !!panorera; },

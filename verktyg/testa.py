@@ -563,6 +563,24 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     kolla(f'{namn}: en för klen bro rasar', vanta_resultat(sida).startswith('Plask!'))
     bild(sida, bilder, f'{namn}-7-plask')
 
+    # Förloppet: brott för brott, ett tryck på en balk visar utnyttjandet.
+    sida.click('#ruta [data-v=forlopp]')
+    f = sida.evaluate('() => window.bro.forlopp')
+    text = sida.evaluate('() => document.querySelector("#ruta").textContent')
+    kolla(f'{namn}: Förlopp visar första brottet', f and f['nr'] == 0 and text.startswith('Brott 1 av')
+          and 'Väg ' in text and 'böjning' in text and 'egentyngden' in text, text)
+    if f['antal'] > 1:
+        sida.click('#ruta [data-v=forlopp-nasta]')
+    kolla(f'{namn}: › går till nästa brott', f['antal'] == 1 or sida.evaluate('() => window.bro.forlopp.nr') == 1)
+    sida.click('#ruta [data-v=forlopp-forra]') if f['antal'] > 1 else None
+    tryck(sida, (2, 0))
+    kolla(f'{namn}: ett tryck på balken visar dess utnyttjande', sida.evaluate('() => window.bro.forlopp.valt') == 0
+          and 'Väg ' in sida.inner_text('#ruta .valt') and '%' in sida.inner_text('#ruta .valt'))
+    bild(sida, bilder, f'{namn}-7-forlopp')
+    sida.click('#ruta [data-v=forlopp-klar]')
+    kolla(f'{namn}: Klar går tillbaka till resultatet', sida.inner_text('#ruta h1').startswith('Plask!')
+          and not sida.evaluate('() => window.bro.forlopp'))
+
     # Menyn: billigaste bron som höll, hämta den, förklaringen och versionen.
     sida.click('#ruta [data-v=bygg]')
     sida.click('#menyknapp')
