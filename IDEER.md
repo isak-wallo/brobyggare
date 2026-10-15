@@ -619,3 +619,7 @@ vippning i 2D).
 v55-test: limträets höjd högst 7 × bredden (TRA_SLANK, i stället för vippning som 2D-modellen
 saknar). Väljer man en för hög höjd blir balken bredare, en för smal bredd gör den lägre;
 gamla ritningar blir bredare. Isak valde slankhetskravet framför dyrare höga balkar.
+
+v56-test: stående ligger banan så högt att profilrutan (den högsta rutan, mätt i en osynlig
+kopia: stålets HEA eller trä) får plats under den; resten av luften blir himmel. Banan står
+still när rutan öppnas, men det syns mer mark under.

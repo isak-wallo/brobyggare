@@ -462,12 +462,13 @@ function anpassa() {
     duk.style.width = w + 'px';
     duk.style.height = h + 'px';
     // Luft för infotexten upptill. Hela bana.vy ska synas, och blir det
-    // höjd över (mobilen står) går det mesta (85 %) till himlen: banan står
-    // långt ner med lite vatten under, och rutor och text får plats ovanför.
+    // höjd över (mobilen står) läggs så mycket under banan att profilrutan
+    // (den högsta rutan, nedtill) inte skymmer den, minst 15 %; resten blir himmel.
     const vy = bana.vy, luft = luftNu;
     const sk = Math.min(w / (vy.x1 - vy.x0), (h - luft) / (vy.y1 - vy.y0));
     const over = h - luft - sk * (vy.y1 - vy.y0);
-    const oy = luft + over * 0.85 + sk * vy.y1, cy = (oy - (luft + h) / 2) / sk;
+    const under = Math.min(over, Math.max(over * 0.15, staende() ? profilRutansHojd() + 14 : 0));
+    const oy = luft + over - under + sk * vy.y1, cy = (oy - (luft + h) / 2) / sk;
     const cx = (vy.x0 + vy.x1) / 2;
     const hw = w / 2 / sk, hh = (h - luft) / 2 / sk;
     bas = { sk, cx, cy, B: { x0: cx - hw, x1: cx + hw, y0: cy - hh, y1: cy + hh } };
@@ -1124,7 +1125,6 @@ function visaValjare() {
 function visaPopup(typ, ankare) {
     popup = { typ, ankare };
     const a = aktuellt();
-    const rad = (rubrik, knappar) => '<div class="rad"><span>' + rubrik + '</span><div>' + knappar.join('') + '</div></div>';
     let html = '';
     if (typ === 'material') {
         html = '<div class="val">' + Object.entries(MATERIAL)
@@ -1135,19 +1135,7 @@ function visaPopup(typ, ankare) {
             bana.pelare && !a.balk ? ['pelare'] : []);
         html = '<div class="val">' + typer.map(t => knapp('data-t="' + t + '"', TYPNAMN[t], t === a.typ)).join('') + '</div>';
     } else if (typ === 'profil') {
-        const p = profil(a.mat, a.st), vag = a.typ === 'vag';
-        html = '<div class="rubrik"><b>' + p.namn + '</b> · ' + kr(p.pris + (vag ? VAG.pris : 0)) + '/m'
-            + (vag ? ' med väg' : '') + ' · ' + tal(p.massa, 1) + ' kg/m</div>';
-        if (a.mat === 'limtra') {
-            html += rad('Bredd', TRA_BREDD.map(b => knapp('data-b="' + b + '"', b, b === Math.round(p.b * 1000))))
-                + rad('Höjd', TRA_HOJD.map(h => knapp('data-h="' + h + '"', h, h === Math.round(p.h * 1000))));
-        } else if (a.mat === 'stal') {
-            const [serie, nr] = p.namn.split(' ');
-            html += rad('Serie', Object.keys(STAL_SERIER).map(s => knapp('data-serie="' + s + '"', s, s === serie)))
-                + rad('Höjd', STAL_SERIER[serie].map(([n]) => knapp('data-nr="' + n + '"', n, String(n) === nr)));
-        } else {
-            html += rad('', STEGEN[a.mat].map((x, i) => knapp('data-s="' + i + '"', x.namn, x === p)));
-        }
+        html = profilRutan(a.mat, a.st, a.typ === 'vag');
     } else if (typ === 'rivallt') {
         html = '<div class="val">' + knapp('data-v="rivallt"', 'Riv allt', false,
             !ritning.balkar.length && !ritning.noder.some(n => n.pelare), 'riv') + '</div>';
@@ -1162,6 +1150,42 @@ function visaPopup(typ, ankare) {
     if (popupEl.innerHTML !== html) popupEl.innerHTML = html;
     placeraPopup();
     markeraAnkare();
+}
+
+// Profilrutan: bredd och höjd (trä), serie och höjd (stål) eller stegen.
+function profilRutan(mat, st, vag) {
+    const rad = (rubrik, knappar) => '<div class="rad"><span>' + rubrik + '</span><div>' + knappar.join('') + '</div></div>';
+    const p = profil(mat, st);
+    let html = '<div class="rubrik"><b>' + p.namn + '</b> · ' + kr(p.pris + (vag ? VAG.pris : 0)) + '/m'
+        + (vag ? ' med väg' : '') + ' · ' + tal(p.massa, 1) + ' kg/m</div>';
+    if (mat === 'limtra') {
+        html += rad('Bredd', TRA_BREDD.map(b => knapp('data-b="' + b + '"', b, b === Math.round(p.b * 1000))))
+            + rad('Höjd', TRA_HOJD.map(h => knapp('data-h="' + h + '"', h, h === Math.round(p.h * 1000))));
+    } else if (mat === 'stal') {
+        const [serie, nr] = p.namn.split(' ');
+        html += rad('Serie', Object.keys(STAL_SERIER).map(s => knapp('data-serie="' + s + '"', s, s === serie)))
+            + rad('Höjd', STAL_SERIER[serie].map(([n]) => knapp('data-nr="' + n + '"', n, String(n) === nr)));
+    } else {
+        html += rad('', STEGEN[mat].map((x, i) => knapp('data-s="' + i + '"', x.namn, x === p)));
+    }
+    return html;
+}
+
+// Den högsta profilrutan (stålets HEA, trä) på den här skärmen: mäts i en
+// osynlig kopia, så att banan kan ligga ovanför den hela tiden.
+function profilRutansHojd() {
+    const m = document.createElement('div');
+    m.id = 'popup';
+    m.className = 'popup-profil';
+    m.style.cssText = 'visibility: hidden; left: 0; top: 0;';
+    let hojd = 0;
+    document.body.appendChild(m);
+    for (const [mat, st] of [['stal', 'HEA 100'], ['limtra', '90×270']]) {
+        m.innerHTML = profilRutan(mat, st, true);
+        hojd = Math.max(hojd, m.offsetHeight);
+    }
+    m.remove();
+    return hojd;
 }
 
 // Knappen som rutan hör till syns tydligt (där stänger man den). Utan
