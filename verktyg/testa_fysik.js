@@ -98,7 +98,8 @@ const mat = MATERIAL.limtra;
     const L = 4, p = PROFILER.limtra[1];
     const m = byggModell({ noder: [{ x: 0, y: 0, fast: true, styv: true }, { x: L, y: 0 }],
                            balkar: [{ a: 0, b: 1, storlek: 1 }] });
-    m.massa[2 * m.nodPunkt[1]] -= 20; m.massa[2 * m.nodPunkt[1] + 1] -= 20;   // inget förband i änden
+    const fb = forbandet({ noder: [{}, {}], balkar: [{ a: 0, b: 1, storlek: 1 }] }, 1).massa;
+    m.massa[2 * m.nodPunkt[1]] -= fb; m.massa[2 * m.nodPunkt[1] + 1] -= fb;   // inget förband i änden
     const spets = 2 * m.nodPunkt[1] + 1;
     m.last[spets] = -500; losStatiskt(m, 0, 1); m.last[spets] = 0; m.tyngd = 0;
     const dt = 1 / 4000, nollor = [];

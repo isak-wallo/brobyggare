@@ -214,4 +214,25 @@ const VAG = { massa: 200, pris: 400, tjocklek: 0.12 };
 // fritt mot varandra. Styvt: de sitter ihop och böjer tillsammans, med
 // knutplåtar och fler bultar (dyrare och tyngre).
 // Fästpunkterna i berget kostar inget.
-const FORBAND = { massa: { ledat: 20, styvt: 40 }, pris: { ledat: 300, styvt: 500 } };
+// Förbandet görs för den grövsta balken i knuten: plåtar, bultar och
+// dymlingar för balkens dragkraft A·f (trä ft, stål fy, betong armeringen
+// ft, kabel fu). Upp till N0 gäller grundvikten och grundpriset, därefter
+// växer båda i proportion till kraften.
+const FORBAND = { massa: { ledat: 20, styvt: 40 }, pris: { ledat: 300, styvt: 500 }, N0: 300e3 };
+
+// Förbandets storlek i knutpunkt i (1 = grundförbandet).
+function forbandsFaktor(r, i) {
+    let N = 0;
+    for (const b of r.balkar) {
+        if (b.a !== i && b.b !== i) continue;
+        const mat = b.material || 'limtra', m = MATERIAL[mat];
+        N = Math.max(N, profil(mat, b.storlek).A * (m.ft || m.fy || m.fu));
+    }
+    return Math.max(1, N / FORBAND.N0);
+}
+
+// Förbandet i knutpunkt i: {massa (kg), pris ($$)}.
+function forbandet(r, i) {
+    const typ = r.noder[i].styv ? 'styvt' : 'ledat', f = forbandsFaktor(r, i);
+    return { massa: FORBAND.massa[typ] * f, pris: FORBAND.pris[typ] * f };
+}

@@ -337,7 +337,7 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     # Håll på en knutpunkt väljer den: styv/ledad och Riv (med balkarna).
     hall(sida, (7, 0))
     kolla(f'{namn}: håll väljer en knutpunkt', sida.evaluate('() => window.bro.vald') == -1
-          and 'Knutpunkt' in sida.inner_text('#valjare') and sida.locator('#valjare [data-fb=ledad]').count() == 1)
+          and 'Förband' in sida.inner_text('#valjare') and sida.locator('#valjare [data-fb=ledad]').count() == 1)
     bild(sida, bilder, f'{namn}-0-knutpunkt')
     sida.click('#valjare [data-fb=ledad]')
     kolla(f'{namn}: knutpunkten blir ledad i panelen', sida.evaluate(
@@ -756,7 +756,7 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
         kolla(f'{namn}: lösningen på bana {nr + 1} ryms i budgeten', sida.evaluate('() => window.bro.banaNr') == nr
               and sida.evaluate('() => window.bro.kostnad()') <= sida.evaluate(f'() => BANOR[{nr}].budget'))
         bild(sida, bilder, f'{namn}-12-{bnamn}')
-    # Havet: keIWs kör bil (ett ton) över hängbron.
+    # Havet: keIWs kör bil (2,5 ton) över hängbron.
     sida.click('#verktyg [data-v=kor]')
     sida.wait_for_timeout(8000)
     bild(sida, bilder, f'{namn}-13-bil')

@@ -21,7 +21,8 @@ Idéer och beslut i `IDEER.md` (läs den först).
   trä bredd × höjd (TRA_BREDD, TRA_HOJD), stål IPE/HEA/HEB (STAL_SERIER), betong och kabel
   6 steg (STEGEN). Balkens `storlek` är profilens namn ('90×315', 'HEA 200') eller ett steg
   0–5 i STEGEN (banornas lösningar, äldre ritningar; före version 7 9 steg, se GAMLA_STEG).
-  `profil(material, storlek)` ger A, I, W, vikt och pris. Vägbanan och förbanden (vikt och pris).
+  `profil(material, storlek)` ger A, I, W, vikt och pris. Vägbanan och förbanden (vikt och pris;
+  `forbandet(ritning, i)` växer med den grövsta balkens dragkraft A·f i knuten).
 - `fysik.js` – FE-lösaren: korotationella Euler–Bernoulli-element, Newmark
   + Newton–Raphson, bandad Cholesky med Cuthill–McKee, brott (spänning,
   skjuvning, Euler-knäckning). SI-enheter, y uppåt.
@@ -51,5 +52,5 @@ Kablar (`material: 'vajer'`) är ett enda element utan böjstyvhet som bara
 tar drag; kablar i vägen spänns vid bygget (`spannKablar`). Stora banor har
 egna `element`, `maxLangd`, `maxKabel`, `maxZoom` (se banor.js).
 Massan klumpas i noderna. Egentyngden räknas statiskt (losStatiskt; går
-det inte läggs den på under 1 s), sedan går keIWs (100 kg) över. g = 10 m/s². Ett element över 100 %
+det inte läggs den på under 1 s), sedan går keIWs (500 kg; bilen 2,5 ton) över. g = 10 m/s². Ett element över 100 %
 utnyttjande tas bort; en balk som knäcks tappar mittelementet.

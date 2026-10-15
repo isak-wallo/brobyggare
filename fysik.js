@@ -16,7 +16,7 @@
 //
 // Enheter: SI (m, kg, s, N, Pa). y är uppåt.
 
-const G = 10;                 // m/s², avrundat (keIWs 100 kg = 1 kN)
+const G = 10;                 // m/s², avrundat (keIWs 500 kg = 5 kN)
 const ELEMENT_LANGD = 0.75;   // m, ungefärlig längd på elementen i en balk
 const NEWMARK_BETA = 0.3025;  // (γ + 1/2)² / 4
 const NEWMARK_GAMMA = 0.6;    // > 1/2 dämpar bort de högsta frekvenserna
@@ -43,8 +43,8 @@ function byggModell(ritning, elLangd = ELEMENT_LANGD) {
     const balkar = [];
 
     const nyRot = fast => { rotFast.push(!!fast); return rotFast.length - 1; };
-    const nodPunkt = ritning.noder.map(n => {
-        punkter.push({ x0: n.x, y0: n.y, fast: !!n.fast, glid: n.lager === 'glid', forband: n.fast ? null : n.styv ? 'styvt' : 'ledat' });
+    const nodPunkt = ritning.noder.map((n, i) => {
+        punkter.push({ x0: n.x, y0: n.y, fast: !!n.fast, glid: n.lager === 'glid', forband: n.fast ? 0 : forbandet(ritning, i).massa });
         return punkter.length - 1;
     });
     // Knutpunkter där bara kablar sitter har ingen vridning (den vore lös).
@@ -105,7 +105,7 @@ function byggModell(ritning, elLangd = ELEMENT_LANGD) {
         m.X0[2 * i] = p.x0; m.X0[2 * i + 1] = p.y0;
         m.fri[2 * i] = p.fast && !p.glid ? 0 : 1;
         m.fri[2 * i + 1] = p.fast ? 0 : 1;
-        if (p.forband) m.massa[2 * i] = m.massa[2 * i + 1] = FORBAND.massa[p.forband];
+        if (p.forband) m.massa[2 * i] = m.massa[2 * i + 1] = p.forband;
     });
     rotFast.forEach((f, r) => { m.fri[2 * np + r] = f ? 0 : 1; });
 

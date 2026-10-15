@@ -586,3 +586,18 @@ En rak träbalk på bana 1 blev billigare än ett litet fackverk
 - Förbanden kostar efter den största balken i knuten (plåtar, dymlingar).
 - Höga limträ dyrare per m³ över ca 405 mm: större maskiner och verktyg för
   att tillverka och hantera dem.
+
+v51-test (2026-10-15): de två första gjorda, priset på höga limträ väntar
+(Isak vill först testa de andra). keIWs 500 kg, bilen 2,5 ton. Förbandet
+får grundvikten och grundpriset (20/40 kg, 300/500 $$) upp till en
+dragkraft A·f = 300 kN i den grövsta balken i knuten, sedan i proportion
+(56×180 trä: 1×, 90×450: 2,6×, HEA 140: 3,7×, HEA 200: 6,4×). Lösningarna
+dimensionerades om och budgetarna höjdes:
+- Bäcken: väg 2 + fackverk 1, 10 830 av 12 000 $$ (budgeten kvar). En rak
+  skarvad 90×450 håller för 11 960 $$: dyrare än fackverket men inom
+  budget, så priset på höga trä behövs nog ändå.
+- Ån och Ravinen: lösningarna håller som de var.
+- Dalgången 83 090 av 87 000 (förr 75 000), Kanalen väg 90×315 64 650 av
+  68 000 (55 000), Älven väg IPE 220 228 850 av 240 000 (175 000), Havet
+  väg IPE 330 och hängare Ø 14 961 250 av 1 000 000 (820 000).
+- Stålförbanden blev dyra (Älven, IPE 220: ca 2 000 $$ och 160 kg per knut i vägen).

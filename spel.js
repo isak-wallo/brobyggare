@@ -8,14 +8,14 @@
 // de två noderna i elementet under fötterna. Finns ingen vägbana under,
 // faller keIWs. Hamnar keIWs i vattnet har bron misslyckats, och kommer
 // keIWs fram till andra sidan har den klarat sig. På banor med `bil` kör
-// keIWs en bil på ett ton: två hjul med halva tyngden var.
+// keIWs en bil på 2,5 ton: två hjul med halva tyngden var.
 
 const DT = 1 / 120;          // s, ett fysiksteg
 const TYNGD_TID = 1.0;       // s, tyngden läggs på under den här tiden (om
                              // bron inte gick att räkna statiskt)
 const START_TID = 1.4;       // s, då börjar keIWs gå
-const KEIWS_MASSA = 100;     // kg
-const BIL_MASSA = 1000;      // kg, bilen med keIWs i
+const KEIWS_MASSA = 500;     // kg
+const BIL_MASSA = 2500;      // kg, bilen med keIWs i
 const BIL_AXEL = 2.5;        // m mellan hjulen
 const KLIV_UPP = 0.25;       // m, så högt kliver keIWs upp utan att hoppa
 const LUFT_TID = 0.15;       // s i luften innan det räknas som att falla

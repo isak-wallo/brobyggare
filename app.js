@@ -1068,7 +1068,8 @@ function visaValjare() {
     } else if (n) {
         // Knutpunkten: styv eller ledad (brolagren är alltid ledade).
         const lager = !!n.lager;
-        html = '<div class="etikett"><small>Knutpunkt</small><b>Förband</b></div>'
+        const fb = forbandet(ritning, ritning.noder.indexOf(n));
+        html = '<div class="etikett"><small>Förband · ' + Math.round(fb.massa) + ' kg</small><b>' + kr(Math.round(fb.pris / 10) * 10) + '</b></div>'
             + knapp('data-fb="styv"', 'Styv', n.styv && !lager, lager) + knapp('data-fb="ledad"', 'Ledad', !n.styv || lager, lager);
     } else if (a.typ === 'pelare') {
         html = val('material', 'Material', 'Betong', true) + val('typ', 'Typ', 'Pelare')
@@ -1254,7 +1255,7 @@ dem slaknar de. Häng upp vägen i kablar från höga pyloner, så klarar du
 långa spann.</li>
 <li><b>Bron måste först bära sin egen vikt</b>, balkarna och vägen. Sedan
 går keIWs över.</li>
-<li><b>Från Älven kör keIWs bil.</b> Den väger ett ton, tio gånger så mycket
+<li><b>Från Älven kör keIWs bil.</b> Den väger 2,5 ton, fem gånger så mycket
 som keIWs, så vägen måste vara starkare.</li>
 <li><b>Färgerna</b> visar hur hårt varje bit jobbar: grönt är lugnt, gult är
 mycket och rött nästan för mycket. Över 100 % går biten sönder.</li>
@@ -1336,7 +1337,7 @@ land) låser x och y och kan vara styva eller ledade.</li>
 <table class="tabell">
 <tr><th>g</th><td>${G}</td><td class="v">m/s²</td></tr>
 <tr><th>Vägbana</th><td>${VAG.massa}</td><td class="v">kg/m</td></tr>
-<tr><th>Förband</th><td>${FORBAND.massa.ledat}/${FORBAND.massa.styvt}</td><td class="v">kg/st, ledat/styvt</td></tr>
+<tr><th>Förband</th><td>${FORBAND.massa.ledat}/${FORBAND.massa.styvt}</td><td class="v">kg/st, ledat/styvt, gånger den grövsta balkens A·f / ${FORBAND.N0 / 1000} kN (minst 1)</td></tr>
 <tr><th>keIWs</th><td>${KEIWS_MASSA}</td><td class="v">kg, rörlig last</td></tr>
 <tr><th>Bil</th><td>${BIL_MASSA}</td><td class="v">kg från Älven, två hjul ${tal(BIL_AXEL, 1)} m isär</td></tr>
 </table>

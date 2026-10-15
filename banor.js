@@ -23,7 +23,7 @@
 //           inga stjärnor
 //   keiws:  keIWs höjd i meter (bara utseendet, större på långa banor)
 //   keiwsInzoomad: så mycket större keIWs ritas vid största zoom (1 om det saknas)
-//   bil:    keIWs kör bil (1 ton på två hjul) i stället för att gå
+//   bil:    keIWs kör bil (2,5 ton på två hjul) i stället för att gå
 //   omrade: där man får sätta knutpunkter (över land bara ovanför marken)
 //   vy:     det som syns utan zoom
 //   farled: {x0, x1, y}: under y mellan x0 och x1 får inget byggas (båtarna)
@@ -37,8 +37,8 @@ const BANOR = [
     {
         namn: 'Bäcken',
         // 14 m: längre än en balk (12 m), så man måste skarva. En rak balk
-        // måste vara av stål (HEA 160) och går över budget, ett litet
-        // fackverk av trä ryms med marginal.
+        // måste vara av grovt trä (90×450) eller stål (HEA 200, över
+        // budget); ett litet fackverk av trä är billigast.
         spann: 14,
         fasten: [[0, 0, 'fast'], [14, 0, 'glid']],
         kant: 1 / 3,
@@ -49,12 +49,12 @@ const BANOR = [
         omrade: { x0: -3, x1: 17, y0: -1, y1: 7 },
         vy: { x0: -4, x1: 18, y0: -3, y1: 7.5 },
         losning: {
-            // Väg 1 (56×180) med ett fackverk av 1 ovanpå, 2 m högt (10 550 $$).
+            // Väg 2 (56×215) med ett fackverk av 1 (56×180) ovanpå, 2 m högt (10 830 $$).
             noder: [
                 [0, 0], [14, 0], [5, 0], [9, 0], [5, 2], [9, 2]
             ],
             balkar: [
-                [0, 2, 0, true], [2, 3, 0, true], [3, 1, 0, true], [0, 4, 0], [4, 5, 0], [5, 1, 0],
+                [0, 2, 1, true], [2, 3, 1, true], [3, 1, 1, true], [0, 4, 0], [4, 5, 0], [5, 1, 0],
                 [2, 4, 0], [3, 5, 0]
             ]
         }
@@ -117,13 +117,14 @@ const BANOR = [
         dal: { djup: 24, bredd: 24 },
         vatten: -24,
         torr: true,
-        budget: 75000,
+        budget: 87000,
         keiws: 5.5,
         omrade: { x0: -4, x1: 64, y0: -22, y1: 16 },
         vy: { x0: -8, x1: 68, y0: -25, y1: 17 },
         losning: {
-            // Båge av 5 (90×270) med pelare av 1 till vägen (3), och
-            // snedsträvor av 5 från de övre fästena (71 850 $$).
+            // Båge av 4 (90×245) med pelare av 1 till vägen (4), och
+            // snedsträvor av 4 och stöd av 2 (56×215) från de övre
+            // fästena (83 090 $$).
             noder: [
                 [0, 0], [12, -12], [60, 0], [48, -12], [16, -18], [44, -18], [2, 0], [4, 0],
                 [6, 0], [8, 0], [10, 0], [12, 0], [14, 0], [16, 0], [18, 0], [20, 0],
@@ -133,15 +134,15 @@ const BANOR = [
                 [40, -12]
             ],
             balkar: [
-                [0, 6, 2, true], [6, 7, 2, true], [7, 8, 2, true], [8, 9, 2, true], [9, 10, 2, true], [10, 11, 2, true],
-                [11, 12, 2, true], [12, 13, 2, true], [13, 14, 2, true], [14, 15, 2, true], [15, 16, 2, true], [16, 17, 2, true],
-                [17, 18, 2, true], [18, 19, 2, true], [19, 20, 2, true], [20, 21, 2, true], [21, 22, 2, true], [22, 23, 2, true],
-                [23, 24, 2, true], [24, 25, 2, true], [25, 26, 2, true], [26, 27, 2, true], [27, 28, 2, true], [28, 29, 2, true],
-                [29, 30, 2, true], [30, 31, 2, true], [31, 32, 2, true], [32, 33, 2, true], [33, 34, 2, true], [34, 2, 2, true],
-                [4, 35, 4], [35, 36, 4], [36, 37, 4], [37, 38, 4], [38, 39, 4], [39, 40, 4],
-                [40, 5, 4], [35, 15, 0], [36, 17, 0], [37, 19, 0], [38, 21, 0], [39, 23, 0],
-                [40, 25, 0], [1, 11, 0], [1, 8, 4], [1, 4, 0], [3, 29, 0], [3, 32, 4],
-                [3, 5, 0]
+                [0, 6, 3, true], [6, 7, 3, true], [7, 8, 3, true], [8, 9, 3, true], [9, 10, 3, true], [10, 11, 3, true],
+                [11, 12, 3, true], [12, 13, 3, true], [13, 14, 3, true], [14, 15, 3, true], [15, 16, 3, true], [16, 17, 3, true],
+                [17, 18, 3, true], [18, 19, 3, true], [19, 20, 3, true], [20, 21, 3, true], [21, 22, 3, true], [22, 23, 3, true],
+                [23, 24, 3, true], [24, 25, 3, true], [25, 26, 3, true], [26, 27, 3, true], [27, 28, 3, true], [28, 29, 3, true],
+                [29, 30, 3, true], [30, 31, 3, true], [31, 32, 3, true], [32, 33, 3, true], [33, 34, 3, true], [34, 2, 3, true],
+                [4, 35, 3], [35, 36, 3], [36, 37, 3], [37, 38, 3], [38, 39, 3], [39, 40, 3],
+                [40, 5, 3], [35, 15, 0], [36, 17, 0], [37, 19, 0], [38, 21, 0], [39, 23, 0],
+                [40, 25, 0], [1, 11, 1], [1, 8, 3], [1, 4, 1], [3, 29, 1], [3, 32, 3],
+                [3, 5, 1]
             ]
         }
     },
@@ -154,7 +155,7 @@ const BANOR = [
         fasten: [[0, 0, 'fast'], [2, -4], [48, 0, 'glid'], [46, -4], [-4, 0], [52, 0]],
         kant: 0.5,
         vatten: -6,
-        budget: 55000,
+        budget: 68000,
         keiws: 5,
         omrade: { x0: -4, x1: 52, y0: -4, y1: 12 },
         vy: { x0: -9, x1: 57, y0: -7.5, y1: 12.5 },
@@ -162,17 +163,17 @@ const BANOR = [
         material: ['limtra', 'stal'],
         pelare: { botten: -10, pris: 3000, perMeter: 150 },
         losning: {
-            // Väg 5 (90×270) på två pelare 4 m ner, med strävor av 3 (53 040 $$).
+            // Väg 90×315 på två pelare 4 m ner, med strävor av 3 (66×225) (64 650 $$).
             noder: [[0, 0], [0, -4], [48, 0], [48, -4], [-4, 0], [52, 0], [2, 0], [4, 0], [6, 0], [8, 0],
                     [10, 0], [12, 0], [14, 0], [16, 0], [18, 0], [20, 0], [22, 0], [24, 0], [26, 0], [28, 0],
                     [30, 0], [32, 0], [34, 0], [36, 0], [38, 0], [40, 0], [42, 0], [44, 0], [46, 0],
                     [14, -4, 'pelare'], [34, -4, 'pelare']],
             balkar: [
-                [0, 6, 4, true], [6, 7, 4, true], [7, 8, 4, true], [8, 9, 4, true], [9, 10, 4, true],
-                [10, 11, 4, true], [11, 12, 4, true], [12, 13, 4, true], [13, 14, 4, true], [14, 15, 4, true],
-                [15, 16, 4, true], [16, 17, 4, true], [17, 18, 4, true], [18, 19, 4, true], [19, 20, 4, true],
-                [20, 21, 4, true], [21, 22, 4, true], [22, 23, 4, true], [23, 24, 4, true], [24, 25, 4, true],
-                [25, 26, 4, true], [26, 27, 4, true], [27, 28, 4, true], [28, 2, 4, true],
+                [0, 6, '90×315', true], [6, 7, '90×315', true], [7, 8, '90×315', true], [8, 9, '90×315', true], [9, 10, '90×315', true],
+                [10, 11, '90×315', true], [11, 12, '90×315', true], [12, 13, '90×315', true], [13, 14, '90×315', true], [14, 15, '90×315', true],
+                [15, 16, '90×315', true], [16, 17, '90×315', true], [17, 18, '90×315', true], [18, 19, '90×315', true], [19, 20, '90×315', true],
+                [20, 21, '90×315', true], [21, 22, '90×315', true], [22, 23, '90×315', true], [23, 24, '90×315', true], [24, 25, '90×315', true],
+                [25, 26, '90×315', true], [26, 27, '90×315', true], [27, 28, '90×315', true], [28, 2, '90×315', true],
                 [29, 10, 2], [29, 12, 2], [29, 14, 2], [30, 20, 2], [30, 22, 2], [30, 24, 2]
             ]
         }
@@ -191,7 +192,7 @@ const BANOR = [
         fasten: [[0, 0, 'fast'], [160, 0, 'glid'], [-5, 0], [165, 0], [40, -8], [120, -8]],
         kant: 0.4,
         vatten: -8,
-        budget: 175000,
+        budget: 240000,
         bil: true,
         keiws: 8,
         omrade: { x0: -5, x1: 165, y0: -8, y1: 50 },
@@ -199,8 +200,8 @@ const BANOR = [
         farled: { x0: 45, x1: 115, y: -1 },
         pelare: { botten: -16, pris: 3000, perMeter: 150 },
         losning: {
-            // Väg av stål 4 (HEA 140, för bilen), pyloner av betong 1 38 m
-            // höga på fundamenten, fyra kablar 1 (Ø 10) åt var håll (164 350 $$).
+            // Väg av stål IPE 220 (för bilen), pyloner av betong 2 38 m
+            // höga på fundamenten, fyra kablar 2 (Ø 14) åt var håll (228 850 $$).
             noder: [
                 [0, 0], [160, 0], [-5, 0], [165, 0], [40, -8, 'styv'], [120, -8, 'styv'], [5, 0], [10, 0],
                 [15, 0], [20, 0], [25, 0], [30, 0], [35, 0], [40, 0], [45, 0], [50, 0],
@@ -210,18 +211,18 @@ const BANOR = [
                 [120, 10], [120, 20], [120, 30]
             ],
             balkar: [
-                [0, 6, 3, true, 'stal'], [6, 7, 3, true, 'stal'], [7, 8, 3, true, 'stal'], [8, 9, 3, true, 'stal'], [9, 10, 3, true, 'stal'],
-                [10, 11, 3, true, 'stal'], [11, 12, 3, true, 'stal'], [12, 13, 3, true, 'stal'], [13, 14, 3, true, 'stal'], [14, 15, 3, true, 'stal'],
-                [15, 16, 3, true, 'stal'], [16, 17, 3, true, 'stal'], [17, 18, 3, true, 'stal'], [18, 19, 3, true, 'stal'], [19, 20, 3, true, 'stal'],
-                [20, 21, 3, true, 'stal'], [21, 22, 3, true, 'stal'], [22, 23, 3, true, 'stal'], [23, 24, 3, true, 'stal'], [24, 25, 3, true, 'stal'],
-                [25, 26, 3, true, 'stal'], [26, 27, 3, true, 'stal'], [27, 28, 3, true, 'stal'], [28, 29, 3, true, 'stal'], [29, 30, 3, true, 'stal'],
-                [30, 31, 3, true, 'stal'], [31, 32, 3, true, 'stal'], [32, 33, 3, true, 'stal'], [33, 34, 3, true, 'stal'], [34, 35, 3, true, 'stal'],
-                [35, 36, 3, true, 'stal'], [36, 1, 3, true, 'stal'], [4, 13, 0, false, 'betong'], [13, 37, 0, false, 'betong'], [37, 38, 0, false, 'betong'],
-                [38, 39, 0, false, 'betong'], [39, 11, 0, false, 'vajer'], [39, 15, 0, false, 'vajer'], [39, 9, 0, false, 'vajer'], [39, 17, 0, false, 'vajer'],
-                [39, 7, 0, false, 'vajer'], [39, 19, 0, false, 'vajer'], [39, 0, 0, false, 'vajer'], [39, 21, 0, false, 'vajer'], [5, 29, 0, false, 'betong'],
-                [29, 40, 0, false, 'betong'], [40, 41, 0, false, 'betong'], [41, 42, 0, false, 'betong'], [42, 27, 0, false, 'vajer'], [42, 31, 0, false, 'vajer'],
-                [42, 25, 0, false, 'vajer'], [42, 33, 0, false, 'vajer'], [42, 23, 0, false, 'vajer'], [42, 35, 0, false, 'vajer'], [42, 21, 0, false, 'vajer'],
-                [42, 1, 0, false, 'vajer']
+                [0, 6, 'IPE 220', true, 'stal'], [6, 7, 'IPE 220', true, 'stal'], [7, 8, 'IPE 220', true, 'stal'], [8, 9, 'IPE 220', true, 'stal'], [9, 10, 'IPE 220', true, 'stal'],
+                [10, 11, 'IPE 220', true, 'stal'], [11, 12, 'IPE 220', true, 'stal'], [12, 13, 'IPE 220', true, 'stal'], [13, 14, 'IPE 220', true, 'stal'], [14, 15, 'IPE 220', true, 'stal'],
+                [15, 16, 'IPE 220', true, 'stal'], [16, 17, 'IPE 220', true, 'stal'], [17, 18, 'IPE 220', true, 'stal'], [18, 19, 'IPE 220', true, 'stal'], [19, 20, 'IPE 220', true, 'stal'],
+                [20, 21, 'IPE 220', true, 'stal'], [21, 22, 'IPE 220', true, 'stal'], [22, 23, 'IPE 220', true, 'stal'], [23, 24, 'IPE 220', true, 'stal'], [24, 25, 'IPE 220', true, 'stal'],
+                [25, 26, 'IPE 220', true, 'stal'], [26, 27, 'IPE 220', true, 'stal'], [27, 28, 'IPE 220', true, 'stal'], [28, 29, 'IPE 220', true, 'stal'], [29, 30, 'IPE 220', true, 'stal'],
+                [30, 31, 'IPE 220', true, 'stal'], [31, 32, 'IPE 220', true, 'stal'], [32, 33, 'IPE 220', true, 'stal'], [33, 34, 'IPE 220', true, 'stal'], [34, 35, 'IPE 220', true, 'stal'],
+                [35, 36, 'IPE 220', true, 'stal'], [36, 1, 'IPE 220', true, 'stal'], [4, 13, 1, false, 'betong'], [13, 37, 1, false, 'betong'], [37, 38, 1, false, 'betong'],
+                [38, 39, 1, false, 'betong'], [39, 11, 1, false, 'vajer'], [39, 15, 1, false, 'vajer'], [39, 9, 1, false, 'vajer'], [39, 17, 1, false, 'vajer'],
+                [39, 7, 1, false, 'vajer'], [39, 19, 1, false, 'vajer'], [39, 0, 1, false, 'vajer'], [39, 21, 1, false, 'vajer'], [5, 29, 1, false, 'betong'],
+                [29, 40, 1, false, 'betong'], [40, 41, 1, false, 'betong'], [41, 42, 1, false, 'betong'], [42, 27, 1, false, 'vajer'], [42, 31, 1, false, 'vajer'],
+                [42, 25, 1, false, 'vajer'], [42, 33, 1, false, 'vajer'], [42, 23, 1, false, 'vajer'], [42, 35, 1, false, 'vajer'], [42, 21, 1, false, 'vajer'],
+                [42, 1, 1, false, 'vajer']
             ]
         }
     },
@@ -239,7 +240,7 @@ const BANOR = [
         fasten: [[0, 0, 'fast'], [400, 0, 'glid'], [-40, 0], [440, 0], [80, -30], [320, -30]],
         kant: 0.4,
         vatten: -30,
-        budget: 820000,
+        budget: 1000000,
         bil: true,
         keiws: 12,
         ö: 60,
@@ -249,8 +250,8 @@ const BANOR = [
         pelare: { botten: -60, pris: 3000, perMeter: 150 },
         losning: {
             // Hängbro: pyloner av betong 5 (90 m), huvudkabel 6 (Ø 32)
-            // förankrad på land, hängare 1 var 20 m, väg av stål
-            // 6 (HEA 200) och pelare var 10 m under sidospannen (814 260 $$).
+            // förankrad på land, hängare 2 (Ø 14) var 20 m, väg av stål
+            // IPE 330 och pelare var 10 m under sidospannen (961 250 $$).
             noder: [
                 [0, 0], [400, 0], [-40, 0], [440, 0], [80, -30, 'styv'], [320, -30, 'styv'], [10, 0, 'pelare'], [20, 0, 'pelare'],
                 [30, 0, 'pelare'], [40, 0, 'pelare'], [50, 0, 'pelare'], [60, 0, 'pelare'], [70, 0, 'pelare'], [80, 0], [90, 0], [100, 0],
@@ -263,22 +264,22 @@ const BANOR = [
                 [280, 30], [300, 40]
             ],
             balkar: [
-                [0, 6, 5, true, 'stal'], [6, 7, 5, true, 'stal'], [7, 8, 5, true, 'stal'], [8, 9, 5, true, 'stal'], [9, 10, 5, true, 'stal'],
-                [10, 11, 5, true, 'stal'], [11, 12, 5, true, 'stal'], [12, 13, 5, true, 'stal'], [13, 14, 5, true, 'stal'], [14, 15, 5, true, 'stal'],
-                [15, 16, 5, true, 'stal'], [16, 17, 5, true, 'stal'], [17, 18, 5, true, 'stal'], [18, 19, 5, true, 'stal'], [19, 20, 5, true, 'stal'],
-                [20, 21, 5, true, 'stal'], [21, 22, 5, true, 'stal'], [22, 23, 5, true, 'stal'], [23, 24, 5, true, 'stal'], [24, 25, 5, true, 'stal'],
-                [25, 26, 5, true, 'stal'], [26, 27, 5, true, 'stal'], [27, 28, 5, true, 'stal'], [28, 29, 5, true, 'stal'], [29, 30, 5, true, 'stal'],
-                [30, 31, 5, true, 'stal'], [31, 32, 5, true, 'stal'], [32, 33, 5, true, 'stal'], [33, 34, 5, true, 'stal'], [34, 35, 5, true, 'stal'],
-                [35, 36, 5, true, 'stal'], [36, 37, 5, true, 'stal'], [37, 38, 5, true, 'stal'], [38, 39, 5, true, 'stal'], [39, 40, 5, true, 'stal'],
-                [40, 41, 5, true, 'stal'], [41, 42, 5, true, 'stal'], [42, 43, 5, true, 'stal'], [43, 44, 5, true, 'stal'], [44, 1, 5, true, 'stal'],
+                [0, 6, 'IPE 330', true, 'stal'], [6, 7, 'IPE 330', true, 'stal'], [7, 8, 'IPE 330', true, 'stal'], [8, 9, 'IPE 330', true, 'stal'], [9, 10, 'IPE 330', true, 'stal'],
+                [10, 11, 'IPE 330', true, 'stal'], [11, 12, 'IPE 330', true, 'stal'], [12, 13, 'IPE 330', true, 'stal'], [13, 14, 'IPE 330', true, 'stal'], [14, 15, 'IPE 330', true, 'stal'],
+                [15, 16, 'IPE 330', true, 'stal'], [16, 17, 'IPE 330', true, 'stal'], [17, 18, 'IPE 330', true, 'stal'], [18, 19, 'IPE 330', true, 'stal'], [19, 20, 'IPE 330', true, 'stal'],
+                [20, 21, 'IPE 330', true, 'stal'], [21, 22, 'IPE 330', true, 'stal'], [22, 23, 'IPE 330', true, 'stal'], [23, 24, 'IPE 330', true, 'stal'], [24, 25, 'IPE 330', true, 'stal'],
+                [25, 26, 'IPE 330', true, 'stal'], [26, 27, 'IPE 330', true, 'stal'], [27, 28, 'IPE 330', true, 'stal'], [28, 29, 'IPE 330', true, 'stal'], [29, 30, 'IPE 330', true, 'stal'],
+                [30, 31, 'IPE 330', true, 'stal'], [31, 32, 'IPE 330', true, 'stal'], [32, 33, 'IPE 330', true, 'stal'], [33, 34, 'IPE 330', true, 'stal'], [34, 35, 'IPE 330', true, 'stal'],
+                [35, 36, 'IPE 330', true, 'stal'], [36, 37, 'IPE 330', true, 'stal'], [37, 38, 'IPE 330', true, 'stal'], [38, 39, 'IPE 330', true, 'stal'], [39, 40, 'IPE 330', true, 'stal'],
+                [40, 41, 'IPE 330', true, 'stal'], [41, 42, 'IPE 330', true, 'stal'], [42, 43, 'IPE 330', true, 'stal'], [43, 44, 'IPE 330', true, 'stal'], [44, 1, 'IPE 330', true, 'stal'],
                 [4, 45, 4, false, 'betong'], [45, 46, 4, false, 'betong'], [46, 13, 4, false, 'betong'], [13, 47, 4, false, 'betong'], [47, 48, 4, false, 'betong'],
                 [48, 49, 4, false, 'betong'], [5, 50, 4, false, 'betong'], [50, 51, 4, false, 'betong'], [51, 37, 4, false, 'betong'], [37, 52, 4, false, 'betong'],
                 [52, 53, 4, false, 'betong'], [53, 54, 4, false, 'betong'], [2, 49, 5, false, 'vajer'], [49, 55, 5, false, 'vajer'], [55, 56, 5, false, 'vajer'],
                 [56, 57, 5, false, 'vajer'], [57, 58, 5, false, 'vajer'], [58, 59, 5, false, 'vajer'], [59, 60, 5, false, 'vajer'], [60, 61, 5, false, 'vajer'],
                 [61, 62, 5, false, 'vajer'], [62, 63, 5, false, 'vajer'], [63, 64, 5, false, 'vajer'], [64, 65, 5, false, 'vajer'], [65, 54, 5, false, 'vajer'],
-                [54, 3, 5, false, 'vajer'], [55, 15, 0, false, 'vajer'], [56, 17, 0, false, 'vajer'], [57, 19, 0, false, 'vajer'], [58, 21, 0, false, 'vajer'],
-                [59, 23, 0, false, 'vajer'], [60, 25, 0, false, 'vajer'], [61, 27, 0, false, 'vajer'], [62, 29, 0, false, 'vajer'], [63, 31, 0, false, 'vajer'],
-                [64, 33, 0, false, 'vajer'], [65, 35, 0, false, 'vajer']
+                [54, 3, 5, false, 'vajer'], [55, 15, 1, false, 'vajer'], [56, 17, 1, false, 'vajer'], [57, 19, 1, false, 'vajer'], [58, 21, 1, false, 'vajer'],
+                [59, 23, 1, false, 'vajer'], [60, 25, 1, false, 'vajer'], [61, 27, 1, false, 'vajer'], [62, 29, 1, false, 'vajer'], [63, 31, 1, false, 'vajer'],
+                [64, 33, 1, false, 'vajer'], [65, 35, 1, false, 'vajer']
             ]
         }
     }
@@ -297,10 +298,10 @@ function ritningensKostnad(r, bana) {
         const na = r.noder[b.a], nb = r.noder[b.b];
         k += Math.hypot(nb.x - na.x, nb.y - na.y) * (profil(b.material || 'limtra', b.storlek).pris + (b.vag ? VAG.pris : 0));
     }
-    for (const n of r.noder) {
+    r.noder.forEach((n, i) => {
         if (n.pelare) k += pelarensPris(bana, n.y);
-        else if (!n.fast) k += FORBAND.pris[n.styv ? 'styvt' : 'ledat'];
-    }
+        else if (!n.fast) k += forbandet(r, i).pris;
+    });
     return Math.round(k / 10) * 10;
 }
 
