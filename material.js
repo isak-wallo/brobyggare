@@ -104,6 +104,18 @@ function iprofil(namn, A, I, W, Av, h) {
 const TRA_BREDD = [42, 56, 66, 78, 90, 115, 140];
 const TRA_HOJD = [180, 225, 270, 315, 360, 405, 450, 495, 540, 585, 630];
 
+// Höjden högst 7 gånger bredden: en högre och smalare balk skulle vippa i
+// sidled (det räknar inte 2D-modellen med), så en hög balk kräver bredd.
+// traMatt ger ett tillåtet mått: med behallH blir balken bredare, annars lägre.
+const TRA_SLANK = 7;
+function traMatt(b, h, behallH) {
+    if (h > TRA_SLANK * b) {
+        if (behallH) b = TRA_BREDD.find(x => TRA_SLANK * x >= h) ?? TRA_BREDD.at(-1);
+        else h = TRA_HOJD.filter(x => x <= TRA_SLANK * b).at(-1) ?? TRA_HOJD[0];
+    }
+    return b + '×' + h;
+}
+
 // Stålprofilerna: [nummer, h, b, tw, tf, r (mm), A (cm²), Iy (cm⁴), Wy (cm³)].
 // Böjning kring den styva axeln; livets area A_v enligt Eurokod
 // (A − 2·b·tf + (tw + 2r)·tf).

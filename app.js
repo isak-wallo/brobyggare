@@ -163,6 +163,9 @@ function uppgradera(r, b = bana) {
     }
     for (const k of r.balkar) {
         if (typeof k.storlek !== 'string') k.storlek = Math.max(0, Math.min(ANTAL_STEG - 1, Math.round(k.storlek)));
+        // Trä som är för högt för sin bredd (från v55) blir bredare.
+        const m = (k.material || 'limtra') === 'limtra' && /^(\d+)×(\d+)$/.exec(k.storlek);
+        if (m) k.storlek = traMatt(+m[1], +m[2], true);
     }
     r.version = 7;
     return r;
@@ -1400,7 +1403,7 @@ ${brott}
 <p>Ett element som går sönder försvinner, en balk som knäcks går av på mitten.</p>
 <h4>Profiler</h4>
 <p>Limträ: bredd ${TRA_BREDD[0]}–${TRA_BREDD.at(-1)} mm, höjd ${TRA_HOJD[0]}–${TRA_HOJD.at(-1)} mm (lameller
-på 45 mm). Stål: IPE 80–600, HEA och HEB 100–600. Några av dem:</p>
+på 45 mm), höjden högst ${TRA_SLANK} gånger bredden (en högre balk väljs bredare). Stål: IPE 80–600, HEA och HEB 100–600. Några av dem:</p>
 <div class="rulla"><table class="tabell">
 <tr><th></th><th class="v">Profil</th><th>kg/m</th><th>$$/m</th></tr>
 ${profiler}
@@ -1408,7 +1411,7 @@ ${profiler}
 <h4>Förenklingar</h4>
 <ul>
 <li>Ingen skjuvdeformation (Timoshenko).</li>
-<li>Ingen vippning eller knäckning ut ur planet (stålets I-balkar knäcks bara kring den styva axeln).</li>
+<li>Ingen vippning eller knäckning ut ur planet (stålets I-balkar knäcks bara kring den styva axeln; limträet har i stället ett krav på bredden).</li>
 <li>Inga partialkoefficienter eller lastkombinationer som i Eurokod.</li>
 <li>Betong räknas som ett homogent armerat tvärsnitt (ingen sprickbildning).</li>
 <li>Kablarna hänger inte i en kedjelinje mellan fästena (ingen egen nedböjning).</li>
@@ -1631,8 +1634,8 @@ popupEl.addEventListener('click', e => {
     } else {
         const p = profil(a.mat, a.st);
         let s;
-        if (d.b) s = d.b + '×' + narmast(TRA_HOJD, p.h * 1000);
-        else if (d.h) s = narmast(TRA_BREDD, p.b * 1000) + '×' + d.h;
+        if (d.b) s = traMatt(+d.b, narmast(TRA_HOJD, p.h * 1000), false);
+        else if (d.h) s = traMatt(narmast(TRA_BREDD, p.b * 1000), +d.h, true);
         else if (d.serie) s = d.serie + ' ' + narmast(STAL_SERIER[d.serie].map(([n]) => n), +p.namn.split(' ')[1]);
         else if (d.nr) s = p.namn.split(' ')[0] + ' ' + d.nr;
         else if (d.s !== undefined) s = +d.s;

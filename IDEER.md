@@ -615,3 +615,7 @@ lägena). Hålltiden 300 ms. Är något redan valt väljer ett tryck på en anna
 knutpunkt den direkt. När vägbanan blir hel mellan brolagren byts verktyget till balk.
 Fråga: trä i bredd lönar sig bara vid maxhöjd (I och W växer med h², priset med b·h, ingen
 vippning i 2D).
+
+v55-test: limträets höjd högst 7 × bredden (TRA_SLANK, i stället för vippning som 2D-modellen
+saknar). Väljer man en för hög höjd blir balken bredare, en för smal bredd gör den lägre;
+gamla ritningar blir bredare. Isak valde slankhetskravet framför dyrare höga balkar.

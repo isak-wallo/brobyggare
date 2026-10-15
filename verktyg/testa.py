@@ -229,6 +229,11 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     kolla(f'{namn}: bredd och höjd väljs, rutan är kvar med pris', sida.evaluate('() => window.bro.ritProfil.limtra') == '90×270'
           and sida.evaluate('() => window.bro.popup') == 'profil' and '90×270' in sida.inner_text('#popup .rubrik')
           and '$$/m' in sida.inner_text('#popup .rubrik') and '90×270' in panel('profil'))
+    slank = []
+    for k in ['b="56"', 'h="450"', 'h="630"', 'b="42"', 'b="90"', 'h="270"']:
+        sida.click(f'#popup [data-{k}]')
+        slank.append(sida.evaluate('() => window.bro.ritProfil.limtra'))
+    kolla(f'{namn}: höjden högst 7 gånger bredden', slank == ['56×270', '66×450', '90×630', '42×270', '90×270', '90×270'], slank)
     d = sida.locator('#duk').bounding_box()
     sida.mouse.click(d['x'] + 15, d['y'] + sida.evaluate('() => luftNu') + 15)
     kolla(f'{namn}: ett tryck på spelytan stänger rutan och bygger inget',
