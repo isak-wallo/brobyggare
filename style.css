@@ -114,7 +114,7 @@ html, body {
 }
 
 /* Styrningen under spelytan (stående): panelen (Material, Typ, Profil)
-   överst och ✋ ↶ Riv Kör under, med luft nedtill för telefonens
+   överst och Ångra, Riv och Kör under (samma rutnät), med luft nedtill för telefonens
    navigeringsstreck. Liggande: två kolumner till höger. */
 #styrning {
     flex: none;
@@ -137,7 +137,7 @@ html, body {
 }
 
 #verktyg {
-    grid-template-columns: 56px 56px minmax(0, 1fr) minmax(0, 1.4fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 #styrning button {
@@ -156,11 +156,6 @@ html, body {
 #styrning button:disabled {
     opacity: 0.4;
     cursor: default;
-}
-
-#verktyg button[data-v=angra],
-#verktyg button[data-v=panorera] {
-    font-size: 22px;
 }
 
 #styrning button.vald {
@@ -250,12 +245,12 @@ html, body {
 
     #valjare {
         grid-template-columns: minmax(0, 1fr);
-        grid-template-rows: repeat(3, minmax(0, 64px));
+        grid-template-rows: repeat(3, minmax(0, 72px));
     }
 
     #verktyg {
         grid-template-columns: minmax(0, 1fr);
-        grid-template-rows: repeat(3, minmax(0, 1fr)) minmax(0, 1.4fr);
+        grid-template-rows: repeat(3, minmax(0, 72px));
     }
 
     #valjare .etikett {
@@ -347,9 +342,10 @@ html, body {
 
 #popup .lista button {
     display: flex;
-    justify-content: space-between;
-    gap: 12px;
-    text-align: left;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-height: 34px;
 }
 
 #popup .lista small {

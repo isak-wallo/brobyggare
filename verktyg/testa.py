@@ -78,11 +78,16 @@ def skarm(sida, varld):
     return box['x'] + k['ox'] + varld[0] * k['sk'], box['y'] + k['oy'] - varld[1] * k['sk']
 
 
-def dra(sida, fran, till):
+def dra(sida, fran, till, vanta=320):
+    """Bygger: håller still en kort stund (på tom yta börjar balken då, från
+    en knutpunkt direkt) och drar. vanta=0: ett vanligt drag (panorerar på
+    tom yta)."""
     x1, y1 = skarm(sida, fran)
     x2, y2 = skarm(sida, till)
     sida.mouse.move(x1, y1)
     sida.mouse.down()
+    if vanta:
+        sida.wait_for_timeout(vanta)
     sida.mouse.move((x1 + x2) / 2, (y1 + y2) / 2, steps=4)
     sida.mouse.move(x2, y2, steps=4)
     sida.mouse.up()
@@ -192,16 +197,20 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
           and y0 >= duk['y'] - 1 and y1 <= duk['y'] + duk['height'] + 1)
 
     # Man bygger väg av trä 66×225 från start. Panelen: Material, Typ och
-    # Profil, och under (bredvid när den ligger) ✋, Ångra, Riv och Kör.
+    # Profil, och under (bredvid när den ligger) Ångra, Riv och Kör i samma rutnät.
     panel = lambda p: sida.inner_text(f'#valjare [data-p={p}]').replace('\n', ' ')
     kolla(f'{namn}: man bygger väg av trä 66×225 från start', panel('material') == 'Material Trä' and panel('typ') == 'Typ Väg'
-          and '66×225' in panel('profil') and '$$/m' in panel('profil') and not sida.evaluate('() => window.bro.panorera'))
+          and '66×225' in panel('profil') and '$$/m' in panel('profil'))
     vb = sida.locator('#styrning').bounding_box()
     rader = sida.evaluate("([kant]) => new Set([...document.querySelectorAll('#styrning button')].map(b => Math.round(b.getBoundingClientRect()[kant]))).size",
                           ['top' if bredd < hojd else 'left'])
     kor = sida.locator('#verktyg [data-v=kor]').bounding_box()
-    kolla(f'{namn}: Material, Typ, Profil och ✋ Ångra Riv Kör på två ' + ('rader' if bredd < hojd else 'kolumner') + ', utanför spelytan',
-          sida.locator('#styrning button').count() == 7 and rader == 2 and riv_av(sida)
+    prof = sida.locator('#valjare [data-p=profil]').bounding_box()
+    rutnat = (abs(kor['x'] - prof['x']) < 1 and abs(kor['width'] - prof['width']) < 1 if bredd < hojd
+              else abs(kor['y'] - prof['y']) < 1 and abs(kor['height'] - prof['height']) < 1)
+    kolla(f'{namn}: Material, Typ, Profil och Ångra Riv Kör i ett rutnät på två ' + ('rader' if bredd < hojd else 'kolumner') + ', utanför spelytan',
+          sida.locator('#styrning button').count() == 6 and rader == 2 and riv_av(sida) and rutnat
+          and sida.inner_text('#verktyg [data-v=angra]') == 'Ångra'
           and (vb['y'] >= duk['y'] + duk['height'] - 1 if bredd < hojd else vb['x'] >= duk['x'] + duk['width'] - 1))
     if bredd < hojd:
         kolla(f'{namn}: luft under knapparna (telefonens streck)', kor['y'] + kor['height'] <= hojd - 20,
@@ -344,28 +353,29 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
           and all(b['vag'] and b['storlek'] == '90×270' for b in sida.evaluate('() => window.bro.ritning.balkar')))
     sida.click('#verktyg [data-v=riv]')
     kolla(f'{namn}: Riv utan något valt gör inget', antal_balkar(sida) == 2 and riv_av(sida))
-    sida.click('#verktyg [data-v=panorera]')
-    kolla(f'{namn}: ✋ panorerar', sida.evaluate('() => window.bro.panorera')
-          and sida.locator('#verktyg [data-v=panorera].vald').count() == 1)
 
-    # Panorera: inzoomad flyttar ett finger vyn även mitt i rutnätet.
+    # Inzoomad: ett drag på tom yta i rutnätet flyttar vyn och bygger inget;
+    # håller man still först börjar en balk där; från en knutpunkt bygger
+    # man direkt.
     sida.mouse.move(*skarm(sida, (7, 0)))
     sida.mouse.wheel(0, -600)
     sida.wait_for_timeout(100)
     fore = skarm(sida, (7, 0))
+    dra(sida, (5, 2), (7, 2), vanta=0)
+    efter = skarm(sida, (7, 0))
+    kolla(f'{namn}: ett drag på tom yta panorerar, bygger inget',
+          abs(efter[0] - fore[0]) > 20 and antal_balkar(sida) == 2, f'{efter[0] - fore[0]:.0f} px')
+    fore = skarm(sida, (7, 0))
     dra(sida, (5, 2), (7, 2))
     efter = skarm(sida, (7, 0))
-    kolla(f'{namn}: Panorera flyttar vyn med ett finger i rutnätet, bygger inget',
-          abs(efter[0] - fore[0]) > 20 and antal_balkar(sida) == 2, f'{efter[0] - fore[0]:.0f} px')
+    kolla(f'{namn}: håll still på tom yta och dra: en ny balk, vyn står kvar',
+          antal_balkar(sida) == 3 and abs(efter[0] - fore[0]) < 1)
+    sida.click('#verktyg [data-v=angra]')
+    dra(sida, (7, 0), (7, 1.5), vanta=0)
+    kolla(f'{namn}: ett drag från en knutpunkt bygger direkt', antal_balkar(sida) == 3)
+    sida.click('#verktyg [data-v=angra]')
     sida.mouse.wheel(0, 3000)
     sida.wait_for_timeout(100)
-    ruta(sida, 'typ', '[data-t=vag]')
-    kolla(f'{namn}: Väg i Typ går tillbaka till att bygga', not sida.evaluate('() => window.bro.panorera')
-          and sida.locator('#verktyg [data-v=panorera].vald').count() == 0)
-    sida.click('#verktyg [data-v=panorera]')
-    sida.click('#verktyg [data-v=panorera]')
-    kolla(f'{namn}: och ✋ igen', not sida.evaluate('() => window.bro.panorera'))
-    valj(sida, 'vag')
 
     # Inzoomad: ett finger utanför rutnätet (här i berget) flyttar vyn,
     # bygger inget.
@@ -373,7 +383,11 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     sida.mouse.wheel(0, -600)
     sida.wait_for_timeout(100)
     fore = skarm(sida, (7, 0))
-    dra(sida, (-1.5, -1.5), (-0.5, -1.5))
+    d = sida.locator('#duk').bounding_box()
+    sida.mouse.move(d['x'] + 12, d['y'] + d['height'] - 40)
+    sida.mouse.down()
+    sida.mouse.move(d['x'] + 70, d['y'] + d['height'] - 40, steps=6)
+    sida.mouse.up()
     efter = skarm(sida, (7, 0))
     kolla(f'{namn}: inzoomad flyttar ett finger utanför rutnätet vyn',
           sida.evaluate('() => window.bro.zoom') > 1.2 and abs(efter[0] - fore[0]) > 20 and antal_balkar(sida) == 2,

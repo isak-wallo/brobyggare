@@ -570,3 +570,8 @@ eller pelare för att välja den. Profilerna: limträ bredd 42–140 × höjd
 material.js); betong och kabel har kvar sina sex steg. Balkens storlek är
 profilens namn (eller steget 0–5). Inga tips under kostnaden. Pilarna
 bredvid varandra till vänster om namnet, och namnet visar alla banor.
+v50-test (Isak 2026-10-15): ✋ är borta. Ett drag från en knutpunkt eller ett
+fäste bygger direkt; ett drag på tom yta panorerar; håller man still 0,25 s
+på tom yta börjar balken där (en blå prick, det surrar). Nedersta raden är
+Ångra, Riv, Kör i text, i samma rutnät som Material, Typ, Profil (liggande
+lika höga rader). Banlistan: lägre knappar med centrerad text.

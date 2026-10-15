@@ -13,6 +13,7 @@ const TEST = new URLSearchParams(location.search).has('test');
 // som text, för felsökning. Inte på den skarpa sidan.
 const FELSOK = TEST || /github\.io$|^localhost$|^127\./.test(location.hostname);
 const MAX_LANGD = 12;        // m, längsta balken (om banan inte säger annat)
+const BYGG_HALL = 250;       // ms: håll still så länge på tom yta för att börja en balk där (annars panorerar man)
 const START_NARA = 24;       // px: så nära en knutpunkt börjar en ny balk i den
 const RATTA_TID = 2.5;       // s som en ny balks startände går att dra rätt
 const MAX_STEG = 8;          // fysiksteg per bildruta (annars går det långsamt)
@@ -53,7 +54,6 @@ let banaNr = lasBanaNr();
 let bana = BANOR[banaNr];
 let ritning = lasRitning();
 let historik = [];
-let panoreraLage = false;    // Panorera: ett finger flyttar vyn i stället för att bygga
 let ritVag = true;            // ritar väg (som keIWs går på) eller balk
 let ritPelare = false;       // sätter pelare i stället (banor med pelare)
 let ritKabel = false;        // ritar kablar i stället (bara drag)
@@ -677,6 +677,10 @@ function ritaBygg() {
     }
     for (const n of ritning.noder) ritaNod(n.x, n.y, n);
     ritaVald();
+    if (drag && drag.ny && drag.till[0] === drag.fran[0] && drag.till[1] === drag.fran[1]) {
+        ctx.fillStyle = 'rgba(61, 139, 253, 0.35)';
+        ctx.beginPath(); ctx.arc(sx(drag.fran[0]), sy(drag.fran[1]), Math.max(9, 0.3 * kam.sk), 0, 7); ctx.fill();
+    }
     if (drag && !drag.pelare && (drag.till[0] !== drag.fran[0] || drag.till[1] !== drag.fran[1])) {
         const [x1, y1] = drag.fran, [x2, y2] = drag.till, max = maxLangd(ritKabel);
         const ok = Math.hypot(x2 - x1, y2 - y1) <= max + 1e-6;
@@ -1022,8 +1026,7 @@ function uppdateraInfo() {
     knappar.kor.textContent = bygger ? 'Kör' : 'Stopp';
     knappar.kor.classList.toggle('stopp', !bygger);
     knappar.angra.disabled = !bygger || !historik.length;
-    knappar.panorera.disabled = knappar.riv.disabled = !bygger;
-    knappar.panorera.classList.toggle('vald', panoreraLage && bygger);
+    knappar.riv.disabled = !bygger;
     knappar.riv.classList.toggle('av', !kanRiva());
     visaValjare();
     if (popup) visaPopup(popup.typ, popup.ankare);
@@ -1265,6 +1268,8 @@ tillsammans. <b>Ledad knut</b> (ring): de vrider sig fritt, som ett
 gångjärn. Tryck på en knut för att byta.</li>
 <li><b>Håll fingret på en balk eller knut</b> för att välja den: byt
 material, typ eller profil, flytta den eller riv den.</li>
+<li><b>Dra från en knut</b> för att bygga en balk. Drar man på tom yta
+flyttas vyn; håll still en kort stund först för att börja en balk där.</li>
 <li><b>Vid vägens ändar står bron på lager</b>, som riktiga broar: den ena
 änden sitter fast och den andra står på rullar. Övriga fästen sitter
 fast.</li>
@@ -1492,7 +1497,7 @@ function placeraRuta() {
     else rutaEl.style.top = info + 8 + b.height / 2 + 'px';
 }
 
-// ✋ (panorera av och på), Ångra, Riv (håll inne: Riv allt) och Kör/Stopp.
+// Ångra, Riv (håll inne: Riv allt) och Kör/Stopp.
 const verktygEl = document.getElementById('verktyg');
 let rivHall = null;           // {timer, klar}: man håller i Riv
 
@@ -1514,8 +1519,7 @@ verktygEl.addEventListener('click', e => {
     if (v === 'riv' && rivHall && rivHall.klar) { rivHall = null; return; }     // Riv allt är framme
     rivHall = null;
     stangPopup();
-    if (v === 'panorera') panoreraLage = !panoreraLage;
-    else if (v === 'riv') rivValt();
+    if (v === 'riv') rivValt();
     else if (v === 'angra' && historik.length) { ritning = uppgradera(JSON.parse(historik.pop())); vald = -1; valdNod = null; ratta = null; sparaRitning(); }
     else if (v === 'kor') { if (lageNu === 'bygg') kor(); else bygg(); }
     uppdateraInfo();
@@ -1552,7 +1556,6 @@ popupEl.addEventListener('click', e => {
         uppdateraInfo();
         return;
     }
-    panoreraLage = false;
     if (d.m) {
         if (balk) { if (a.mat !== d.m) andra(() => { balk.material = d.m; balk.storlek = ritProfil[d.m]; }); }
         else ritMaterial = d.m;
@@ -1669,6 +1672,7 @@ function narmasteNod(wx, wy, max, medFasten = false) {
 // finger under provkörningen flyttar vyn.
 const pekare = new Map();
 let nyp = null, panorera = null;
+let byggHall = null;          // {p, fran, timer}: ett finger på tom yta, kan bli en ny balk
 
 function nypLage() {
     const [[x1, y1], [x2, y2]] = [...pekare.values()];
@@ -1697,6 +1701,21 @@ function valjHall() {
 function slappHall() {
     if (hall) clearTimeout(hall.timer);
     hall = null;
+    if (byggHall) clearTimeout(byggHall.timer);
+    byggHall = null;
+}
+
+// Fingret har stått still på tom yta: vyn hoppar tillbaka och en ny balk
+// börjar i punkten.
+function byggHar() {
+    const b = byggHall;
+    byggHall = null;
+    if (!b || lageNu !== 'bygg' || pekare.size !== 1 || !panorera) return;
+    mitt = panorera.mitt;
+    sattKamera();
+    panorera = null;
+    drag = { fran: b.fran, till: b.fran, ny: true };
+    try { if (navigator.vibrate) navigator.vibrate(10); } catch (err) { /* inget */ }
 }
 
 duk.addEventListener('pointerdown', e => {
@@ -1712,11 +1731,6 @@ duk.addEventListener('pointerdown', e => {
     }
     if (lageNu !== 'bygg') {
         if (sim && sim.bygge) byggKlart();       // ett tryck hoppar över bygget
-        panorera = { p: iDuken(e), mitt: vynsMitt() };
-        return;
-    }
-    // Panorera: ett finger flyttar vyn var man än trycker.
-    if (panoreraLage) {
         panorera = { p: iDuken(e), mitt: vynsMitt() };
         return;
     }
@@ -1769,17 +1783,24 @@ duk.addEventListener('pointerdown', e => {
         hall.p = iDuken(e);
         hall.timer = setTimeout(valjHall, HALL_TID);
     }
-    // Pelare: ett tryck på en punkt sätter eller tar bort en.
+    // Pelare: ett tryck på en punkt sätter eller tar bort en (ett drag
+    // panorerar).
     if (ritPelare) {
         const p = snappa(wx, wy);
+        panorera = { p: iDuken(e), mitt: vynsMitt() };
         if (p) drag = { fran: p, till: p, pelare: true, avmarkera };
         return;
     }
-    // Nära en knutpunkt eller ett fäste börjar balken där, annars i
-    // närmaste punkt (man bygger nästan alltid vidare på något).
+    // Från en knutpunkt eller ett fäste börjar en balk direkt. På tom yta
+    // panorerar ett drag; håller man still en kort stund börjar balken där.
     const start = narmasteNod(wx, wy, Math.max(rutnat() / 2, START_NARA / kam.sk), true);
-    const p = start >= 0 ? [ritning.noder[start].x, ritning.noder[start].y] : snappa(wx, wy);
-    if (p) drag = { fran: p, till: p, avmarkera };
+    if (start >= 0) {
+        drag = { fran: [ritning.noder[start].x, ritning.noder[start].y], till: [ritning.noder[start].x, ritning.noder[start].y], avmarkera };
+        return;
+    }
+    panorera = { p: iDuken(e), mitt: vynsMitt() };
+    const p = snappa(wx, wy);
+    if (p) byggHall = { p: iDuken(e), fran: p, timer: setTimeout(byggHar, BYGG_HALL) };
 });
 
 const rattaAktiv = () => ratta && lageNu === 'bygg' && ritning.balkar[ratta.balk]
@@ -1795,7 +1816,9 @@ duk.addEventListener('pointermove', e => {
         return;
     }
     if (hall && Math.hypot(iDuken(e)[0] - hall.p[0], iDuken(e)[1] - hall.p[1]) > 10) slappHall();
+    if (byggHall && Math.hypot(iDuken(e)[0] - byggHall.p[0], iDuken(e)[1] - byggHall.p[1]) > 10) slappHall();
     if (panorera) {
+        if (drag && drag.pelare && Math.hypot(iDuken(e)[0] - panorera.p[0], iDuken(e)[1] - panorera.p[1]) > 10) drag = null;
         const [px, py] = iDuken(e);
         mitt = [panorera.mitt[0] - (px - panorera.p[0]) / kam.sk, panorera.mitt[1] + (py - panorera.p[1]) / kam.sk];
         sattKamera();
@@ -1969,7 +1992,7 @@ if (TEST) {
         get popup() { return popup && popup.typ; },
         get valt() { return !!(valdBalken() || valdKnut()); },
         get ritProfil() { return ritProfil; },
-        get panorera() { return panoreraLage; },
+        get panorerar() { return !!panorera; },
         get banaNr() { return banaNr; },
         get bygger() { return !!(sim && sim.bygge); },
         get version() { return version; },

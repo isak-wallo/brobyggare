@@ -13,8 +13,11 @@ utnyttjad (grön → gul → röd). Över 100 % går den sönder.
   mobilen ligger): **Material** (trä, stål …), **Typ** (väg som keIWs går
   på, balk, kabel som bara tar drag, pelare) och **Profil** (trä: bredd
   42–140 och höjd 180–630 mm; stål: IPE, HEA, HEB). Varje knapp öppnar en
-  ruta med val. Under: **✋** (ett finger flyttar vyn), **Ångra**, **Riv**
+  ruta med val. Under, i samma rutnät: **Ångra**, **Riv**
   (håll inne: Riv allt) och **Kör**.
+- **Bygga och flytta vyn**: dra från en knutpunkt eller ett fäste för att
+  bygga en balk. Ett drag på tom yta flyttar vyn; håll still en kort stund
+  (0,25 s) för att börja en balk där.
 - **Tryck på en knutpunkt** när man bygger: växla mellan styvt (fyrkant) och ledat (ring).
 - **Håll fingret** på en balk, knutpunkt eller pelare för att välja den:
   panelen gäller då den (byt material, typ, profil, styv/ledad), Riv tar
