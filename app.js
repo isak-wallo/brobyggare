@@ -1509,6 +1509,8 @@ function visaMeny() {
     menyEl.firstChild.innerHTML = '<button class="stang" data-v="stang">✕</button>'
         + '<h2>Brobyggare</h2>'
         + '<h3>Bana ' + (banaNr + 1) + ' · ' + bana.namn + ' (budget ' + kr(bana.budget) + ')</h3>' + basta
+        + facitText()
+        + '<p><button data-v="guide">Visa guiden</button></p>'
         + (FELSOK ? '<p><button data-v="dela">Dela konstruktionen (test)</button></p>' : '')
         + '<details><summary>Hur funkar det?</summary>' + LEKMAN_TEXT + '</details>'
         + '<details><summary>Förutsättningar – för nördar</summary>' + nordText() + '</details>'
@@ -1517,6 +1519,27 @@ function visaMeny() {
 }
 
 const menyOppen = () => !menyEl.classList.contains('dold');
+
+// Möjliga lösningar (banans facit): gömda i menyn så att man inte får
+// fram dem av misstag. Ritningen byts ut, Ångra tar tillbaka den.
+const FACIT_NAMN = { enkel: 'Enkel', effektiv: 'Kostnadseffektiv' };
+function facitText() {
+    if (!bana.facit) return '';
+    return '<details class="facit"><summary>Visa möjliga lösningar</summary>'
+        + '<p>Två broar som håller, att utgå ifrån. Inte de bästa, så det går att bygga billigare! '
+        + 'Din ritning byts ut (Ångra tar tillbaka den).</p>'
+        + Object.keys(FACIT_NAMN).map(sort => '<p><button data-facit="' + sort + '">' + FACIT_NAMN[sort] + ' · '
+            + kr(ritningensKostnad(losningsRitning(bana, bana.facit[sort]), bana)) + '</button><br>'
+            + bana.facit[sort].text + '</p>').join('')
+        + '</details>';
+}
+
+// Byter ritningen (Ångra tar tillbaka den gamla).
+function bytRitning(ny) {
+    if (lageNu !== 'bygg') bygg(false);
+    andra(() => { ritning = uppgradera(JSON.parse(JSON.stringify(ny))); vald = -1; valdNod = null; });
+    ritVag = !vagenHel();
+}
 
 // Felsökning: konstruktionen som text (version, bana, ritning och senaste
 // provkörningen) som kopieras och visas i menyn, så att den kan klistras in
@@ -1564,14 +1587,120 @@ menyEl.addEventListener('click', e => {
     }
     if (b.dataset.v === 'hamta') {
         const basta = lasBasta(banaNr);
-        if (basta) {
-            if (lageNu !== 'bygg') bygg(false);
-            andra(() => { ritning = uppgradera(JSON.parse(JSON.stringify(basta.ritning))); vald = -1; valdNod = null; });
-            ritVag = !vagenHel();
+        if (basta) bytRitning(basta.ritning);
+    }
+    if (b.dataset.facit && bana.facit) bytRitning(losningsRitning(bana, bana.facit[b.dataset.facit]));
+    stangMeny();
+    if (b.dataset.v === 'guide') visaGuide();
+});
+
+// ---------- Guiden ----------
+
+// En frivillig rundtur ("?" under menyknappen, eller i menyn): ett steg i
+// taget lyser upp en knapp eller en del av banan och berättar vad den gör.
+// Allt annat är mörkt och går inte att trycka på medan guiden visas.
+const guideEl = document.getElementById('guide');
+let guideSteg = -1;
+
+const elRuta = sel => { const e = document.querySelector(sel); return e && e.offsetParent ? e.getBoundingClientRect() : null; };
+// En ruta kring punkter i banan (meter), minst m px åt varje håll.
+function banRuta(punkter, m = 18) {
+    const d = duk.getBoundingClientRect();
+    const xs = punkter.map(p => d.left + sx(p[0])), ys = punkter.map(p => d.top + sy(p[1]));
+    const l = Math.min(...xs) - m, t = Math.min(...ys) - m, r = Math.max(...xs) + m, b = Math.max(...ys) + m;
+    return { left: l, top: t, right: r, bottom: b, width: r - l, height: b - t };
+}
+const lagerRuta = typ => { const f = bana.fasten.find(f => f[2] === typ); return f && banRuta([f]); };
+
+const GUIDE = [
+    { text: '<b>Välkommen till Brobyggare!</b> Bygg en bro så att keIWs kommer över, och håll budgeten. '
+        + 'Här är en kort rundtur. Du kan hoppa ur när du vill.' },
+    { mal: () => elRuta('#info .rad:first-child'), text: 'Det här är banan. ‹ och › byter bana, och ett tryck på namnet visar alla banor.' },
+    { mal: () => elRuta('#info .rad:nth-child(2)'), text: 'Vad din bro kostar, och banans budget. Blir siffran röd är du över budget.' },
+    { mal: () => lagerRuta('fast'), text: 'Vägens ändar står på lager, de svarta trianglarna. Det här är det fasta lagret: det sitter fast i berget.' },
+    { mal: () => lagerRuta('glid'), text: 'Det här är glidlagret. Det står på rullar och låter vägen glida i sidled, som på riktiga broar.' },
+    { mal: () => { const f = bana.fasten.filter(f => !f[2] && f[0] >= bana.omrade.x0 && f[0] <= bana.omrade.x1); return f.length ? banRuta(f) : null; },
+      text: 'Svarta knutar sitter fast i berget och går inte att flytta. Därifrån kan du bygga strävor och bågar.' },
+    { mal: () => { const o = bana.omrade; return banRuta([[o.x0, Math.max(o.y0, 0)], [o.x1, o.y1]], 8); },
+      text: 'Prickarna visar var du kan bygga. <b>Dra med fingret</b> från en knut till en prick, så blir det en balk. '
+        + 'Vita knutar har du byggt själv: fyrkant är styv, rund är ledad. Tryck på en knut för att byta.' },
+    { mal: () => elRuta('#valjare [data-p=typ]'), text: '<b>Typ:</b> väg är det keIWs går på. Balk är allt annat, det som bär upp vägen.' },
+    { mal: () => elRuta('#valjare [data-p=material]'), text: '<b>Material:</b> först finns bara trä. Stål kommer på Kanalen, betong och kablar på Älven.' },
+    { mal: () => elRuta('#valjare [data-p=profil]'), text: '<b>Profil:</b> hur grov balken är. Grövre är starkare men dyrare; priset står per meter.' },
+    { mal: () => elRuta('#valjare'), text: '<b>Håll fingret</b> på en balk eller knut för att välja den. Då gäller valen här den, och du kan flytta eller riva den.' },
+    { mal: () => elRuta('#verktyg [data-v=angra]'), text: '<b>Ångra</b> tar tillbaka det senaste du gjorde.' },
+    { mal: () => elRuta('#verktyg [data-v=riv]'), text: '<b>Riv</b> tar bort det du har valt. Håll inne Riv för att riva allt.' },
+    { mal: () => elRuta('#verktyg [data-v=kor]'), text: '<b>Kör:</b> keIWs går över bron. Färgerna visar hur hårt varje bit jobbar, '
+        + 'och går något sönder kan du se förloppet steg för steg.' },
+    { mal: () => elRuta('#menyknapp'), text: 'I <b>menyn</b> finns din billigaste bro, möjliga lösningar att utgå ifrån och hur allt fungerar.' },
+    { mal: () => elRuta('#guideknapp'), text: 'Och här startar du guiden igen. Lycka till!' }
+];
+
+function visaGuide() {
+    if (lageNu !== 'bygg') bygg(false);
+    if (popup) stangPopup();
+    if (menyOppen()) stangMeny();
+    guideSteg = -1;
+    guideEl.classList.remove('dold');
+    guideNasta(1);
+}
+
+function stangGuide() {
+    guideSteg = -1;
+    guideEl.classList.add('dold');
+}
+
+// Nästa (eller förra) steg som har något att visa på den här banan.
+function guideNasta(d) {
+    let i = guideSteg + d;
+    while (i > 0 && i < GUIDE.length && GUIDE[i].mal && !GUIDE[i].mal()) i += d;
+    if (i < 0) i = 0;
+    if (i >= GUIDE.length) { stangGuide(); return; }
+    guideSteg = i;
+    ritaGuide();
+}
+
+function ritaGuide() {
+    if (guideSteg < 0) return;
+    const steg = GUIDE[guideSteg], r = steg.mal ? steg.mal() : null;
+    const synliga = GUIDE.map((s, i) => i).filter(i => !GUIDE[i].mal || GUIDE[i].mal());
+    const sista = guideSteg === synliga[synliga.length - 1];
+    guideEl.innerHTML = '<div class="hal' + (r ? '' : ' ingen') + '"></div><div class="bubbla">'
+        + '<button class="stang" data-g="stang" aria-label="Stäng guiden">✕</button>'
+        + '<p>' + steg.text + '</p><div class="knappar">'
+        + '<button data-g="forra"' + (guideSteg === 0 ? ' disabled' : '') + '>‹ Förra</button>'
+        + '<span class="nr">' + (synliga.indexOf(guideSteg) + 1) + ' / ' + synliga.length + '</span>'
+        + '<button data-g="nasta" class="fram">' + (sista ? 'Klar' : 'Nästa ›') + '</button></div></div>';
+    const hal = guideEl.querySelector('.hal'), bubbla = guideEl.querySelector('.bubbla');
+    const W = innerWidth, H = innerHeight, kant = 10;
+    if (r) {
+        const p = 4;
+        Object.assign(hal.style, { left: (r.left - p) + 'px', top: (r.top - p) + 'px', width: (r.width + 2 * p) + 'px', height: (r.height + 2 * p) + 'px' });
+    }
+    // Bubblan under det som lyser (eller över, eller bredvid), inom skärmen.
+    const bw = bubbla.offsetWidth, bh = bubbla.offsetHeight;
+    let x = (W - bw) / 2, y = (H - bh) / 2;
+    if (r) {
+        x = Math.min(Math.max(kant, r.left + r.width / 2 - bw / 2), W - bw - kant);
+        if (r.bottom + 12 + bh <= H - kant) y = r.bottom + 12;
+        else if (r.top - 12 - bh >= kant) y = r.top - 12 - bh;
+        else {
+            y = Math.min(Math.max(kant, r.top + r.height / 2 - bh / 2), H - bh - kant);
+            x = r.left - 12 - bw >= kant ? r.left - 12 - bw : Math.min(r.right + 12, W - bw - kant);
         }
     }
-    stangMeny();
+    bubbla.style.left = x + 'px';
+    bubbla.style.top = y + 'px';
+}
+
+document.getElementById('guideknapp').addEventListener('click', visaGuide);
+guideEl.addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if (!b || b.disabled) return;
+    if (b.dataset.g === 'stang') stangGuide();
+    else guideNasta(b.dataset.g === 'forra' ? -1 : 1);
 });
+addEventListener('resize', () => requestAnimationFrame(ritaGuide));
 
 // ---------- Ny version ----------
 

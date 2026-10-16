@@ -423,6 +423,117 @@ html, body {
     cursor: pointer;
 }
 
+/* Guiden: ? under menyknappen */
+#guideknapp {
+    position: absolute;
+    top: calc(max(8px, env(safe-area-inset-top)) + 40px);
+    right: 10px;
+    width: 40px;
+    height: 32px;
+    border: none;
+    border-radius: 8px;
+    background-color: rgba(47, 63, 76, 0.75);
+    color: #fff;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+}
+
+/* Guiden: allt mörkt utom det som lyser (hal), och en bubbla med texten */
+#guide {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+}
+
+#guide.dold {
+    display: none;
+}
+
+#guide .hal {
+    position: fixed;
+    border-radius: 10px;
+    box-shadow: 0 0 0 200vmax rgba(20, 30, 40, 0.6);
+    outline: 3px solid #ffd54a;
+    animation: lys 1.2s ease-in-out infinite alternate;
+    pointer-events: none;
+}
+
+#guide .hal.ingen {
+    left: 50%;
+    top: 50%;
+    width: 0;
+    height: 0;
+    outline: none;
+    animation: none;
+}
+
+@keyframes lys {
+    from { outline-color: rgba(255, 213, 74, 0.5); }
+    to { outline-color: rgba(255, 213, 74, 1); }
+}
+
+#guide .bubbla {
+    position: fixed;
+    width: min(calc(100vw - 20px), 320px);
+    padding: 12px 14px 10px;
+    border-radius: 14px;
+    background-color: rgba(250, 252, 248, 0.98);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    color: #2f3f4c;
+    font-size: 15px;
+    line-height: 1.45;
+}
+
+#guide .bubbla p {
+    margin: 0 26px 10px 0;
+}
+
+#guide .knappar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+#guide .nr {
+    font-size: 12px;
+    opacity: 0.6;
+}
+
+#guide button {
+    min-height: 34px;
+    padding: 0 12px;
+    border: none;
+    border-radius: 8px;
+    background-color: #dfe5e9;
+    color: #2f3f4c;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+#guide button.fram {
+    background-color: #5cb560;
+    color: #fff;
+}
+
+#guide button:disabled {
+    opacity: 0.35;
+    cursor: default;
+}
+
+#guide button.stang {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    min-height: 28px;
+    width: 28px;
+    padding: 0;
+    background: none;
+    font-size: 16px;
+}
+
 #version {
     position: absolute;
     left: max(8px, env(safe-area-inset-left));

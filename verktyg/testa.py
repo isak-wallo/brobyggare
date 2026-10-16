@@ -614,6 +614,32 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     kolla(f'{namn}: rekord från före de sex storlekarna (version 7) glöms', sida.evaluate('''() => {
           localStorage.setItem('brobyggare-basta-Ån', JSON.stringify({ kostnad: 1, ritning: { version: 6, noder: [], balkar: [] } }));
           return lasBasta(1) === null; }'''))
+    # Möjliga lösningar i menyn: enkel byter ritningen, Ångra tar tillbaka den.
+    fore = sida.evaluate('() => JSON.stringify(window.bro.ritning)')
+    sida.click('#menyknapp')
+    kolla(f'{namn}: möjliga lösningar är gömda tills man öppnar dem', not sida.locator('#meny [data-facit=enkel]').is_visible())
+    sida.click('#meny .facit summary')
+    bild(sida, bilder, f'{namn}-7-facit')
+    sida.click('#meny [data-facit=enkel]')
+    kolla(f'{namn}: en möjlig lösning (enkel) hämtas och menyn stängs', not sida.locator('#meny').is_visible()
+          and sida.evaluate('() => window.bro.kostnad()')
+          == sida.evaluate('() => ritningensKostnad(losningsRitning(BANOR[0], BANOR[0].facit.enkel), BANOR[0])'))
+    sida.click('#verktyg [data-v=angra]')
+    kolla(f'{namn}: Ångra tar tillbaka ritningen', sida.evaluate('() => JSON.stringify(window.bro.ritning)') == fore)
+    # Guiden: ? under menyknappen, ett steg i taget, Klar stänger.
+    sida.click('#guideknapp')
+    kolla(f'{namn}: guiden börjar med en välkomst', sida.locator('#guide').is_visible()
+          and 'Välkommen' in sida.inner_text('#guide .bubbla'))
+    steg = 1
+    while sida.locator('#guide').is_visible() and steg < 40:
+        if steg in (2, 4, 7, 10, 14):
+            bild(sida, bilder, f'{namn}-8-guide{steg}')
+        sida.click('#guide [data-g=nasta]')
+        steg += 1
+    kolla(f'{namn}: guiden går igenom stegen och stängs med Klar', not sida.locator('#guide').is_visible() and 10 < steg < 40, steg)
+    sida.click('#guideknapp')
+    sida.click('#guide [data-g=stang]')
+    kolla(f'{namn}: ✕ stänger guiden', not sida.locator('#guide').is_visible())
     riv_allt(sida)
     kolla(f'{namn}: håll inne Riv: Riv allt tömmer banan',
           antal_balkar(sida) == 0 and sida.evaluate('() => window.bro.ritning.noder.length')

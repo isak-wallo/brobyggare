@@ -695,3 +695,11 @@ Senare (Isak 2026-10-16):
 v65-test: ny grafik för knutarna (Isak 2026-10-16). Svart = går inte att flytta (fästen i
 berget: fyrkant styv, rund ledad), vitt med mörk kant = egna knutar (fyrkant styv, rund ledad).
 Vägens lager är noden själv som en svart triangel, glidlagret med två rullar under.
+
+v66-test (Isak 2026-10-16, utkast): **möjliga lösningar** för Bäcken och Ån i menyn ("Visa
+möjliga lösningar", gömt i en utfällbar rad): Enkel (Bäcken: rak 90×495, 12 650; Ån: vägen
+66×360 rakt igenom på två strävor 140×180, 20 580) och Kostnadseffektiv (Bäcken: litet
+fackverk, 11 820; Ån: tunnare väg vid lagren, 19 880). Ritningen byts ut, Ångra tar tillbaka.
+**Guiden**: "?" under menyknappen (och "Visa guiden" i menyn), 15–16 steg: banan, kostnaden,
+lagren, fästena, rutnätet och knutarna, Typ, Material, Profil, välja (håll fingret), Ångra,
+Riv, Kör, menyn. Allt annat mörkt; ‹ Förra, Nästa ›, ✕.

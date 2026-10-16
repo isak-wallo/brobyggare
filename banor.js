@@ -38,6 +38,9 @@
 //   losning: en bro som håller (testerna kör den); en nod [x, y, 'pelare']
 //           är en pelare, ett fäste [x, y, 'styv'] är styvt, och en balk är
 //           [a, b, storlek (0–5, knapparna 1–6), väg, material] (limträ om det saknas)
+//   facit:  {enkel, effektiv}: två möjliga lösningar som spelaren kan hämta
+//           i menyn (som losning, med en text). Inte optimerade, bara
+//           något att utgå ifrån: enkel men dyr, och en billigare.
 
 const BANOR = [
     {
@@ -69,6 +72,21 @@ const BANOR = [
                 [0, 2, '42×270', true], [2, 3, '42×270', true], [3, 1, '42×270', true], [0, 4, '90×180'], [4, 5, '66×180'],
                 [5, 1, '90×180'], [2, 4, '42×180'], [3, 5, '42×180']
             ]
+        },
+        facit: {
+            enkel: {
+                text: 'En grov rak balk, skarvad i mitten. Enkel, men det går åt mycket trä.',
+                noder: [[0, 0], [14, 0], [7, 0]],
+                balkar: [[0, 2, '90×495', true], [2, 1, '90×495', true]]
+            },
+            effektiv: {
+                text: 'En tunn väg med ett litet fackverk ovanpå. Överramen trycks och är tjock åt sidan.',
+                noder: [[0, 0], [14, 0], [5, 0], [9, 0], [5, 3], [9, 3]],
+                balkar: [
+                    [0, 2, '42×270', true], [2, 3, '42×270', true], [3, 1, '42×270', true], [0, 4, '90×180'], [4, 5, '90×180'],
+                    [5, 1, '90×180'], [2, 4, '42×180'], [3, 5, '42×180']
+                ]
+            }
         }
     },
     {
@@ -93,6 +111,18 @@ const BANOR = [
             // åt sidan om de är smala: 140×180 (19 880 $$).
             noder: [[0, 0], [1, -3], [26, 0], [25, -3], [7, 0], [19, 0]],
             balkar: [[0, 4, '56×315', true], [4, 5, '66×360', true], [5, 2, '56×315', true], [1, 4, '140×180'], [3, 5, '140×180']]
+        },
+        facit: {
+            enkel: {
+                text: 'Vägen i en och samma grova profil, buren av två strävor från fästena i slänterna.',
+                noder: [[0, 0], [1, -3], [26, 0], [25, -3], [7, 0], [19, 0]],
+                balkar: [[0, 4, '66×360', true], [4, 5, '66×360', true], [5, 2, '66×360', true], [1, 4, '140×180'], [3, 5, '140×180']]
+            },
+            effektiv: {
+                text: 'Samma idé, men vägen är tunnare närmast lagren, där den böjs minst.',
+                noder: [[0, 0], [1, -3], [26, 0], [25, -3], [7, 0], [19, 0]],
+                balkar: [[0, 4, '56×315', true], [4, 5, '66×360', true], [5, 2, '56×315', true], [1, 4, '140×180'], [3, 5, '140×180']]
+            }
         }
     },
     {
@@ -356,9 +386,9 @@ function fastNod(x, y, lager) {
     return n;
 }
 
-// En sparad lösning ([x, y] och [a, b, storlek, väg]) som ritning.
-function losningsRitning(bana) {
-    const l = bana.losning;
+// En sparad lösning ([x, y] och [a, b, storlek, väg]) som ritning (banans
+// lösning, eller en ur facit).
+function losningsRitning(bana, l = bana.losning) {
     return {
         version: 7,
         noder: l.noder.map(([x, y, typ], i) => i < bana.fasten.length ? Object.assign(fastNod(x, y, bana.fasten[i][2]), typ === 'styv' ? { styv: true } : {})

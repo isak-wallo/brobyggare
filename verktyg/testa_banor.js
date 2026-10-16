@@ -18,6 +18,17 @@ module.exports = function (S, kolla) {
               + (Date.now() - t0) + ' ms för ' + sim.t.toFixed(1) + ' s');
         const k = ritningensKostnad(losningsRitning(bana), bana);
         kolla(namn + ': lösningen ryms i budgeten', k <= bana.budget, k + ' av ' + bana.budget + ' $$');
+        // Facit: två möjliga lösningar (enkel men dyr, och en billigare) som håller.
+        if (bana.facit) {
+            const pris = {};
+            for (const sort of ['enkel', 'effektiv']) {
+                const r = losningsRitning(bana, bana.facit[sort]), f = korSim(r, bana);
+                pris[sort] = ritningensKostnad(r, bana);
+                kolla(namn + ': facit ' + sort + ' håller och ryms i budgeten', f.resultat === 'klarade' && f.brott === 0
+                      && pris[sort] <= bana.budget, f.resultat + ', max ' + Math.round(f.maxU * 100) + ' %, ' + pris[sort] + ' $$');
+            }
+            kolla(namn + ': den enkla är dyrare', pris.enkel > pris.effektiv, pris.enkel + ' mot ' + pris.effektiv);
+        }
         sim = korSim(nyRitning(bana), bana);
         kolla(namn + ': utan bro hamnar keIWs i vattnet', sim.resultat === 'vatten');
         sim = korSim(enBalk(bana, 1), bana);         // 56×215
