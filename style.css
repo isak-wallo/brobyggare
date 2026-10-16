@@ -575,6 +575,11 @@ html, body {
     font-size: 18px;
 }
 
+#meny .over {
+    color: #c0392b;
+    font-weight: bold;
+}
+
 #meny h3 {
     margin: 12px 0 4px;
     font-size: 15px;

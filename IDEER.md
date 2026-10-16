@@ -703,3 +703,10 @@ fackverk, 11 820; Ån: tunnare väg vid lagren, 19 880). Ritningen byts ut, Ång
 **Guiden**: "?" under menyknappen (och "Visa guiden" i menyn), 15–16 steg: banan, kostnaden,
 lagren, fästena, rutnätet och knutarna, Typ, Material, Profil, välja (håll fingret), Ångra,
 Riv, Kör, menyn. Allt annat mörkt; ‹ Förra, Nästa ›, ✕.
+
+v67-test (Isak 2026-10-16): möjliga lösningar omgjorda. Enkel = en alldeles för grov balk,
+över budget, bara för att visa att det går (Bäcken rak 115×540, 15 460 av 13 000; Ån väg 90×450
+på strävor 140×225, 26 150 av 21 500). Kostnadseffektiv = trianglar och ledade knutar, under
+budget men inte bäst (Bäcken fackverk 11 910; Ån två strävor från varje fäste, 20 620). Noder i
+lösningar kan vara ledade ([x, y, 'ledad']). Bäckens lösning blev fackverket med ledade knutar
+och en diagonal i mittfacket (11 350).

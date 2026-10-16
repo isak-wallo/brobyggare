@@ -1526,11 +1526,13 @@ const FACIT_NAMN = { enkel: 'Enkel', effektiv: 'Kostnadseffektiv' };
 function facitText() {
     if (!bana.facit) return '';
     return '<details class="facit"><summary>Visa möjliga lösningar</summary>'
-        + '<p>Två broar som håller, att utgå ifrån. Inte de bästa, så det går att bygga billigare! '
-        + 'Din ritning byts ut (Ångra tar tillbaka den).</p>'
-        + Object.keys(FACIT_NAMN).map(sort => '<p><button data-facit="' + sort + '">' + FACIT_NAMN[sort] + ' · '
-            + kr(ritningensKostnad(losningsRitning(bana, bana.facit[sort]), bana)) + '</button><br>'
-            + bana.facit[sort].text + '</p>').join('')
+        + '<p>Två broar som håller, att utgå ifrån. Den enkla är för dyr, och den kostnadseffektiva går att '
+        + 'göra billigare: det får du klura ut själv! Din ritning byts ut (Ångra tar tillbaka den).</p>'
+        + Object.keys(FACIT_NAMN).map(sort => {
+            const k = ritningensKostnad(losningsRitning(bana, bana.facit[sort]), bana);
+            return '<p><button data-facit="' + sort + '">' + FACIT_NAMN[sort] + ' · ' + kr(k) + '</button>'
+                + (k > bana.budget ? ' <span class="over">över budget</span>' : '') + '<br>' + bana.facit[sort].text + '</p>';
+        }).join('')
         + '</details>';
 }
 

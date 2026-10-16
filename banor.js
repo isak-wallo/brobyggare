@@ -36,11 +36,13 @@
 //   pelare: {botten, pris, perMeter}: här får man bygga pelare över vattnet,
 //           från botten upp till en knutpunkt (med glidlager överst)
 //   losning: en bro som håller (testerna kör den); en nod [x, y, 'pelare']
-//           är en pelare, ett fäste [x, y, 'styv'] är styvt, och en balk är
+//           är en pelare, [x, y, 'ledad'] en ledad knut, ett fäste [x, y, 'styv'] är styvt, och en balk är
 //           [a, b, storlek (0–5, knapparna 1–6), väg, material] (limträ om det saknas)
 //   facit:  {enkel, effektiv}: två möjliga lösningar som spelaren kan hämta
-//           i menyn (som losning, med en text). Inte optimerade, bara
-//           något att utgå ifrån: enkel men dyr, och en billigare.
+//           i menyn (som losning, med en text), något att utgå ifrån. Den
+//           enkla är en alldeles för grov balk (över budget), den
+//           kostnadseffektiva ett fackverk med tydliga trianglar och ledade
+//           knutar, under budget men inte bäst (det får man hitta själv).
 
 const BANOR = [
     {
@@ -63,28 +65,30 @@ const BANOR = [
         omrade: { x0: -3, x1: 17, y0: -1, y1: 7 },
         vy: { x0: -4, x1: 18, y0: -3.5, y1: 7.5 },
         losning: {
-            // Väg 42×270 med ett fackverk ovanpå, 3 m högt: överramen trycks och
-            // måste vara tjock åt sidan (90×180, 66×180), stängerna 42×180 (11 660 $$).
+            // Väg 42×270 med ett fackverk ovanpå, 3 m högt, ledade knutar och en
+            // diagonal i mittfacket: överramen trycks och måste vara tjock åt
+            // sidan (90×180), stängerna 42×180 (11 350 $$).
             noder: [
-                [0, 0], [14, 0], [5, 0], [9, 0], [5, 3], [9, 3]
+                [0, 0], [14, 0], [5, 0, 'ledad'], [9, 0, 'ledad'], [5, 3, 'ledad'], [9, 3, 'ledad']
             ],
             balkar: [
-                [0, 2, '42×270', true], [2, 3, '42×270', true], [3, 1, '42×270', true], [0, 4, '90×180'], [4, 5, '66×180'],
-                [5, 1, '90×180'], [2, 4, '42×180'], [3, 5, '42×180']
+                [0, 2, '42×270', true], [2, 3, '42×270', true], [3, 1, '42×270', true], [0, 4, '90×180'], [4, 5, '90×180'],
+                [5, 1, '90×180'], [2, 4, '42×180'], [3, 5, '42×180'], [4, 3, '42×180']
             ]
         },
         facit: {
             enkel: {
-                text: 'En grov rak balk, skarvad i mitten. Enkel, men det går åt mycket trä.',
+                text: 'En rak balk, skarvad i mitten. Den håller med råge, men är alldeles för grov och dyr.',
                 noder: [[0, 0], [14, 0], [7, 0]],
-                balkar: [[0, 2, '90×495', true], [2, 1, '90×495', true]]
+                balkar: [[0, 2, '115×540', true], [2, 1, '115×540', true]]
             },
             effektiv: {
-                text: 'En tunn väg med ett litet fackverk ovanpå. Överramen trycks och är tjock åt sidan.',
-                noder: [[0, 0], [14, 0], [5, 0], [9, 0], [5, 3], [9, 3]],
+                text: 'Ett fackverk ovanpå vägen: trianglar, som inte kan tryckas sneda, och ledade knutar, '
+                    + 'så att balkarna dras eller trycks i stället för att böjas. Det går att göra billigare.',
+                noder: [[0, 0], [14, 0], [5, 0, 'ledad'], [9, 0, 'ledad'], [5, 3, 'ledad'], [9, 3, 'ledad']],
                 balkar: [
-                    [0, 2, '42×270', true], [2, 3, '42×270', true], [3, 1, '42×270', true], [0, 4, '90×180'], [4, 5, '90×180'],
-                    [5, 1, '90×180'], [2, 4, '42×180'], [3, 5, '42×180']
+                    [0, 2, '56×270', true], [2, 3, '56×270', true], [3, 1, '56×270', true], [0, 4, '90×180'], [4, 5, '90×180'],
+                    [5, 1, '90×180'], [2, 4, '42×180'], [3, 5, '42×180'], [4, 3, '42×180']
                 ]
             }
         }
@@ -114,14 +118,16 @@ const BANOR = [
         },
         facit: {
             enkel: {
-                text: 'Vägen i en och samma grova profil, buren av två strävor från fästena i slänterna.',
+                text: 'En grov väg på två grova strävor från fästena i slänterna. Den håller med råge, men är för dyr.',
                 noder: [[0, 0], [1, -3], [26, 0], [25, -3], [7, 0], [19, 0]],
-                balkar: [[0, 4, '66×360', true], [4, 5, '66×360', true], [5, 2, '66×360', true], [1, 4, '140×180'], [3, 5, '140×180']]
+                balkar: [[0, 4, '90×450', true], [4, 5, '90×450', true], [5, 2, '90×450', true], [1, 4, '140×225'], [3, 5, '140×225']]
             },
             effektiv: {
-                text: 'Samma idé, men vägen är tunnare närmast lagren, där den böjs minst.',
-                noder: [[0, 0], [1, -3], [26, 0], [25, -3], [7, 0], [19, 0]],
-                balkar: [[0, 4, '56×315', true], [4, 5, '66×360', true], [5, 2, '56×315', true], [1, 4, '140×180'], [3, 5, '140×180']]
+                text: 'Två strävor från varje fäste bildar trianglar med vägen, och knutarna är ledade, så att '
+                    + 'strävorna bara trycks. Det går att göra billigare.',
+                noder: [[0, 0], [1, -3], [26, 0], [25, -3], [4, 0, 'ledad'], [9, 0, 'ledad'], [17, 0, 'ledad'], [22, 0, 'ledad']],
+                balkar: [[0, 4, '42×315', true], [4, 5, '42×315', true], [5, 6, '56×360', true], [6, 7, '42×315', true],
+                         [7, 2, '42×315', true], [1, 4, '78×180'], [1, 5, '140×180'], [3, 6, '140×180'], [3, 7, '78×180']]
             }
         }
     },
@@ -392,7 +398,7 @@ function losningsRitning(bana, l = bana.losning) {
     return {
         version: 7,
         noder: l.noder.map(([x, y, typ], i) => i < bana.fasten.length ? Object.assign(fastNod(x, y, bana.fasten[i][2]), typ === 'styv' ? { styv: true } : {})
-            : typ === 'pelare' ? { x, y, fast: true, styv: false, pelare: true, lager: 'glid' } : { x, y, fast: false, styv: true }),
+            : typ === 'pelare' ? { x, y, fast: true, styv: false, pelare: true, lager: 'glid' } : { x, y, fast: false, styv: typ !== 'ledad' }),
         balkar: l.balkar.map(([a, b, storlek, vag, material = 'limtra']) => ({ a, b, storlek, vag: !!vag, material }))
     };
 }
