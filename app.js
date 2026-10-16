@@ -719,7 +719,7 @@ function ritaBit(x1, y1, x2, y2, prof, vag, farg, kant) {
 
 // Knutpunkterna: fyrkant = styv, rund = ledad. Vitt det som går att ändra
 // (det man har byggt och fästena i berget), svart vägens lager. Lagren är
-// trianglar med knutpunkten i mitten, glidlagrets lägre med två rullar under.
+// trianglar med spetsen på samma höjd, glidlagrets lägre med två rullar under.
 function ritaNod(x, y, { fast, styv, lager, pelare }) {
     const r = Math.max(3.5, 0.13 * kam.sk), X = sx(x), Y = sy(y);
     if (pelare) return;                    // pelarens topp är glidlagret (ritaPelare)
@@ -727,11 +727,11 @@ function ritaNod(x, y, { fast, styv, lager, pelare }) {
     ctx.strokeStyle = FARG.fast;
     ctx.lineWidth = Math.max(1.2, r * 0.3);
     if (lager) {
-        // Knutpunkten i triangelns tyngdpunkt: spetsen 2/3 av höjden ovanför.
-        // Glidlagret: lika bred men halva höjden, och två rullar under, så
-        // att det blir ungefär lika högt som det fasta lagret.
-        const b = r * 1.7, h = r * (lager === 'glid' ? 1.6 : 3.2), fot = Y + h / 3;
-        ctx.beginPath(); ctx.moveTo(X, Y - h * 2 / 3); ctx.lineTo(X + b, fot); ctx.lineTo(X - b, fot); ctx.closePath(); ctx.fill();
+        // Det fasta lagret har knutpunkten i triangelns tyngdpunkt (spetsen
+        // 2/3 av höjden ovanför). Glidlagret: spetsen på samma höjd, lika brett
+        // men halva höjden, och två rullar under, så att det blir lika högt.
+        const b = r * 1.7, H = r * 3.2, topp = Y - H * 2 / 3, fot = topp + (lager === 'glid' ? H / 2 : H);
+        ctx.beginPath(); ctx.moveTo(X, topp); ctx.lineTo(X + b, fot); ctx.lineTo(X - b, fot); ctx.closePath(); ctx.fill();
         if (lager === 'glid') {
             const rr = r * 0.78;
             for (const d of [-0.52, 0.52]) { ctx.beginPath(); ctx.arc(X + d * b, fot + rr, rr, 0, 7); ctx.fill(); }
