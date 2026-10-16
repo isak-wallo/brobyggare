@@ -750,3 +750,10 @@ v78–v79 (Isak 2026-10-16): rullagret är samma triangel som det fasta, rullarn
 Den valda balkens längd står under budgeten. Ligger en balk under fingret träffas knutarna bara
 på halva avståndet (korta balkar gick inte att välja). Träprofilen anpassas till banan också när
 sidan laddas (Ån visade 66×225); man börjar med 66×270.
+
+v80–v81 (Isak 2026-10-16): rullagrets triangel halva höjden men lika bred, rullarna under; toppen
+på samma höjd som det fasta lagrets.
+
+v82-test (Isak 2026-10-16): pengarna heter **mynt** (en nolla mindre, guldmynt med keIWs, `.mynt`
+i style.css). Bara visningen (`kr` i app.js delar med 10): priser och budgetar i material.js och
+banor.js och sparade rekord står kvar i gamla $$. Åns budget 22 000 $$ = 2 200 mynt.

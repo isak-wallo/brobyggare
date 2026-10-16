@@ -28,6 +28,7 @@ Idéer och beslut i `IDEER.md` (läs den först).
   skjuvning, Euler-knäckning med I_min, det tunnaste hållet; vägbalkarna hålls i sidled av
   vägen och knäcks med I). SI-enheter, y uppåt. Blir Newtonmatrisen indefinit
   (knäckta bitar) förstoras diagonalen; ett Newtonsteg högst MAX_DU.
+- Pengar: mynt (1 mynt = 10 $$). Allt i koden räknas i $$; `kr` i app.js visar /10 med myntet (`.mynt`).
 - `banor.js` – banorna (spann, fästpunkter, marken (`kant`/`dal`, eller `profil`: ojämn mark punkt för punkt), budget, en sparad lösning, `tra`: trädimensionerna på banan, färre på de två första).
 - `spel.js` – provkörningen utan ritning: keIWs som rörlig last, faller
   utan vägbana, marken (`markY`) stoppar fallande bitar. Har något gått sönder när keIWs

@@ -807,3 +807,12 @@ html, body {
 #ruta button[data-v="kor"] {
     background-color: #5cb260;
 }
+
+/* Myntet (spelets pengar): guld med en liten keIWs på */
+.mynt {
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+    vertical-align: -0.14em;
+    background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' shape-rendering='crispEdges'><circle cx='16' cy='16' r='15.5' fill='%23c9921c'/><circle cx='16' cy='16' r='13.5' fill='%23f5c842'/><circle cx='16' cy='16' r='11.5' fill='none' stroke='%23e0ab2a' stroke-width='1'/><g fill='%23b07d14'><rect x='10' y='9' width='12' height='12'/><rect x='7' y='13' width='3' height='3'/><rect x='22' y='13' width='3' height='3'/><rect x='11' y='21' width='3' height='3'/><rect x='18' y='21' width='3' height='3'/></g><g fill='%23fde58a'><rect x='12' y='11' width='3' height='3'/><rect x='17' y='11' width='3' height='3'/></g></svg>") center / contain no-repeat;
+}

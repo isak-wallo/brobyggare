@@ -204,7 +204,8 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     # Profil, och under (bredvid när den ligger) Ångra, Riv och Kör i samma rutnät.
     panel = lambda p: sida.inner_text(f'#valjare [data-p={p}]').replace('\n', ' ')
     kolla(f'{namn}: man bygger väg av trä 66×270 från start', panel('material') == 'Material Trä' and panel('typ') == 'Typ Väg'
-          and '66×270' in panel('profil') and '$$/m' in panel('profil'))
+          and '66×270' in panel('profil') and '/m' in panel('profil')
+          and sida.locator('#valjare [data-p=profil] .mynt').count() == 1)
     vb = sida.locator('#styrning').bounding_box()
     rader = sida.evaluate("([kant]) => new Set([...document.querySelectorAll('#styrning button')].map(b => Math.round(b.getBoundingClientRect()[kant]))).size",
                           ['top' if bredd < hojd else 'left'])
@@ -228,7 +229,7 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     sida.click('#popup [data-h="270"]')
     kolla(f'{namn}: bredd och höjd väljs, rutan är kvar med pris', sida.evaluate('() => window.bro.ritProfil.limtra') == '90×270'
           and sida.evaluate('() => window.bro.popup') == 'profil' and '90×270' in sida.inner_text('#popup .rubrik')
-          and '$$/m' in sida.inner_text('#popup .rubrik') and '90×270' in panel('profil'))
+          and '/m' in sida.inner_text('#popup .rubrik') and sida.locator('#popup .rubrik .mynt').count() == 1 and '90×270' in panel('profil'))
     slank = []
     for k in ['b="56"', 'h="450"', 'h="540"', 'b="42"', 'b="90"', 'h="270"']:
         sida.click(f'#popup [data-{k}]')
@@ -647,7 +648,7 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     sida.click('#menyknapp')
     text = sida.locator('#meny').inner_text()
     kolla(f'{namn}: menyn visar billigaste bron och förklaringen',
-          'Billigaste bron som höll' in text and '(budget 13 000 $$)' in text.replace(' ', ' ') and 'Hur funkar det?' in text
+          'Billigaste bron som höll' in text and '(budget 1 300 )' in text and 'Hur funkar det?' in text
           and 'Förutsättningar – för nördar' in text and 'Version v' in text)
     sida.click('#meny [data-v=dela]')
     dela = sida.locator('#meny .dela').input_value()
@@ -928,16 +929,16 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     fore = sida.evaluate('() => window.bro.kostnad()')
     valj(sida, 'pelare')
     kolla(f'{namn}: panelen har Pelare med pris', 'Pelare' in panel('typ')
-          and '5 400' in sida.inner_text('#valjare').replace('\xa0', ' '), sida.inner_text('#valjare'))
+          and '540' in sida.inner_text('#valjare'), sida.inner_text('#valjare'))
     tryck(sida, (30, -5))
     n = sida.evaluate('() => window.bro.ritning.noder.find(n => n.x === 30 && n.y === -5)')
-    kolla(f'{namn}: ett tryck sätter en pelare (3 000 + 11 m × 150 $$)', n and n.get('pelare') and n['fast']
+    kolla(f'{namn}: ett tryck sätter en pelare (300 + 11 m × 15 mynt)', n and n.get('pelare') and n['fast']
           and sida.evaluate('() => window.bro.kostnad()') == fore + 4650)
     tryck(sida, (80, -5))
     tryck(sida, (80, 30))
     kolla(f'{namn}: Riv heter Riv allt utan val', sida.inner_text('#verktyg [data-v=riv]') == 'Riv allt')
     hall(sida, (30, -5))
-    kolla(f'{namn}: håll väljer en pelare', '4 650' in sida.inner_text('#valjare').replace('\xa0', ' ')
+    kolla(f'{namn}: håll väljer en pelare', '465' in sida.inner_text('#valjare')
           and not riv_av(sida), sida.inner_text('#valjare'))
     sida.click('#verktyg [data-v=riv]')
     kolla(f'{namn}: pelaren tas bort igen, och går inte i farleden eller på land',

@@ -471,8 +471,13 @@ function vaxlaForband(i) {
 
 const kostnad = () => ritningensKostnad(ritning, bana);
 
-// Spelets pengar: $$ (påhittad valuta).
-const kr = v => v.toLocaleString('sv-SE') + ' $$';
+// Spelets pengar: mynt (guld med keIWs på, .mynt i style.css). Priserna i
+// material.js, banor.js och sparade rekord räknas i den gamla enheten ($$);
+// ett mynt är 10 $$, så här tas en nolla bort. Per meter med en decimal.
+// Hårda mellanslag skrivs &nbsp; så att innerHTML blir samma sträng (annars
+// ritas panelen om hela tiden och knapparna byts ut mitt i ett tryck).
+const MYNT = '<span class="mynt" role="img" aria-label="mynt"></span>';
+const kr = (v, d = 0) => tal(v / 10, d).replace(/ /g, '&nbsp;') + '&nbsp;' + MYNT;
 
 // ---------- Skärmen ----------
 
@@ -1237,7 +1242,7 @@ function visaValjare() {
         const p = profil(a.mat, a.st);
         html = val('material', 'Material', a.typ === 'kabel' ? 'Stållina' : MATERIAL[a.mat].kort, a.typ === 'kabel')
             + val('typ', 'Typ', TYPNAMN[a.typ])
-            + val('profil', 'Profil · ' + kr(p.pris + (a.typ === 'vag' ? VAG.pris : 0)) + '/m', p.namn);
+            + val('profil', 'Profil · ' + kr(p.pris + (a.typ === 'vag' ? VAG.pris : 0), 1) + '/m', p.namn);
     }
     if (valjareEl.innerHTML !== html) valjareEl.innerHTML = html;
     markeraAnkare();
@@ -1283,7 +1288,7 @@ const traHojder = () => bana.tra ? bana.tra.hojd : TRA_HOJD;
 function profilRutan(mat, st, vag) {
     const rad = (rubrik, knappar) => '<div class="rad"><span>' + rubrik + '</span><div>' + knappar.join('') + '</div></div>';
     const p = profil(mat, st);
-    let html = '<div class="rubrik"><b>' + p.namn + '</b> · ' + kr(p.pris + (vag ? VAG.pris : 0)) + '/m'
+    let html = '<div class="rubrik"><b>' + p.namn + '</b> · ' + kr(p.pris + (vag ? VAG.pris : 0), 1) + '/m'
         + (vag ? ' med väg' : '') + ' · ' + tal(p.massa, 1) + ' kg/m</div>';
     if (mat === 'limtra') {
         html += rad('Bredd', traBredder().map(b => knapp('data-b="' + b + '"', b, b === Math.round(p.b * 1000))))
@@ -1498,7 +1503,7 @@ const EGENSKAPER = [
     ['fy', 'f<sub>y</sub> sträckgräns', 'MPa', v => v / 1e6],
     ['fu', 'f<sub>u</sub> brottgräns', 'MPa', v => v / 1e6],
     ['densitet', 'Densitet', 'kg/m³', v => v],
-    ['prisM3', 'Pris', '$$/m³', v => v]
+    ['prisM3', 'Pris', MYNT + '/m³', v => v / 10]
 ];
 
 const tal = (v, d = 0) => v.toLocaleString('sv-SE', { maximumFractionDigits: d });
@@ -1524,7 +1529,7 @@ function nordText() {
     const profiler = Object.entries(urval).map(([nyckel, lista]) => lista.map((s, i) => {
         const p = profil(nyckel, s);
         return '<tr' + kommerKlass(MATERIAL[nyckel]) + '>' + (i ? '' : '<th rowspan="' + lista.length + '">' + MATERIAL[nyckel].namn.split(' ')[0] + '</th>')
-            + '<td class="v">' + p.namn + '</td><td>' + tal(p.massa, 1) + '</td><td>' + tal(p.pris) + '</td></tr>';
+            + '<td class="v">' + p.namn + '</td><td>' + tal(p.massa, 1) + '</td><td>' + tal(p.pris / 10, 1) + '</td></tr>';
     }).join('')).join('');
     return `
 <h4>Modellen</h4>
@@ -1566,7 +1571,7 @@ ${brott}
 <p>Limträ: bredd ${TRA_BREDD[0]}–${TRA_BREDD.at(-1)} mm, höjd ${TRA_HOJD[0]}–${TRA_HOJD.at(-1)} mm (lameller
 på 45 mm), höjden högst ${TRA_SLANK} gånger bredden (en högre balk väljs bredare). Stål: IPE 80–600, HEA och HEB 100–600, fyrkantsrör KKR 40×3–200×8. Några av dem:</p>
 <div class="rulla"><table class="tabell">
-<tr><th></th><th class="v">Profil</th><th>kg/m</th><th>$$/m</th></tr>
+<tr><th></th><th class="v">Profil</th><th>kg/m</th><th>${MYNT}/m</th></tr>
 ${profiler}
 </table></div>
 <h4>Förenklingar</h4>
