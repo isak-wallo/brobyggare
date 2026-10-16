@@ -252,11 +252,17 @@ function bytBana(nr) {
     laddaOmOmLugnt();
 }
 
+// Varje ändring av ritningen. Blev vägen hel mellan lagren (hur den än
+// byggdes: i vilken ordning som helst, eller genom att flytta en ände eller
+// knut) byts typen till balk, det man oftast bygger sedan. Väljer man väg
+// igen får man fortsätta med väg.
 function andra(f) {
     ratta = null;
     historik.push(JSON.stringify(ritning));
     if (historik.length > 100) historik.shift();
+    const varHel = vagenHel();
     f();
+    if (ritVag && !ritKabel && !varHel && vagenHel()) ritVag = false;
     sparaRitning();
     uppdateraInfo();
 }
@@ -345,10 +351,8 @@ function vagenHel() {
 function laggTillBalk(p, q) {
     const L = Math.hypot(q[0] - p[0], q[1] - p[1]);
     if (L < 1e-6 || L > maxLangd(ritKabel) + 1e-6 || genomFarleden(p, q)) return false;
-    // Blev vägen hel med den här balken byts typen till balk (det man oftast
-    // bygger sedan; likaså när banan laddas, och efter Ångra); väljer man väg
-    // igen får man fortsätta med väg.
-    const vag = ritVag && !ritKabel, varHel = vag && vagenHel();
+    // Blir vägen hel byts typen till balk (se andra; likaså när banan
+    // laddas, och efter Ångra).
     andra(() => {
         const idx = ([x, y]) => {
             let i = nodVid(x, y);
@@ -362,7 +366,6 @@ function laggTillBalk(p, q) {
         if (fanns >= 0) ritning.balkar[fanns] = balk;
         else ritning.balkar.push(balk);
     });
-    if (vag && !varHel && vagenHel()) { ritVag = false; uppdateraInfo(); }
     return true;
 }
 

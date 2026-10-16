@@ -736,3 +736,7 @@ trianglar med knutpunkten i tyngdpunkten, glidlagret med rullarna under. Fästen
 v73-test (Isak 2026-10-16): rasar bron av sin egen tyngd innan keIWs ska gå ut hoppar han till
 och stannar på klippan ("Hoppsan!", resultatet 'rasade'; bron fortsätter att rasa). I menyn
 går det att stänga av att keIWs bygger bron först (sparas i webbläsaren).
+
+v74-test (Isak 2026-10-16): typen byts från väg till balk så fort vägen blir hel mellan lagren,
+hur den än byggdes (kollas i `andra`, vid varje ändring; förut bara när en ny vägbalk lades
+till, inte när en ände eller knut flyttades så att vägen kopplades ihop).
