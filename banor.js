@@ -9,7 +9,8 @@
 //           överst); dal: {djup, bredd} för landbanornas mjuka dal (se
 //           markY i spel.js)
 //   material: vilka material som finns (trä och stål om det saknas);
-//           Bäcken och Ån har bara trä, betongen och kablarna kommer på Älven
+//           Bäcken och Ån har bara trä, stålet kommer på Kanalen, betongen
+//           och kablarna på Älven
 //   fasten: fästpunkterna i berget [x, y] eller [x, y, lager]. Vägbanans
 //           fästen är brolager (alltid ledade): 'fast' låser x och y,
 //           'glid' bara y (rör sig fritt i sidled, som på riktiga broar,
@@ -93,6 +94,39 @@ const BANOR = [
         }
     },
     {
+        // 48 m: för långt för en balk på strävor, så det blir ett fackverk.
+        // Här kommer stålet (trä finns kvar).
+        namn: 'Kanalen',
+        spann: 48,
+        rutnat: 2,
+        fasten: [[0, 0, 'fast'], [2, -4], [48, 0, 'glid'], [46, -4], [-4, 0], [52, 0]],
+        kant: 0.5,
+        vatten: -6,
+        budget: 58000,
+        keiws: 5,
+        omrade: { x0: -4, x1: 52, y0: -4, y1: 12 },
+        vy: { x0: -9, x1: 57, y0: -7.5, y1: 12.5 },
+        material: ['limtra', 'stal'],
+        losning: {
+            // Fackverk av stål, 4 m högt med fack på 4 m: väg och överram IPE 100,
+            // stänger IPE 80, diagonalerna dragna mot mitten (53 580 $$). Ett
+            // fackverk av trä blir billigare (ca 44 500), men stålets är lättare.
+            noder: [[0, 0], [2, -4], [48, 0], [46, -4], [-4, 0], [52, 0],
+                    [4, 0], [8, 0], [12, 0], [16, 0], [20, 0], [24, 0], [28, 0], [32, 0], [36, 0], [40, 0], [44, 0],
+                    [4, 4], [8, 4], [12, 4], [16, 4], [20, 4], [24, 4], [28, 4], [32, 4], [36, 4], [40, 4], [44, 4]],
+            balkar: [
+                ...[0, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16].map((a, i, v) => [a, v[i + 1] ?? 2, 'IPE 100', true, 'stal']),
+                ...[17, 18, 19, 20, 21, 22, 23, 24, 25, 26].map(a => [a, a + 1, 'IPE 100', false, 'stal']),
+                [0, 17, 'IPE 100', false, 'stal'], [2, 27, 'IPE 100', false, 'stal'],
+                ...[6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16].map(a => [a, a + 11, 'IPE 80', false, 'stal']),
+                [17, 7, 'IPE 80', false, 'stal'], [18, 8, 'IPE 80', false, 'stal'], [19, 9, 'IPE 80', false, 'stal'],
+                [20, 10, 'IPE 80', false, 'stal'], [21, 11, 'IPE 80', false, 'stal'], [11, 23, 'IPE 80', false, 'stal'],
+                [12, 24, 'IPE 80', false, 'stal'], [13, 25, 'IPE 80', false, 'stal'], [14, 26, 'IPE 80', false, 'stal'],
+                [15, 27, 'IPE 80', false, 'stal']
+            ]
+        }
+    },
+    {
         // En kort ravin utan vatten, med mjuka sluttningar och ett fäste
         // halvvägs ner på var sida.
         namn: 'Ravinen',
@@ -153,38 +187,6 @@ const BANOR = [
                 [40, 5, 3], [35, 15, 0], [36, 17, 0], [37, 19, 0], [38, 21, 0], [39, 23, 0],
                 [40, 25, 0], [1, 11, 1], [1, 8, 3], [1, 4, 1], [3, 29, 1], [3, 32, 3],
                 [3, 5, 1]
-            ]
-        }
-    },
-    {
-        // Längre spann med en farled i mitten. Här får man bygga pelare från
-        // botten (dyrt), men inte i farleden.
-        namn: 'Kanalen',
-        spann: 48,
-        rutnat: 2,
-        fasten: [[0, 0, 'fast'], [2, -4], [48, 0, 'glid'], [46, -4], [-4, 0], [52, 0]],
-        kant: 0.5,
-        vatten: -6,
-        budget: 68000,
-        keiws: 5,
-        omrade: { x0: -4, x1: 52, y0: -4, y1: 12 },
-        vy: { x0: -9, x1: 57, y0: -7.5, y1: 12.5 },
-        farled: { x0: 16, x1: 32, y: -2 },
-        material: ['limtra', 'stal'],
-        pelare: { botten: -10, pris: 3000, perMeter: 150 },
-        losning: {
-            // Väg 90×315 på två pelare 4 m ner, med strävor av 3 (66×225) (64 650 $$).
-            noder: [[0, 0], [0, -4], [48, 0], [48, -4], [-4, 0], [52, 0], [2, 0], [4, 0], [6, 0], [8, 0],
-                    [10, 0], [12, 0], [14, 0], [16, 0], [18, 0], [20, 0], [22, 0], [24, 0], [26, 0], [28, 0],
-                    [30, 0], [32, 0], [34, 0], [36, 0], [38, 0], [40, 0], [42, 0], [44, 0], [46, 0],
-                    [14, -4, 'pelare'], [34, -4, 'pelare']],
-            balkar: [
-                [0, 6, '90×315', true], [6, 7, '90×315', true], [7, 8, '90×315', true], [8, 9, '90×315', true], [9, 10, '90×315', true],
-                [10, 11, '90×315', true], [11, 12, '90×315', true], [12, 13, '90×315', true], [13, 14, '90×315', true], [14, 15, '90×315', true],
-                [15, 16, '90×315', true], [16, 17, '90×315', true], [17, 18, '90×315', true], [18, 19, '90×315', true], [19, 20, '90×315', true],
-                [20, 21, '90×315', true], [21, 22, '90×315', true], [22, 23, '90×315', true], [23, 24, '90×315', true], [24, 25, '90×315', true],
-                [25, 26, '90×315', true], [26, 27, '90×315', true], [27, 28, '90×315', true], [28, 2, '90×315', true],
-                [29, 10, 2], [29, 12, 2], [29, 14, 2], [30, 20, 2], [30, 22, 2], [30, 24, 2]
             ]
         }
     },

@@ -88,14 +88,19 @@ let laddaOmSen = false;       // ny version finns: ladda om när det passar
 // man var på.
 // Förut sparades allt per banans nummer, i två olika ordningar (före och
 // efter v37). Nu per namn, så att banorna kan byta plats. Dalgången
-// ritades om helt (v39), och Ån (v59, 26 m): det som sparats där kastas.
+// ritades om helt (v39), Ån (v59, 26 m) och Kanalen (v63, utan farled
+// och pelare): det som sparats där kastas.
 function flyttaSparat() {
     try {
         const ordning = localStorage.getItem('brobyggare-ordning');
-        if (ordning === '4') return;
-        if (ordning === '3') {
-            for (const nyckel of [SPARA, SPARA_BASTA]) localStorage.removeItem(nyckel + 'Ån');
-            localStorage.setItem('brobyggare-ordning', '4');
+        if (ordning === '5') return;
+        if (ordning === '3' || ordning === '4') {
+            for (const nyckel of [SPARA, SPARA_BASTA]) {
+                if (ordning === '3') localStorage.removeItem(nyckel + 'Ån');
+                localStorage.removeItem(nyckel + 'Kanalen');
+            }
+            sessionStorage.removeItem(SPARA_HISTORIK);     // banornas nummer har bytts
+            localStorage.setItem('brobyggare-ordning', '5');
             return;
         }
         const forr = ordning === '2' ? ['Bäcken', 'Ån', 'Dalgången', 'Kanalen', 'Älven', 'Havet']
@@ -104,13 +109,13 @@ function flyttaSparat() {
             forr.forEach((namn, nr) => {
                 const v = localStorage.getItem(nyckel + nr);
                 localStorage.removeItem(nyckel + nr);
-                if (v !== null && namn !== 'Dalgången' && namn !== 'Ån') localStorage.setItem(nyckel + namn, v);
+                if (v !== null && !['Dalgången', 'Ån', 'Kanalen'].includes(namn)) localStorage.setItem(nyckel + namn, v);
             });
         }
         const nr = localStorage.getItem(SPARA_BANA);
         if (nr !== null && forr[nr]) localStorage.setItem(SPARA_BANA, forr[nr]);
         sessionStorage.removeItem(SPARA_HISTORIK);
-        localStorage.setItem('brobyggare-ordning', '4');
+        localStorage.setItem('brobyggare-ordning', '5');
     } catch (e) { /* privat läge */ }
 }
 

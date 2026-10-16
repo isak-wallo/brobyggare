@@ -657,3 +657,11 @@ slänten. Nu går inget sönder efter Plask, och lösa bitar (som inte sitter ih
 fäste, iFastet) går inte sönder; Förloppet visar var på balken det gick (x = … m).
 Ån: budget 18 500 (var 26 000); Isaks bro (tre vägbalkar 56×315 på två strävor 42×270 från
 fästena i slänterna, 17 420) är lösningen.
+
+v63-test: Ny ordning: Bäcken, Ån, Kanalen, Ravinen, Dalgången, Älven, Havet. Kanalen (bana 3)
+utan farled och pelare: här kommer stålet. 48 m är för långt för balkar på strävor, så det
+blir ett fackverk. Med både trä och stål blir trä billigast (fackverk ca 44 500) mot stålets
+bästa (53 580: 4 m högt, fack på 4 m, väg och överram IPE 100, stänger IPE 80): IPE 80 är
+dyrare per meter än 42×180, och på 48 m med keIWs blir stängerna klena. Isak ville ha kvar
+både trä och stål; lösningen är stålfackverket, budget 58 000. Farleden och pelarna provas nu
+på Älven (testa.py). Sparade ritningar på Kanalen kastas (ordning 5).
