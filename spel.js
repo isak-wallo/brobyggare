@@ -228,12 +228,14 @@ function simSteg(sim, dt = DT) {
     steg(sim.m, dt);
     lagerStopp(sim);
     berget(sim);
-    // När keIWs har ramlat i är provet avgjort: inget mer går sönder (bitarna
-    // som faller och slår i marken skulle annars smulas sönder i onödan).
+    // När keIWs har ramlat i är provet avgjort: inget mer går sönder på
+    // vanligt sätt (bitarna som faller och slår i marken skulle annars gå
+    // sönder i onödan), men det som krossas (över SMUL_GRANS) smulas bort,
+    // också bitar som sitter kvar i ett fäste (de flög annars iväg).
     // Rasade bron innan keIWs gick ut fortsätter den att rasa.
     let n = 0;
     if (!sim.resultat || sim.resultat === 'rasade') n = brott(sim.m);
-    else { montera(sim.m, false); utnyttjande(sim.m); smula(sim.m); sim.m.brutna = []; }
+    else { montera(sim.m, false); utnyttjande(sim.m); smula(sim.m, []); sim.m.brutna = []; }
     sim.brott += n;
     if (n && sim.forlopp.length < FORLOPP_MAX) sim.forlopp.push(forloppBild(sim));
     if (!sim.resultat) for (const e of sim.m.element) if (!e.dod) sim.maxU = Math.max(sim.maxU, e.u, sim.m.balkar[e.balk].uk);

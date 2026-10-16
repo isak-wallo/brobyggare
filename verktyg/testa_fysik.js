@@ -178,6 +178,25 @@ const mat = MATERIAL.limtra;
           'brott ' + sim.brott + ', högsta fart ' + vmax.toFixed(1) + ' m/s');
 }
 
+// Isaks fackverk över Bäcken (v74): efter Plask krossades bitar som satt kvar
+// i ett fäste mot botten utan att gå av, och flög iväg. De smulas nu bort.
+{
+    const nySim = S('nySim'), simSteg = S('simSteg'), bana = S('BANOR').find(b => b.namn === 'Bäcken');
+    const n = (x, y, lager) => ({ x, y, fast: !!lager, styv: !lager, ...(lager ? { lager } : {}) });
+    const ritning = { version: 7, noder: [n(0, 0, 'fast'), n(14, 0, 'glid'), n(5, 0), n(9, 0), n(3, 4), n(7, 4), n(11, 4)],
+        balkar: [[0, 2, '42×180', true], [2, 3, '42×180', true], [3, 1, '42×180', true], [0, 4, '66×180'], [4, 2, '42×180'],
+                 [4, 5, '56×180'], [2, 5, '42×180'], [5, 3, '42×180'], [5, 6, '56×180'], [6, 3, '42×180'], [6, 1, '66×180']]
+            .map(([a, b, storlek, vag]) => ({ a, b, storlek, vag: !!vag, material: 'limtra' })) };
+    const sim = nySim(ritning, bana);
+    let vmax = 0;
+    while (sim.t < 8) {
+        simSteg(sim);
+        for (let p = 0; p < sim.m.np; p++) vmax = Math.max(vmax, Math.hypot(sim.m.v[2 * p], sim.m.v[2 * p + 1]));
+    }
+    kolla('fackverket som rasar i bäcken: inga bitar flyger iväg efteråt', sim.resultat === 'vatten' && vmax < 40,
+          'högsta fart ' + vmax.toFixed(1) + ' m/s');
+}
+
 require(path.join(__dirname, 'testa_banor.js'))(S, kolla);
 
 console.log(fel ? fel + ' FEL' : 'Allt OK');
