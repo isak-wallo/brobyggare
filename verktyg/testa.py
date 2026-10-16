@@ -221,8 +221,8 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
               f"{hojd - kor['y'] - kor['height']:.0f} px")
     bild(sida, bilder, f'{namn}-0-valjare')
     sida.click('#valjare [data-p=profil]')
-    kolla(f'{namn}: Profil visar trä i bredder och höjder', sida.locator('#popup [data-b]').count() == 7
-          and sida.locator('#popup [data-h]').count() == 11 and sida.locator('#popup [data-b="66"].vald').count() == 1)
+    kolla(f'{namn}: Profil visar trä i bredder och höjder (inte de grövsta på Bäcken)', sida.locator('#popup [data-b]').count() == 6
+          and sida.locator('#popup [data-h]').count() == 9 and sida.locator('#popup [data-b="66"].vald').count() == 1)
     bild(sida, bilder, f'{namn}-0-profil')
     sida.click('#popup [data-b="90"]')
     sida.click('#popup [data-h="270"]')
@@ -230,10 +230,10 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
           and sida.evaluate('() => window.bro.popup') == 'profil' and '90×270' in sida.inner_text('#popup .rubrik')
           and '$$/m' in sida.inner_text('#popup .rubrik') and '90×270' in panel('profil'))
     slank = []
-    for k in ['b="56"', 'h="450"', 'h="630"', 'b="42"', 'b="90"', 'h="270"']:
+    for k in ['b="56"', 'h="450"', 'h="540"', 'b="42"', 'b="90"', 'h="270"']:
         sida.click(f'#popup [data-{k}]')
         slank.append(sida.evaluate('() => window.bro.ritProfil.limtra'))
-    kolla(f'{namn}: höjden högst 7 gånger bredden', slank == ['56×270', '66×450', '90×630', '42×270', '90×270', '90×270'], slank)
+    kolla(f'{namn}: höjden högst 7 gånger bredden', slank == ['56×270', '66×450', '78×540', '42×270', '90×270', '90×270'], slank)
     if namn == 'staende':
         luft = sida.evaluate('''() => [document.querySelector('#popup').getBoundingClientRect().top
             - document.querySelector('#duk').getBoundingClientRect().top - sy(bana.vy.y0), profilRutansHojd()]''')
@@ -250,12 +250,22 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     valj(sida, 'balk')
     dra(sida, (7, 0), (7, 4))
     tryck(sida, (7, 0))
+    kolla(f'{namn}: ett tryck på knutpunkten väljer den', sida.evaluate('() => window.bro.vald') == -1
+          and sida.evaluate('() => window.bro.valt') and sida.locator('#valjare [data-fb=ledad]').count() == 1)
+    sida.click('#valjare [data-fb=ledad]')
     mitt = next(n for n in sida.evaluate('() => window.bro.ritning.noder') if n['x'] == 7 and n['y'] == 0)
-    kolla(f'{namn}: tryck på knutpunkten gör den ledad', not mitt['styv'])
-    tryck(sida, (7, 0))
+    kolla(f'{namn}: Ledad i panelen gör den ledad', not mitt['styv'])
+    sida.click('#valjare [data-fb=styv]')
     tryck(sida, (7, 2))
-    kolla(f'{namn}: ett kort tryck på en balk väljer inget', sida.evaluate('() => window.bro.vald') == -1
+    kolla(f'{namn}: ett tryck på en balk väljer den', sida.evaluate('() => window.bro.vald') == 2
           and antal_balkar(sida) == 3)
+    tryck(sida, (7, 2))
+    kolla(f'{namn}: ett tryck till på den valda släpper den', sida.evaluate('() => window.bro.vald') == -1
+          and not sida.evaluate('() => window.bro.valt'))
+    tryck(sida, (0, 0))
+    kolla(f'{namn}: ett tryck på lagret väljer det (styv/ledad går inte)', sida.evaluate('() => window.bro.valt')
+          and sida.locator('#valjare [data-fb=styv]').is_disabled())
+    tryck(sida, (0, 0))
     hall(sida, (7, 2))
     kolla(f'{namn}: håll på balken väljer den, Riv blir röd', sida.evaluate('() => window.bro.vald') == 2
           and not riv_av(sida) and 'redigerar' in sida.get_attribute('#valjare', 'class')
@@ -453,10 +463,10 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     kolla(f'{namn}: största zoom visar 10 m på skärmens kortaste sida', abs(m - 10) < 0.01, m)
     sida.mouse.wheel(0, 3000)
     sida.wait_for_timeout(100)
-    # Snedbalkarna trycks och knäcks åt sidan om de är smala: 140×180.
+    # Snedbalkarna trycks och knäcks åt sidan om de är smala: 115×225.
     sida.click('#valjare [data-p=profil]')
-    sida.click('#popup [data-b="140"]')
-    sida.click('#popup [data-h="180"]')
+    sida.click('#popup [data-b="115"]')
+    sida.click('#popup [data-h="225"]')
     sida.click('#valjare [data-p=profil]')
     valj(sida, 'balk')
     dra(sida, (0, 0), (7, 2))
@@ -873,7 +883,7 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     kolla(f'{namn}: ett tryck sätter en pelare (3 000 + 11 m × 150 $$)', n and n.get('pelare') and n['fast']
           and sida.evaluate('() => window.bro.kostnad()') == fore + 4650)
     tryck(sida, (80, -5))
-    tryck(sida, (-5, 5))
+    tryck(sida, (80, 30))
     kolla(f'{namn}: Riv heter Riv allt utan val', sida.inner_text('#verktyg [data-v=riv]') == 'Riv allt')
     hall(sida, (30, -5))
     kolla(f'{namn}: håll väljer en pelare', '4 650' in sida.inner_text('#valjare').replace('\xa0', ' ')

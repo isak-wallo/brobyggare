@@ -719,3 +719,9 @@ v69-test (Isak 2026-10-16): en möjlig lösning visas först efter en skämtsam 
 
 v70-test (Isak 2026-10-16): Riv heter Riv allt när inget är valt (frågar först, ett tryck till
 stänger frågan), Riv när en balk eller knut är vald. Att hålla inne Riv fungerar som förut.
+
+v71-test (Isak 2026-10-16): ett snabbt tryck på en balk, knut, pelare eller ett fäste väljer
+den (ett tryck till på samma släpper den); att hålla väljer som förut. Ett drag från en knut
+bygger, ett drag på tom yta panorerar, håll still och dra så börjar en balk där. Styv/ledad
+byts nu i panelen (inte med ett tryck på knuten). Bäcken har bara trä upp till 115×540
+(`traMax` i banor.js), de grövsta behövs inte på första banan.

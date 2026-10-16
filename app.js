@@ -240,6 +240,10 @@ function bytBana(nr) {
     if (!bana.pelare) ritPelare = false;
     if (!harMaterial('vajer')) ritKabel = false;
     if (!harMaterial(ritMaterial)) ritMaterial = 'limtra';
+    if (bana.traMax) {
+        const p = profil('limtra', ritProfil.limtra);
+        ritProfil.limtra = traMatt(narmast(traBredder(), p.b * 1000), narmast(traHojder(), p.h * 1000), false);
+    }
     try { localStorage.setItem(SPARA_BANA, bana.namn); } catch (e) { /* privat läge */ }
     anpassa();
     uppdateraInfo();
@@ -527,7 +531,7 @@ const iDuken = e => {
 function traffat(wx, wy, nara = Math.max(0.45, 22 / kam.sk)) {
     const pel = ritning.noder.find(n => n.pelare && Math.hypot(wx - n.x, wy - n.y) < nara * 0.8);
     if (pel) return { nod: pel };
-    const nod = narmasteNod(wx, wy, nara * 0.8);
+    const nod = narmasteNod(wx, wy, nara * 0.8, true);
     if (nod >= 0) return { nod: ritning.noder[nod] };
     const balk = narmasteBalk(wx, wy, Math.max(0.4, 16 / kam.sk));
     return balk >= 0 ? { balk } : null;
@@ -1210,6 +1214,10 @@ function visaPopup(typ, ankare) {
     markeraAnkare();
 }
 
+// Trädimensionerna som finns på banan (Bäcken har inte de grövsta, traMax).
+const traBredder = () => bana.traMax ? TRA_BREDD.filter(b => b <= bana.traMax[0]) : TRA_BREDD;
+const traHojder = () => bana.traMax ? TRA_HOJD.filter(h => h <= bana.traMax[1]) : TRA_HOJD;
+
 // Profilrutan: bredd och höjd (trä), serie och höjd (stål) eller stegen.
 function profilRutan(mat, st, vag) {
     const rad = (rubrik, knappar) => '<div class="rad"><span>' + rubrik + '</span><div>' + knappar.join('') + '</div></div>';
@@ -1217,8 +1225,8 @@ function profilRutan(mat, st, vag) {
     let html = '<div class="rubrik"><b>' + p.namn + '</b> · ' + kr(p.pris + (vag ? VAG.pris : 0)) + '/m'
         + (vag ? ' med väg' : '') + ' · ' + tal(p.massa, 1) + ' kg/m</div>';
     if (mat === 'limtra') {
-        html += rad('Bredd', TRA_BREDD.map(b => knapp('data-b="' + b + '"', b, b === Math.round(p.b * 1000))))
-            + rad('Höjd', TRA_HOJD.map(h => knapp('data-h="' + h + '"', h, h === Math.round(p.h * 1000))));
+        html += rad('Bredd', traBredder().map(b => knapp('data-b="' + b + '"', b, b === Math.round(p.b * 1000))))
+            + rad('Höjd', traHojder().map(h => knapp('data-h="' + h + '"', h, h === Math.round(p.h * 1000))));
     } else if (mat === 'stal') {
         const [serie, nr] = p.namn.split(' ');
         html += rad('Serie', Object.keys(STAL_SERIER).map(s => knapp('data-serie="' + s + '"', s, s === serie)))
@@ -1401,10 +1409,10 @@ ett fackverk dras eller trycks i stället för att böjas. Då räcker små
 balkar långt.</li>
 <li><b>Styv knut</b> (fyrkant): balkarna sitter ihop och vrider sig
 tillsammans. <b>Ledad knut</b> (rund): de vrider sig fritt, som ett
-gångjärn. Tryck på en knut för att byta. Vita knutar har du byggt, svarta
+gångjärn. Tryck på en knut och välj Styv eller Ledad. Vita knutar har du byggt, svarta
 sitter fast i berget. Vägens lager är svarta trianglar: det fasta låser
 vägen, glidlagret (med rullar) låter den glida i sidled.</li>
-<li><b>Håll fingret på en balk eller knut</b> för att välja den: byt
+<li><b>Tryck på en balk eller knut</b> för att välja den: byt
 material, typ eller profil, flytta den eller riv den.</li>
 <li><b>Dra från en knut</b> för att bygga en balk. Drar man på tom yta
 flyttas vyn; håll still en kort stund först för att börja en balk där.</li>
@@ -1643,11 +1651,12 @@ const GUIDE = [
       text: 'Svarta knutar sitter fast i berget och går inte att flytta. Därifrån kan du bygga strävor och bågar.' },
     { mal: () => { const o = bana.omrade; return banRuta([[o.x0, Math.max(o.y0, 0)], [o.x1, o.y1]], 8); },
       text: 'Prickarna visar var du kan bygga. <b>Dra med fingret</b> från en knut till en prick, så blir det en balk. '
-        + 'Vita knutar har du byggt själv: fyrkant är styv, rund är ledad. Tryck på en knut för att byta.' },
+        + 'Vita knutar har du byggt själv: fyrkant är styv, rund är ledad.' },
     { mal: () => elRuta('#valjare [data-p=typ]'), text: '<b>Typ:</b> väg är det keIWs går på. Balk är allt annat, det som bär upp vägen.' },
     { mal: () => elRuta('#valjare [data-p=material]'), text: '<b>Material:</b> först finns bara trä. Stål kommer på Kanalen, betong och kablar på Älven.' },
     { mal: () => elRuta('#valjare [data-p=profil]'), text: '<b>Profil:</b> hur grov balken är. Grövre är starkare men dyrare; priset står per meter.' },
-    { mal: () => elRuta('#valjare'), text: '<b>Håll fingret</b> på en balk eller knut för att välja den. Då gäller valen här den, och du kan flytta eller riva den.' },
+    { mal: () => elRuta('#valjare'), text: '<b>Tryck</b> på en balk eller knut för att välja den. Då gäller valen här den: '
+        + 'en knut kan bli styv eller ledad, och du kan flytta eller riva det du valt.' },
     { mal: () => elRuta('#verktyg [data-v=angra]'), text: '<b>Ångra</b> tar tillbaka det senaste du gjorde.' },
     { mal: () => elRuta('#verktyg [data-v=riv]'), text: '<b>Riv</b> tar bort det du har valt. Håll inne Riv för att riva allt.' },
     { mal: () => elRuta('#verktyg [data-v=kor]'), text: '<b>Kör:</b> keIWs går över bron. Färgerna visar hur hårt varje bit jobbar, '
@@ -1984,8 +1993,8 @@ popupEl.addEventListener('click', e => {
     } else {
         const p = profil(a.mat, a.st);
         let s;
-        if (d.b) s = traMatt(+d.b, narmast(TRA_HOJD, p.h * 1000), false);
-        else if (d.h) s = traMatt(narmast(TRA_BREDD, p.b * 1000), +d.h, true);
+        if (d.b) s = traMatt(+d.b, narmast(traHojder(), p.h * 1000), false);
+        else if (d.h) s = traMatt(narmast(traBredder(), p.b * 1000), +d.h, true);
         else if (d.serie) {
             // Samma höjd (så nära det går) i den nya serien.
             const rader = STAL_SERIER[d.serie], h = narmast(rader.map(x => x[1]), p.h * 1000);
@@ -2187,14 +2196,14 @@ duk.addEventListener('pointerdown', e => {
         }
     }
     ratta = null;
-    // Det man håller på väljs efter en stund: en pelare, en knutpunkt (inte
-    // fästena) eller en balk.
+    // Ett tryck (släpp utan att dra) på en pelare, knutpunkt, ett fäste eller
+    // en balk väljer den (ett tryck på det som redan var valt släpper det);
+    // håller man still väljs den efter en stund.
     slappHall();
     hall = traffat(wx, wy, nara);
     if (hall) {
         hall.p = iDuken(e);
-        // Var något annat valt väljs det här direkt med ett tryck.
-        hall.direkt = avmarkera && (hall.nod ? hall.nod !== valdN : ritning.balkar[hall.balk] !== valdB);
+        hall.direkt = !avmarkera || (hall.nod ? hall.nod !== valdN : ritning.balkar[hall.balk] !== valdB);
         hall.timer = setTimeout(valjHall, HALL_TID);
     }
     // Pelare: ett tryck på en punkt sätter eller tar bort en (ett drag
@@ -2253,7 +2262,7 @@ function slapp(e) {
             forloppRuta();
         }
     }
-    // Ett tryck (utan att röra fingret) på något annat än det som var valt.
+    // Ett tryck (utan att röra fingret) väljer det man tryckte på.
     const direkt = hall && hall.direkt && lageNu === 'bygg' && pekare.size === 1 ? hall : null;
     slappHall();
     if (direkt) {
@@ -2293,10 +2302,7 @@ function slapp(e) {
         if (fran[0] === till[0] && fran[1] === till[1] && !avmarkera) vaxlaPelare(...fran);
         uppdateraInfo();
     } else if (fran[0] === till[0] && fran[1] === till[1]) {
-        // Ett tryck på en knutpunkt: växla mellan styvt och ledat (inte när
-        // trycket bara avmarkerade).
-        const i = nodVid(fran[0], fran[1]);
-        if (i >= 0 && !avmarkera) vaxlaForband(i);
+        // Ett tryck: valet sköttes ovan (styv/ledad väljs i panelen).
     } else {
         const nyPunkt = nodVid(fran[0], fran[1]) < 0;
         if (laggTillBalk(fran, till) && nyPunkt) ratta = { balk: ritning.balkar.length - 1, t: performance.now() };

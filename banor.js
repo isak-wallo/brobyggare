@@ -8,6 +8,8 @@
 //   kant:   vattenbanornas kanter: m i sidled per m ner (branta, rundade
 //           överst); dal: {djup, bredd} för landbanornas mjuka dal (se
 //           markY i spel.js)
+//   traMax: [bredd, höjd] i mm: de grövsta trädimensionerna som finns
+//           (Bäcken, för att göra det enklare; alla om det saknas)
 //   material: vilka material som finns (trä och stål om det saknas);
 //           Bäcken, Ån och Sundet har bara trä, stålet (och rören) kommer
 //           på Kanalen, betongen och kablarna på Älven
@@ -53,6 +55,7 @@ const BANOR = [
         // fackverk är billigast.
         spann: 14,
         material: ['limtra'],
+        traMax: [115, 540],
         fasten: [[0, 0, 'fast'], [14, 0, 'glid']],
         // Branta kanter, en grund botten som går lite upp och ner.
         profil: [[0, 0], [0.25, -0.35], [0.5, -1.05], [0.75, -1.85], [1.25, -2.55], [2.2, -2.95], [4, -3.15],

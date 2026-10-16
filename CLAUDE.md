@@ -28,14 +28,14 @@ Idéer och beslut i `IDEER.md` (läs den först).
   skjuvning, Euler-knäckning med I_min, det tunnaste hållet; vägbalkarna hålls i sidled av
   vägen och knäcks med I). SI-enheter, y uppåt. Blir Newtonmatrisen indefinit
   (knäckta bitar) förstoras diagonalen; ett Newtonsteg högst MAX_DU.
-- `banor.js` – banorna (spann, fästpunkter, marken (`kant`/`dal`, eller `profil`: ojämn mark punkt för punkt), budget, en sparad lösning).
+- `banor.js` – banorna (spann, fästpunkter, marken (`kant`/`dal`, eller `profil`: ojämn mark punkt för punkt), budget, en sparad lösning, `traMax`: grövsta trä på banan).
 - `spel.js` – provkörningen utan ritning: keIWs som rörlig last, faller
   utan vägbana, marken (`markY`) stoppar fallande bitar. Brotten sparas i `sim.forlopp`
   (Förlopp i app.js stegar igenom dem). Testerna kör den i node.
 - `app.js` – ritning, verktyg, bygga med fingret, kamera och layout
   (`#styrning` = panelen Material/Typ/Profil + Ångra/Riv/Kör i samma rutnät; stående: två
   rader nedtill; liggande: två kolumner till höger; `#popup` = rutan med val).
-  Man väljer genom att hålla fingret på något (HALL_TID). Ett drag från en knutpunkt
+  Ett tryck väljer en balk/knut (håll, HALL_TID, gör det också). Ett drag från en knutpunkt
   bygger; på tom yta panorerar det, utom efter BYGG_HALL ms stilla (då börjar en balk där).
 - `figur_data.js` – keIWs rektanglar och animationer. Kopierad från
   flappy-keiws (samma fil); ändra inte för hand.
@@ -64,6 +64,6 @@ Banorna (v64): Bäcken 14 m, Ån 26 m, Sundet 38 m (bara trä), Kanalen 50 m (st
 rör kommer, stålet ska vinna), Ravinen, Dalgången, Älven (betong, kablar, farled, pelare),
 Havet. Varje bana har en lösning som ska hålla under budget (testa_banor.js).
 Banor kan ha `facit` {enkel, effektiv}: möjliga lösningar som spelaren hämtar i menyn
-("Visa möjliga lösningar"); de ska hålla, rymmas i budgeten, och den enkla vara dyrare.
+("Visa möjliga lösningar"); de ska hålla, den enkla gå över budget och den effektiva rymmas.
 Guiden (`GUIDE` i app.js, knappen "?" under menyn eller i menyn) lyser upp ett mål i taget;
 steg vars mål saknas på banan hoppas över.
