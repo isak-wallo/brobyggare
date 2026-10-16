@@ -474,16 +474,42 @@ html, body {
     to { outline-color: rgba(255, 213, 74, 1); }
 }
 
+/* keIWs (professorn) till vänster, pratbubblan med en pil mot honom */
 #guide .bubbla {
     position: fixed;
-    width: min(calc(100vw - 20px), 320px);
+    display: flex;
+    align-items: flex-end;
+    gap: 14px;
+    width: min(calc(100vw - 20px), 380px);
+    color: #2f3f4c;
+    font-size: 15px;
+    line-height: 1.45;
+}
+
+#guide .professor {
+    flex: none;
+    width: 80px;
+    height: 82px;
+}
+
+#guide .prat {
+    position: relative;
+    flex: 1;
+    min-width: 0;
     padding: 12px 14px 10px;
     border-radius: 14px;
     background-color: rgba(250, 252, 248, 0.98);
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-    color: #2f3f4c;
-    font-size: 15px;
-    line-height: 1.45;
+}
+
+#guide .prat::before {
+    content: '';
+    position: absolute;
+    left: -12px;
+    bottom: 22px;
+    border-width: 9px 13px 9px 0;
+    border-style: solid;
+    border-color: transparent rgba(250, 252, 248, 0.98) transparent transparent;
 }
 
 #guide .bubbla p {

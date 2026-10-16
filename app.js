@@ -712,11 +712,12 @@ function ritaNod(x, y, { fast, styv, lager, pelare }) {
     ctx.strokeStyle = FARG.fast;
     ctx.lineWidth = Math.max(1.2, r * 0.3);
     if (lager) {
-        const b = r * 1.7, fot = Y + (lager === 'glid' ? r * 1.0 : r * 1.6);
+        const b = r * 1.7, fot = Y + (lager === 'glid' ? r * 0.8 : r * 1.6);
         ctx.beginPath(); ctx.moveTo(X, Y - r * 1.6); ctx.lineTo(X + b, fot); ctx.lineTo(X - b, fot); ctx.closePath(); ctx.fill();
         if (lager === 'glid') {
-            const rr = r * 0.5;
-            for (const d of [-0.55, 0.55]) { ctx.beginPath(); ctx.arc(X + d * b, fot + rr + 1, rr, 0, 7); ctx.fill(); }
+            // Rullarna sitter under triangelns fot (överlappar den lite).
+            const rr = r * 0.62;
+            for (const d of [-0.5, 0.5]) { ctx.beginPath(); ctx.arc(X + d * b, fot + rr * 0.8, rr, 0, 7); ctx.fill(); }
         }
         return;
     }
@@ -1599,8 +1600,9 @@ menyEl.addEventListener('click', e => {
 // ---------- Guiden ----------
 
 // En frivillig rundtur ("?" under menyknappen, eller i menyn): ett steg i
-// taget lyser upp en knapp eller en del av banan och berättar vad den gör.
-// Allt annat är mörkt och går inte att trycka på medan guiden visas.
+// taget lyser upp en knapp eller en del av banan, och keIWs (som professor,
+// med mössa) berättar i en pratbubbla vad den gör. Allt annat är mörkt och
+// går inte att trycka på medan guiden visas.
 const guideEl = document.getElementById('guide');
 let guideSteg = -1;
 
@@ -1638,6 +1640,42 @@ const GUIDE = [
     { mal: () => elRuta('#guideknapp'), text: 'Och här startar du guiden igen. Lycka till!' }
 ];
 
+// keIWs som professor på en liten duk: vinkar i första steget, sedan
+// står han och pekar uppåt med armen (den till höger) medan han blinkar.
+const PROFESSOR = { x0: -50, y0: -64, x1: 214, y1: 206 };     // figurens pixlar som syns
+function ritaProfessor(t) {
+    const cv = guideEl.querySelector('canvas');
+    if (!cv) return;
+    const w = cv.clientWidth, h = cv.clientHeight, d = window.devicePixelRatio || 1;
+    if (cv.width !== Math.round(w * d)) { cv.width = Math.round(w * d); cv.height = Math.round(h * d); }
+    const c = cv.getContext('2d'), P = PROFESSOR;
+    const s = Math.min(w / (P.x1 - P.x0), h / (P.y1 - P.y0)) * d;
+    c.setTransform(s, 0, 0, s, -P.x0 * s, -P.y0 * s + (h * d - (P.y1 - P.y0) * s));
+    c.clearRect(P.x0, P.y0, P.x1 - P.x0, P.y1 - P.y0);
+    const pekar = guideSteg > 0;
+    for (const [x0, y0, x1, y1, farg] of ruta(guideSteg === 0 ? FIG.vinka : FIG.idle, t)) {
+        const dy = pekar && x0 >= 160 && y1 <= 110 ? -84 : 0;        // armen till höger upp
+        c.fillStyle = FIG.farger[farg];
+        c.fillRect(x0, y0 + dy, x1 - x0 + 0.5, y1 - y0 + 0.5);
+    }
+    // Studentmössan: platta, tofs och kulle.
+    c.fillStyle = '#20252c';
+    c.fillRect(30, -14, 100, 16);
+    c.beginPath(); c.moveTo(-10, -26); c.lineTo(80, -50); c.lineTo(170, -26); c.lineTo(80, -2); c.closePath(); c.fill();
+    c.fillStyle = FIG.farger.stjarna;
+    c.fillRect(78, -30, 6, 6);
+    c.fillRect(-12, -27, 6, 34);
+    c.fillRect(-16, 4, 14, 12);
+}
+
+let guideRam = 0;
+function guideAnimera() {
+    cancelAnimationFrame(guideRam);
+    if (guideSteg < 0) return;
+    ritaProfessor(performance.now() / 1000);
+    guideRam = requestAnimationFrame(guideAnimera);
+}
+
 function visaGuide() {
     if (lageNu !== 'bygg') bygg(false);
     if (popup) stangPopup();
@@ -1649,6 +1687,7 @@ function visaGuide() {
 
 function stangGuide() {
     guideSteg = -1;
+    cancelAnimationFrame(guideRam);
     guideEl.classList.add('dold');
 }
 
@@ -1668,11 +1707,12 @@ function ritaGuide() {
     const synliga = GUIDE.map((s, i) => i).filter(i => !GUIDE[i].mal || GUIDE[i].mal());
     const sista = guideSteg === synliga[synliga.length - 1];
     guideEl.innerHTML = '<div class="hal' + (r ? '' : ' ingen') + '"></div><div class="bubbla">'
+        + '<canvas class="professor"></canvas><div class="prat">'
         + '<button class="stang" data-g="stang" aria-label="Stäng guiden">✕</button>'
         + '<p>' + steg.text + '</p><div class="knappar">'
         + '<button data-g="forra"' + (guideSteg === 0 ? ' disabled' : '') + '>‹ Förra</button>'
         + '<span class="nr">' + (synliga.indexOf(guideSteg) + 1) + ' / ' + synliga.length + '</span>'
-        + '<button data-g="nasta" class="fram">' + (sista ? 'Klar' : 'Nästa ›') + '</button></div></div>';
+        + '<button data-g="nasta" class="fram">' + (sista ? 'Klar' : 'Nästa ›') + '</button></div></div></div>';
     const hal = guideEl.querySelector('.hal'), bubbla = guideEl.querySelector('.bubbla');
     const W = innerWidth, H = innerHeight, kant = 10;
     if (r) {
@@ -1693,6 +1733,7 @@ function ritaGuide() {
     }
     bubbla.style.left = x + 'px';
     bubbla.style.top = y + 'px';
+    guideAnimera();
 }
 
 document.getElementById('guideknapp').addEventListener('click', visaGuide);

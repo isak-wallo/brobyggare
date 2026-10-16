@@ -710,3 +710,6 @@ på strävor 140×225, 26 150 av 21 500). Kostnadseffektiv = trianglar och ledad
 budget men inte bäst (Bäcken fackverk 11 910; Ån två strävor från varje fäste, 20 620). Noder i
 lösningar kan vara ledade ([x, y, 'ledad']). Bäckens lösning blev fackverket med ledade knutar
 och en diagonal i mittfacket (11 350).
+
+v68-test (Isak 2026-10-16): i guiden berättar keIWs som professor (studentmössa, vinkar först,
+sedan handen upp) i en pratbubbla. Glidlagrets rullar större och fast i triangelns fot.
