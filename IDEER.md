@@ -716,3 +716,6 @@ sedan handen upp) i en pratbubbla. Glidlagrets rullar större och fast i triange
 
 v69-test (Isak 2026-10-16): en möjlig lösning visas först efter en skämtsam fusk-varning
 (ersätter ritningen, Ångra tar tillbaka den): "Visa ändå" eller "Jag provar själv".
+
+v70-test (Isak 2026-10-16): Riv heter Riv allt när inget är valt (frågar först, ett tryck till
+stänger frågan), Riv när en balk eller knut är vald. Att hålla inne Riv fungerar som förut.

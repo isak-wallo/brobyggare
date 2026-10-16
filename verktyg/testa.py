@@ -364,8 +364,19 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     sida.click('#verktyg [data-v=riv]')
     kolla(f'{namn}: tillbaka till två vägbalkar', antal_balkar(sida) == 2
           and all(b['vag'] and b['storlek'] == '90×270' for b in sida.evaluate('() => window.bro.ritning.balkar')))
+    kolla(f'{namn}: utan val heter knappen Riv allt', sida.inner_text('#verktyg [data-v=riv]') == 'Riv allt'
+          and not riv_av(sida))
     sida.click('#verktyg [data-v=riv]')
-    kolla(f'{namn}: Riv utan något valt gör inget', antal_balkar(sida) == 2 and riv_av(sida))
+    kolla(f'{namn}: Riv allt frågar först (inget rivs)', antal_balkar(sida) == 2
+          and sida.locator('#popup [data-v=rivallt]').is_visible())
+    sida.click('#verktyg [data-v=riv]')
+    kolla(f'{namn}: ett tryck till på Riv allt stänger frågan', antal_balkar(sida) == 2
+          and not sida.locator('#popup [data-v=rivallt]').is_visible())
+    hall(sida, (3, 0))
+    kolla(f'{namn}: med en balk vald heter den Riv', sida.inner_text('#verktyg [data-v=riv]') == 'Riv')
+    tryck(sida, (10, 6))
+    kolla(f'{namn}: ett tryck bredvid släpper valet: Riv allt igen', antal_balkar(sida) == 2
+          and sida.inner_text('#verktyg [data-v=riv]') == 'Riv allt')
 
     # Inzoomad: ett drag på tom yta i rutnätet flyttar vyn och bygger inget;
     # håller man still först börjar en balk där; från en knutpunkt bygger
@@ -863,7 +874,7 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
           and sida.evaluate('() => window.bro.kostnad()') == fore + 4650)
     tryck(sida, (80, -5))
     tryck(sida, (-5, 5))
-    kolla(f'{namn}: Riv är grå utan val', riv_av(sida))
+    kolla(f'{namn}: Riv heter Riv allt utan val', sida.inner_text('#verktyg [data-v=riv]') == 'Riv allt')
     hall(sida, (30, -5))
     kolla(f'{namn}: håll väljer en pelare', '4 650' in sida.inner_text('#valjare').replace('\xa0', ' ')
           and not riv_av(sida), sida.inner_text('#valjare'))

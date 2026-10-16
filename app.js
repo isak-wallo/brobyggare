@@ -1115,8 +1115,12 @@ function uppdateraInfo() {
     knappar.kor.textContent = bygger ? 'Kör' : 'Stopp';
     knappar.kor.classList.toggle('stopp', !bygger);
     knappar.angra.disabled = !bygger || !historik.length;
+    // Riv: med något valt river den det, annars heter den Riv allt (och
+    // frågar först), grå när det inte finns något att riva.
+    const allt = !valdBalken() && !valdKnut();
     knappar.riv.disabled = !bygger;
-    knappar.riv.classList.toggle('av', !kanRiva());
+    knappar.riv.textContent = allt ? 'Riv allt' : 'Riv';
+    knappar.riv.classList.toggle('av', allt ? !finnsAttRiva() : !kanRiva());
     visaValjare();
     if (popup) visaPopup(popup.typ, popup.ankare);
     if (beraknaLuft() !== luftNu) anpassa();
@@ -1131,6 +1135,8 @@ function aktuellt() {
     const mat = ritKabel ? 'vajer' : ritMaterial;
     return { balk: null, mat, st: ritProfil[mat], typ: ritPelare ? 'pelare' : ritKabel ? 'kabel' : ritVag ? 'vag' : 'balk' };
 }
+
+const finnsAttRiva = () => ritning.balkar.length > 0 || ritning.noder.some(n => n.pelare);
 
 function kanRiva() {
     const n = valdKnut();
@@ -1190,8 +1196,7 @@ function visaPopup(typ, ankare) {
     } else if (typ === 'profil') {
         html = profilRutan(a.mat, a.st, a.typ === 'vag');
     } else if (typ === 'rivallt') {
-        html = '<div class="val">' + knapp('data-v="rivallt"', 'Riv allt', false,
-            !ritning.balkar.length && !ritning.noder.some(n => n.pelare), 'riv') + '</div>';
+        html = '<div class="val">' + knapp('data-v="rivallt"', 'Riv allt', false, !finnsAttRiva(), 'riv') + '</div>';
     } else if (typ === 'banor') {
         html = '<div class="lista">' + BANOR.map((b, i) => {
             const basta = lasBasta(i);
@@ -1883,7 +1888,7 @@ function placeraRuta() {
     else rutaEl.style.top = info + 8 + b.height / 2 + 'px';
 }
 
-// Ångra, Riv (håll inne: Riv allt) och Kör/Stopp.
+// Ångra, Riv (utan val, eller håll inne: Riv allt) och Kör/Stopp.
 const verktygEl = document.getElementById('verktyg');
 let rivHall = null;           // {timer, klar}: man håller i Riv
 
@@ -1904,6 +1909,12 @@ verktygEl.addEventListener('click', e => {
     const v = b.dataset.v;
     if (v === 'riv' && rivHall && rivHall.klar) { rivHall = null; return; }     // Riv allt är framme
     rivHall = null;
+    // Riv allt (inget valt): rutan med Riv allt, ett tryck till river.
+    if (v === 'riv' && !valdBalken() && !valdKnut()) {
+        if (popup && popup.typ === 'rivallt') stangPopup();
+        else if (finnsAttRiva()) visaPopup('rivallt', '#verktyg [data-v=riv]');
+        return;
+    }
     stangPopup();
     if (v === 'riv') rivValt();
     else if (v === 'angra' && historik.length) {
