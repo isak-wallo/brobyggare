@@ -979,7 +979,7 @@ function ritaProv() {
     if (forlopp) {
         ctx.strokeStyle = '#d0503c';
         ctx.lineWidth = 3;
-        for (const b of sim.forlopp[forlopp.nr].brutna) {
+        for (const b of forloppSteg()[forlopp.nr].brutna) {
             const e = m.element[b.el], [x1, y1] = lage(m, e.i), [x2, y2] = lage(m, e.j);
             const r = Math.max(14, 0.6 * Math.hypot(x2 - x1, y2 - y1) * kam.sk);
             ctx.beginPath(); ctx.arc(sx((x1 + x2) / 2), sy((y1 + y2) / 2), r, 0, 7); ctx.stroke();
@@ -1862,10 +1862,10 @@ function visaResultat() {
             [['bygg', 'Bygg vidare'], banaNr < BANOR.length - 1 ? ['nasta', 'Nästa bana'] : ['kor', 'Kör igen']]);
     } else if (sim.resultat === 'rasade') {
         visaRuta('Hoppsan!<br>Bron rasade innan keIWs gick ut.', 'Den klarade inte ens sin egen tyngd.',
-            [['bygg', 'Bygg om'], ['kor', 'Kör igen']].concat(sim.forlopp.length ? [['forlopp', 'Förlopp']] : []));
+            [['bygg', 'Bygg om'], ['kor', 'Kör igen']].concat(forloppSteg().length ? [['forlopp', 'Förlopp']] : []));
     } else {
         visaRuta(bana.torr ? 'Aj!<br>keIWs ramlade ner i dalen.' : 'Plask!<br>keIWs ramlade i vattnet.', sim.brott ? 'Bron gick sönder.' : 'Vägen räckte inte hela vägen över.',
-            [['bygg', 'Bygg om'], ['kor', 'Kör igen']].concat(sim.forlopp.length ? [['forlopp', 'Förlopp']] : []));
+            [['bygg', 'Bygg om'], ['kor', 'Kör igen']].concat(forloppSteg().length ? [['forlopp', 'Förlopp']] : []));
     }
     placeraRuta();
 }
@@ -1873,9 +1873,22 @@ function visaResultat() {
 // Förloppet: bron som den var när brott nr gick sönder (det som gick
 // sönder står kvar, rött och inringat). Ett tryck på en balk visar hur
 // mycket den var utnyttjad då. Klar: tillbaka till slutet.
+// Förloppets steg: bara det första brottet i varje balk redovisas (en balk
+// är flera element och kan gå av på flera ställen, men det är balken som
+// räknas). Ögonblick där bara redan brustna balkar går sönder igen hoppas över.
+function forloppSteg() {
+    if (!sim.forloppSteg) {
+        const sett = new Set();
+        sim.forloppSteg = sim.forlopp
+            .map(f => ({ f, brutna: f.brutna.filter(b => !sett.has(b.balk) && sett.add(b.balk)) }))
+            .filter(st => st.brutna.length);
+    }
+    return sim.forloppSteg;
+}
+
 function visaForlopp(nr) {
     if (!forlopp) { sim.slutBild = forloppBild(sim); sim.slutBild.brutna = []; }
-    stallTill(sim.forlopp[nr], true);
+    stallTill(forloppSteg()[nr].f, true);
     forlopp = { nr, valt: forlopp ? forlopp.valt : -1 };
     forloppRuta();
 }
@@ -1895,13 +1908,13 @@ const balkNamn = i => {
 };
 
 function forloppRuta() {
-    const f = sim.forlopp[forlopp.nr], n = sim.forlopp.length, m = sim.m;
-    const fler = n >= FORLOPP_MAX ? '+' : '';
+    const st = forloppSteg()[forlopp.nr], f = st.f, n = forloppSteg().length, m = sim.m;
+    const fler = sim.forlopp.length >= FORLOPP_MAX ? '+' : '';
     // Var på balken (en balk är flera element och kan gå av på flera ställen):
     // elementets mitt, räknat från vänstra kanten.
     const var_ = b => { const e = m.element[b.el]; return tal((m.punkter[e.i].x0 + m.punkter[e.j].x0) / 2, 1) + ' m'; };
-    const rader = f.brutna.slice(0, 3).map(b => balkNamn(b.balk) + ' vid ' + var_(b) + ': ' + b.orsak + ' ' + Math.round(b.u * 100) + ' %');
-    if (f.brutna.length > 3) rader.push('och ' + (f.brutna.length - 3) + ' till');
+    const rader = st.brutna.slice(0, 3).map(b => balkNamn(b.balk) + ' vid ' + var_(b) + ': ' + b.orsak + ' ' + Math.round(b.u * 100) + ' %');
+    if (st.brutna.length > 3) rader.push('och ' + (st.brutna.length - 3) + ' till');
     let valt = 'Tryck på en balk för att se dess utnyttjande.';
     if (forlopp.valt >= 0) {
         const balk = m.balkar[forlopp.valt];
@@ -2477,7 +2490,7 @@ if (TEST) {
         get ritMaterial() { return ritMaterial; },
         get ritVag() { return ritVag; },
         get popup() { return popup && popup.typ; },
-        get forlopp() { return forlopp && { nr: forlopp.nr, valt: forlopp.valt, antal: sim.forlopp.length }; },
+        get forlopp() { return forlopp && { nr: forlopp.nr, valt: forlopp.valt, antal: forloppSteg().length }; },
         get valt() { return !!(valdBalken() || valdKnut()); },
         get ritProfil() { return ritProfil; },
         get panorerar() { return !!panorera; },

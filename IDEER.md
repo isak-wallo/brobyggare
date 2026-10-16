@@ -740,3 +740,8 @@ går det att stänga av att keIWs bygger bron först (sparas i webbläsaren).
 v74-test (Isak 2026-10-16): typen byts från väg till balk så fort vägen blir hel mellan lagren,
 hur den än byggdes (kollas i `andra`, vid varje ändring; förut bara när en ny vägbalk lades
 till, inte när en ände eller knut flyttades så att vägen kopplades ihop).
+
+v75–v77 (Isak 2026-10-16): keIWs hoppar till på riktigt när bron rasar av egentyngden (sjunker
+ihop, skuttar bakåt med armarna upp och stora ögon, utropstecken). Efter resultatet smulas det
+som krossas bort, också bitar fast i ett fäste (Isaks fackverk över Bäcken flög annars iväg).
+Förloppet visar bara första brottet i varje balk (`forloppSteg` i app.js; fysiken oförändrad).

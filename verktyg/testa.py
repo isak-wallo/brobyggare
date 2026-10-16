@@ -617,6 +617,9 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     # Förloppet: brott för brott, ett tryck på en balk visar utnyttjandet.
     sida.click('#ruta [data-v=forlopp]')
     f = sida.evaluate('() => window.bro.forlopp')
+    balkar = sida.evaluate('() => forloppSteg().flatMap(st => st.brutna.map(b => b.balk))')
+    kolla(f'{namn}: förloppet visar bara första brottet i varje balk', len(balkar) == len(set(balkar)) > 0
+          and f['antal'] <= sida.evaluate('() => window.bro.sim.forlopp.length'), str(balkar))
     text = sida.evaluate('() => document.querySelector("#ruta").textContent')
     kolla(f'{namn}: Förlopp visar första brottet', f and f['nr'] == 0 and text.startswith('Brott 1 av')
           and 'Väg ' in text and 'böjning' in text and 'egentyngden' in text, text)
