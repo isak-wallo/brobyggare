@@ -18,6 +18,14 @@ module.exports = function (S, kolla) {
               + (Date.now() - t0) + ' ms för ' + sim.t.toFixed(1) + ' s');
         const k = ritningensKostnad(losningsRitning(bana), bana);
         kolla(namn + ': lösningen ryms i budgeten', k <= bana.budget, k + ' av ' + bana.budget + ' $$');
+        // Träet i lösningarna finns att välja på banan (och är inte för slankt).
+        const bredder = bana.tra ? bana.tra.bredd : TRA_BREDD, hojder = bana.tra ? bana.tra.hojd : TRA_HOJD;
+        const fel = [bana.losning, ...Object.values(bana.facit || {})].flatMap(l => l.balkar)
+            .filter(b => (b[4] || 'limtra') === 'limtra' && /×/.test(b[2])).map(b => b[2]).filter(st => {
+                const [bb, h] = st.split('×').map(Number);
+                return !bredder.includes(bb) || !hojder.includes(h) || traMatt(bb, h, false) !== st;
+            });
+        kolla(namn + ': träet i lösningarna finns på banan', fel.length === 0, fel.join(', '));
         // Facit: två möjliga lösningar som håller. Den enkla (en för grov
         // balk) går över budget, den kostnadseffektiva ryms men är inte bäst.
         if (bana.facit) {

@@ -121,10 +121,10 @@ const TRA_HOJD = [180, 225, 270, 315, 360, 405, 450, 495, 540, 585, 630];
 // sidled (det räknar inte 2D-modellen med), så en hög balk kräver bredd.
 // traMatt ger ett tillåtet mått: med behallH blir balken bredare, annars lägre.
 const TRA_SLANK = 7;
-function traMatt(b, h, behallH) {
+function traMatt(b, h, behallH, bredder = TRA_BREDD, hojder = TRA_HOJD) {
     if (h > TRA_SLANK * b) {
-        if (behallH) b = TRA_BREDD.find(x => TRA_SLANK * x >= h) ?? TRA_BREDD.at(-1);
-        else h = TRA_HOJD.filter(x => x <= TRA_SLANK * b).at(-1) ?? TRA_HOJD[0];
+        if (behallH) b = bredder.find(x => TRA_SLANK * x >= h) ?? bredder.at(-1);
+        else h = hojder.filter(x => x <= TRA_SLANK * b).at(-1) ?? hojder[0];
     }
     return b + '×' + h;
 }

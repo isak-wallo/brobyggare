@@ -28,14 +28,14 @@ Idéer och beslut i `IDEER.md` (läs den först).
   skjuvning, Euler-knäckning med I_min, det tunnaste hållet; vägbalkarna hålls i sidled av
   vägen och knäcks med I). SI-enheter, y uppåt. Blir Newtonmatrisen indefinit
   (knäckta bitar) förstoras diagonalen; ett Newtonsteg högst MAX_DU.
-- `banor.js` – banorna (spann, fästpunkter, marken (`kant`/`dal`, eller `profil`: ojämn mark punkt för punkt), budget, en sparad lösning, `traMax`: grövsta trä på banan).
+- `banor.js` – banorna (spann, fästpunkter, marken (`kant`/`dal`, eller `profil`: ojämn mark punkt för punkt), budget, en sparad lösning, `tra`: trädimensionerna på banan, färre på de två första).
 - `spel.js` – provkörningen utan ritning: keIWs som rörlig last, faller
   utan vägbana, marken (`markY`) stoppar fallande bitar. Brotten sparas i `sim.forlopp`
   (Förlopp i app.js stegar igenom dem). Testerna kör den i node.
 - `app.js` – ritning, verktyg, bygga med fingret, kamera och layout
   (`#styrning` = panelen Material/Typ/Profil + Ångra/Riv/Kör i samma rutnät; stående: två
   rader nedtill; liggande: två kolumner till höger; `#popup` = rutan med val).
-  Ett tryck väljer en balk/knut (håll, HALL_TID, gör det också). Ett drag från en knutpunkt
+  Ett tryck (och släpp) väljer en balk/knut; den valda knuten flyttas med ett drag. Ett drag från en (annan) knutpunkt
   bygger; på tom yta panorerar det, utom efter BYGG_HALL ms stilla (då börjar en balk där).
 - `figur_data.js` – keIWs rektanglar och animationer. Kopierad från
   flappy-keiws (samma fil); ändra inte för hand.

@@ -725,3 +725,10 @@ den (ett tryck till på samma släpper den); att hålla väljer som förut. Ett 
 bygger, ett drag på tom yta panorerar, håll still och dra så börjar en balk där. Styv/ledad
 byts nu i panelen (inte med ett tryck på knuten). Bäcken har bara trä upp till 115×540
 (`traMax` i banor.js), de grövsta behövs inte på första banan.
+
+v72-test (Isak 2026-10-16): Bäcken och Ån har samma färre trä, bredd 42, 56, 66, 90, 115 och
+höjd 180, 270, 360, 450, 540 (`TRA_ENKEL`, banans `tra`), full katalog från Sundet. Åns lösning
+och förslag gjordes om (strävorna 115 breda). Bara ett tryck och släpp väljer: att hålla på en
+knut och dra bygger en balk, den valda knuten flyttas med ett drag. Lagren är lika stora
+trianglar med knutpunkten i tyngdpunkten, glidlagret med rullarna under. Fästena som går att
+ändra (styv/ledad) är vita, bara vägens lager svarta.

@@ -8,8 +8,8 @@
 //   kant:   vattenbanornas kanter: m i sidled per m ner (branta, rundade
 //           överst); dal: {djup, bredd} för landbanornas mjuka dal (se
 //           markY i spel.js)
-//   traMax: [bredd, höjd] i mm: de grövsta trädimensionerna som finns
-//           (Bäcken, för att göra det enklare; alla om det saknas)
+//   tra:    {bredd, hojd} i mm: de trädimensioner som finns (de två första
+//           banorna har färre, för att göra det enklare; alla om det saknas)
 //   material: vilka material som finns (trä och stål om det saknas);
 //           Bäcken, Ån och Sundet har bara trä, stålet (och rören) kommer
 //           på Kanalen, betongen och kablarna på Älven
@@ -46,6 +46,9 @@
 //           kostnadseffektiva ett fackverk med tydliga trianglar och ledade
 //           knutar, under budget men inte bäst (det får man hitta själv).
 
+// Trädimensionerna på de två första banorna (färre att välja bland).
+const TRA_ENKEL = { bredd: [42, 56, 66, 90, 115], hojd: [180, 270, 360, 450, 540] };
+
 const BANOR = [
     {
         namn: 'Bäcken',
@@ -55,7 +58,7 @@ const BANOR = [
         // fackverk är billigast.
         spann: 14,
         material: ['limtra'],
-        traMax: [115, 540],
+        tra: TRA_ENKEL,
         fasten: [[0, 0, 'fast'], [14, 0, 'glid']],
         // Branta kanter, en grund botten som går lite upp och ner.
         profil: [[0, 0], [0.25, -0.35], [0.5, -1.05], [0.75, -1.85], [1.25, -2.55], [2.2, -2.95], [4, -3.15],
@@ -102,6 +105,7 @@ const BANOR = [
         namn: 'Ån',
         spann: 26,
         material: ['limtra'],
+        tra: TRA_ENKEL,
         fasten: [[0, 0, 'fast'], [1, -3], [26, 0, 'glid'], [25, -3]],
         profil: [[0, 0], [0.3, -0.4], [0.7, -1.5], [0.9, -2.4], [1.15, -3], [1.6, -4.2], [1.9, -5.5], [2.6, -6.8],
                  [3.2, -8.2], [4.5, -9.4], [6, -10.3], [8, -11.4], [10.5, -12.2], [13, -12.8], [15.5, -12.4],
@@ -115,22 +119,22 @@ const BANOR = [
         losning: {
             // Väg med två knutpunkter (7 och 19 m), var och en buren av en sträva
             // från fästet i slänten (som Isaks bro). Strävorna trycks och knäcks
-            // åt sidan om de är smala: 140×180 (19 880 $$).
+            // åt sidan om de är smala: 115×270 (21 210 $$).
             noder: [[0, 0], [1, -3], [26, 0], [25, -3], [7, 0], [19, 0]],
-            balkar: [[0, 4, '56×315', true], [4, 5, '66×360', true], [5, 2, '56×315', true], [1, 4, '140×180'], [3, 5, '140×180']]
+            balkar: [[0, 4, '56×360', true], [4, 5, '66×360', true], [5, 2, '56×360', true], [1, 4, '115×270'], [3, 5, '115×270']]
         },
         facit: {
             enkel: {
                 text: 'En grov väg på två grova strävor från fästena i slänterna. Den håller med råge, men är för dyr.',
                 noder: [[0, 0], [1, -3], [26, 0], [25, -3], [7, 0], [19, 0]],
-                balkar: [[0, 4, '90×450', true], [4, 5, '90×450', true], [5, 2, '90×450', true], [1, 4, '140×225'], [3, 5, '140×225']]
+                balkar: [[0, 4, '90×450', true], [4, 5, '90×450', true], [5, 2, '90×450', true], [1, 4, '115×360'], [3, 5, '115×360']]
             },
             effektiv: {
                 text: 'Två strävor från varje fäste bildar trianglar med vägen, och knutarna är ledade, så att '
                     + 'strävorna bara trycks. Det går att göra billigare.',
-                noder: [[0, 0], [1, -3], [26, 0], [25, -3], [4, 0, 'ledad'], [9, 0, 'ledad'], [17, 0, 'ledad'], [22, 0, 'ledad']],
-                balkar: [[0, 4, '42×315', true], [4, 5, '42×315', true], [5, 6, '56×360', true], [6, 7, '42×315', true],
-                         [7, 2, '42×315', true], [1, 4, '78×180'], [1, 5, '140×180'], [3, 6, '140×180'], [3, 7, '78×180']]
+                noder: [[0, 0], [1, -3], [26, 0], [25, -3], [3, 0, 'ledad'], [8, 0, 'ledad'], [18, 0, 'ledad'], [23, 0, 'ledad']],
+                balkar: [[0, 4, '42×270', true], [4, 5, '42×270', true], [5, 6, '66×450', true], [6, 7, '42×270', true],
+                         [7, 2, '42×270', true], [1, 4, '56×180'], [1, 5, '115×270'], [3, 6, '115×270'], [3, 7, '56×180']]
             }
         }
     },

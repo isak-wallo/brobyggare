@@ -103,7 +103,7 @@ def tryck(sida, punkt):
 
 
 def hall(sida, punkt, ms=650):
-    """Håller fingret still på punkten (väljer det som ligger där)."""
+    """Håller fingret still på punkten och släpper (väljer det som ligger där)."""
     x, y = skarm(sida, punkt)
     sida.mouse.move(x, y)
     sida.mouse.down()
@@ -112,7 +112,7 @@ def hall(sida, punkt, ms=650):
 
 
 def hall_dra(sida, fran, till):
-    """Håller på en knutpunkt tills den väljs, och drar den sedan."""
+    """Håller fingret på punkten en stund och drar sedan."""
     x1, y1 = skarm(sida, fran)
     x2, y2 = skarm(sida, till)
     sida.mouse.move(x1, y1)
@@ -221,8 +221,8 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
               f"{hojd - kor['y'] - kor['height']:.0f} px")
     bild(sida, bilder, f'{namn}-0-valjare')
     sida.click('#valjare [data-p=profil]')
-    kolla(f'{namn}: Profil visar trä i bredder och höjder (inte de grövsta på Bäcken)', sida.locator('#popup [data-b]').count() == 6
-          and sida.locator('#popup [data-h]').count() == 9 and sida.locator('#popup [data-b="66"].vald').count() == 1)
+    kolla(f'{namn}: Profil visar trä i bredder och höjder (färre på Bäcken)', sida.locator('#popup [data-b]').count() == 5
+          and sida.locator('#popup [data-h]').count() == 5 and sida.locator('#popup [data-b="66"].vald').count() == 1)
     bild(sida, bilder, f'{namn}-0-profil')
     sida.click('#popup [data-b="90"]')
     sida.click('#popup [data-h="270"]')
@@ -233,7 +233,7 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     for k in ['b="56"', 'h="450"', 'h="540"', 'b="42"', 'b="90"', 'h="270"']:
         sida.click(f'#popup [data-{k}]')
         slank.append(sida.evaluate('() => window.bro.ritProfil.limtra'))
-    kolla(f'{namn}: höjden högst 7 gånger bredden', slank == ['56×270', '66×450', '78×540', '42×270', '90×270', '90×270'], slank)
+    kolla(f'{namn}: höjden högst 7 gånger bredden', slank == ['56×270', '66×450', '90×540', '42×270', '90×270', '90×270'], slank)
     if namn == 'staende':
         luft = sida.evaluate('''() => [document.querySelector('#popup').getBoundingClientRect().top
             - document.querySelector('#duk').getBoundingClientRect().top - sy(bana.vy.y0), profilRutansHojd()]''')
@@ -334,9 +334,9 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     kolla(f'{namn}: änden flyttas, den gamla punkten försvinner',
           andar == [(5, 3), (7, 0)] and not any(n['x'] == 4 and n['y'] == 3 for n in r['noder']), str(andar))
     hall(sida, (3, 0))                            # välj vägen till vänster
-    ruta(sida, 'profil', '[data-h="225"]')
+    ruta(sida, 'profil', '[data-h="360"]')
     kolla(f'{namn}: profilen byts på vald balk',
-          sida.evaluate('() => window.bro.ritning.balkar[0].storlek') == '90×225'
+          sida.evaluate('() => window.bro.ritning.balkar[0].storlek') == '90×360'
           and sida.evaluate('() => window.bro.ritning.balkar[1].storlek') == '90×270'
           and sida.evaluate('() => window.bro.ritProfil.limtra') == '90×270')
     ruta(sida, 'typ', '[data-t=balk]')
@@ -351,7 +351,13 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     bild(sida, bilder, f'{namn}-0-andra')
     for _ in range(2):
         sida.click('#verktyg [data-v=angra]')
-    hall_dra(sida, (7, 0), (7, 1))                # knutpunkten med alla balkar
+    fore = antal_balkar(sida)
+    hall_dra(sida, (7, 0), (7, 1))
+    kolla(f'{namn}: håll på en knut som inte är vald och dra bygger en balk', antal_balkar(sida) == fore + 1
+          and sida.evaluate('() => window.bro.vald') == -1 and not sida.evaluate('() => !!valdKnut()'))
+    sida.click('#verktyg [data-v=angra]')
+    tryck(sida, (7, 0))
+    dra(sida, (7, 0), (7, 1))                     # den valda knutpunkten med alla balkar
     r = sida.evaluate('() => window.bro.ritning')
     i = next(j for j, n in enumerate(r['noder']) if n['x'] == 7 and n['y'] == 1)
     kolla(f'{namn}: knutpunkten flyttas med alla tre balkarna',
@@ -463,10 +469,10 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     kolla(f'{namn}: största zoom visar 10 m på skärmens kortaste sida', abs(m - 10) < 0.01, m)
     sida.mouse.wheel(0, 3000)
     sida.wait_for_timeout(100)
-    # Snedbalkarna trycks och knäcks åt sidan om de är smala: 115×225.
+    # Snedbalkarna trycks och knäcks åt sidan om de är smala: 115×270.
     sida.click('#valjare [data-p=profil]')
     sida.click('#popup [data-b="115"]')
-    sida.click('#popup [data-h="225"]')
+    sida.click('#popup [data-h="270"]')
     sida.click('#valjare [data-p=profil]')
     valj(sida, 'balk')
     dra(sida, (0, 0), (7, 2))

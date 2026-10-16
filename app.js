@@ -20,7 +20,7 @@ const MAX_STEG = 8;          // fysiksteg per bildruta (annars går det långsam
 // Största zoom: lika många pixlar per meter på alla banor och åt båda hållen
 // (skärmens kortaste sida visar NARMAST m, men minst 3 rutor på de grova rutnäten).
 const NARMAST = 10;
-const HALL_TID = 300;        // ms: så länge man håller på en balk eller knutpunkt för att välja den (och på Riv)
+const HALL_TID = 300;        // ms: så länge man håller inne Riv för att riva allt
 const BYGG_PER_BALK = 0.2;   // s per balk när keIWs bygger ...
 const BYGG_MIN = 1.0;        // ... men hela bygget tar minst ...
 const BYGG_MAX = 3.0;        // ... och högst så här länge (s)
@@ -65,12 +65,12 @@ let varnaNasta = false;      // varningen när man går vidare utan en bro som h
 const ritProfil = { limtra: '66×225', stal: 'HEA 100', betong: 2, vajer: 2 };
 let ritMaterial = 'limtra';   // materialet man ritar väg och balk med (kabeln har sitt eget)
 let popup = null;             // {typ, ankare}: rutan med val (material, typ, profil, riv allt, banor)
-let hall = null;              // {nod} eller {balk}, p, timer: man håller fingret på något
+let hall = null;              // {nod} eller {balk}, p: fingret är nere på något (släpps det där väljs det)
 let lageNu = 'bygg';
 let sim = null;
 let forlopp = null;           // {nr, valt}: man stegar igenom brotten efter provkörningen (valt = balk)
 let drag = null;              // {fran: [x, y], till: [x, y]} medan man drar
-let vald = -1;                // vald balk (håll fingret på den)
+let vald = -1;                // vald balk (tryck på den)
 let valdNod = null;           // eller vald knutpunkt eller pelare
 let flytt = null;             // {balk, ande} eller {nod}, och {till: [x, y]}
 let ratta = null;             // {balk, t}: ny balk som började i en ny punkt
@@ -240,9 +240,10 @@ function bytBana(nr) {
     if (!bana.pelare) ritPelare = false;
     if (!harMaterial('vajer')) ritKabel = false;
     if (!harMaterial(ritMaterial)) ritMaterial = 'limtra';
-    if (bana.traMax) {
+    if (bana.tra) {
         const p = profil('limtra', ritProfil.limtra);
-        ritProfil.limtra = traMatt(narmast(traBredder(), p.b * 1000), narmast(traHojder(), p.h * 1000), false);
+        ritProfil.limtra = traMatt(narmast(traBredder(), p.b * 1000), narmast(traHojder(), p.h * 1000), false,
+                                   traBredder(), traHojder());
     }
     try { localStorage.setItem(SPARA_BANA, bana.namn); } catch (e) { /* privat läge */ }
     anpassa();
@@ -706,18 +707,19 @@ function ritaBit(x1, y1, x2, y2, prof, vag, farg, kant) {
     }
 }
 
-// Knutpunkterna: fyrkant = styv, rund = ledad. Svart det som inte går att
-// flytta (fästen och lager), vitt det man själv har byggt. Lagren är noden
-// själv som en triangel (spetsen i knutpunkten), glidlagret med två rullar.
+// Knutpunkterna: fyrkant = styv, rund = ledad. Vitt det som går att ändra
+// (det man har byggt och fästena i berget), svart vägens lager. Lagren är
+// lika stora trianglar med knutpunkten i mitten, glidlagret med två rullar under.
 function ritaNod(x, y, { fast, styv, lager, pelare }) {
     const r = Math.max(3.5, 0.13 * kam.sk), X = sx(x), Y = sy(y);
     if (pelare) return;                    // pelarens topp är glidlagret (ritaPelare)
-    ctx.fillStyle = fast ? FARG.fast : FARG.knut;
+    ctx.fillStyle = lager ? FARG.fast : FARG.knut;
     ctx.strokeStyle = FARG.fast;
     ctx.lineWidth = Math.max(1.2, r * 0.3);
     if (lager) {
-        const b = r * 1.7, fot = Y + (lager === 'glid' ? r * 0.8 : r * 1.6);
-        ctx.beginPath(); ctx.moveTo(X, Y - r * 1.6); ctx.lineTo(X + b, fot); ctx.lineTo(X - b, fot); ctx.closePath(); ctx.fill();
+        // Knutpunkten i triangelns tyngdpunkt: spetsen 2/3 av höjden ovanför.
+        const b = r * 1.7, h = r * 3.2, fot = Y + h / 3;
+        ctx.beginPath(); ctx.moveTo(X, Y - h * 2 / 3); ctx.lineTo(X + b, fot); ctx.lineTo(X - b, fot); ctx.closePath(); ctx.fill();
         if (lager === 'glid') {
             // Rullarna sitter under triangelns fot (överlappar den lite).
             const rr = r * 0.62;
@@ -729,7 +731,7 @@ function ritaNod(x, y, { fast, styv, lager, pelare }) {
     if (styv) ctx.rect(X - r, Y - r, 2 * r, 2 * r);
     else ctx.arc(X, Y, r * 1.15, 0, 7);
     ctx.fill();
-    if (!fast) ctx.stroke();
+    ctx.stroke();
 }
 
 function ritaBygg() {
@@ -1214,9 +1216,9 @@ function visaPopup(typ, ankare) {
     markeraAnkare();
 }
 
-// Trädimensionerna som finns på banan (Bäcken har inte de grövsta, traMax).
-const traBredder = () => bana.traMax ? TRA_BREDD.filter(b => b <= bana.traMax[0]) : TRA_BREDD;
-const traHojder = () => bana.traMax ? TRA_HOJD.filter(h => h <= bana.traMax[1]) : TRA_HOJD;
+// Trädimensionerna som finns på banan (färre på de två första, bana.tra).
+const traBredder = () => bana.tra ? bana.tra.bredd : TRA_BREDD;
+const traHojder = () => bana.tra ? bana.tra.hojd : TRA_HOJD;
 
 // Profilrutan: bredd och höjd (trä), serie och höjd (stål) eller stegen.
 function profilRutan(mat, st, vag) {
@@ -1409,12 +1411,12 @@ ett fackverk dras eller trycks i stället för att böjas. Då räcker små
 balkar långt.</li>
 <li><b>Styv knut</b> (fyrkant): balkarna sitter ihop och vrider sig
 tillsammans. <b>Ledad knut</b> (rund): de vrider sig fritt, som ett
-gångjärn. Tryck på en knut och välj Styv eller Ledad. Vita knutar har du byggt, svarta
-sitter fast i berget. Vägens lager är svarta trianglar: det fasta låser
+gångjärn. Tryck på en knut och välj Styv eller Ledad. De vita knutarna går
+att ändra (även fästena i berget). Vägens lager är svarta trianglar: det fasta låser
 vägen, glidlagret (med rullar) låter den glida i sidled.</li>
-<li><b>Tryck på en balk eller knut</b> för att välja den: byt
-material, typ eller profil, flytta den eller riv den.</li>
-<li><b>Dra från en knut</b> för att bygga en balk. Drar man på tom yta
+<li><b>Tryck på en balk eller knut</b> (och släpp) för att välja den: byt
+material, typ eller profil, eller riv den. Dra i den valda knuten för att flytta den.</li>
+<li><b>Dra från en knut</b> (som inte är vald) för att bygga en balk. Drar man på tom yta
 flyttas vyn; håll still en kort stund först för att börja en balk där.</li>
 <li><b>Vid vägens ändar står bron på lager</b>, som riktiga broar: den ena
 änden sitter fast och den andra står på rullar. Övriga fästen sitter
@@ -1993,8 +1995,8 @@ popupEl.addEventListener('click', e => {
     } else {
         const p = profil(a.mat, a.st);
         let s;
-        if (d.b) s = traMatt(+d.b, narmast(traHojder(), p.h * 1000), false);
-        else if (d.h) s = traMatt(narmast(traBredder(), p.b * 1000), +d.h, true);
+        if (d.b) s = traMatt(+d.b, narmast(traHojder(), p.h * 1000), false, traBredder(), traHojder());
+        else if (d.h) s = traMatt(narmast(traBredder(), p.b * 1000), +d.h, true, traBredder(), traHojder());
         else if (d.serie) {
             // Samma höjd (så nära det går) i den nya serien.
             const rader = STAL_SERIER[d.serie], h = narmast(rader.map(x => x[1]), p.h * 1000);
@@ -2105,25 +2107,7 @@ function nypLage() {
 
 const vynsMitt = () => [(scen.clientWidth / 2 - kam.ox) / kam.sk, (kam.oy - (luftNu + scen.clientHeight) / 2) / kam.sk];
 
-// Håller man fingret still en stund på en balk, knutpunkt eller pelare väljs
-// den (en knutpunkt går sedan att dra dit man vill).
-function valjHall() {
-    const h = hall;
-    hall = null;
-    if (!h || lageNu !== 'bygg' || pekare.size !== 1) return;
-    drag = null; ratta = null;
-    if (h.nod) {
-        valdNod = h.nod; vald = -1;
-        if (!h.nod.fast) flytt = { nod: ritning.noder.indexOf(h.nod), till: [h.nod.x, h.nod.y] };
-    } else {
-        vald = h.balk; valdNod = null;
-    }
-    try { if (navigator.vibrate) navigator.vibrate(15); } catch (err) { /* inget */ }
-    uppdateraInfo();
-}
-
 function slappHall() {
-    if (hall) clearTimeout(hall.timer);
     hall = null;
     if (byggHall) clearTimeout(byggHall.timer);
     byggHall = null;
@@ -2197,14 +2181,13 @@ duk.addEventListener('pointerdown', e => {
     }
     ratta = null;
     // Ett tryck (släpp utan att dra) på en pelare, knutpunkt, ett fäste eller
-    // en balk väljer den (ett tryck på det som redan var valt släpper det);
-    // håller man still väljs den efter en stund.
+    // en balk väljer den (ett tryck på det som redan var valt släpper det).
+    // Att hålla väljer inte: drar man sedan bygger man.
     slappHall();
     hall = traffat(wx, wy, nara);
     if (hall) {
         hall.p = iDuken(e);
         hall.direkt = !avmarkera || (hall.nod ? hall.nod !== valdN : ritning.balkar[hall.balk] !== valdB);
-        hall.timer = setTimeout(valjHall, HALL_TID);
     }
     // Pelare: ett tryck på en punkt sätter eller tar bort en (ett drag
     // panorerar).
