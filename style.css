@@ -601,6 +601,17 @@ html, body {
     font-size: 18px;
 }
 
+#meny .facit .varning {
+    padding: 2px 12px;
+    border-radius: 10px;
+    background-color: #fdf1d6;
+    border: 1px solid #e8c674;
+}
+
+#meny .facit .varning.dold {
+    display: none;
+}
+
 #meny .over {
     color: #c0392b;
     font-weight: bold;

@@ -1528,13 +1528,13 @@ function facitText() {
     if (!bana.facit) return '';
     return '<details class="facit"><summary>Visa möjliga lösningar</summary>'
         + '<p>Två broar som håller, att utgå ifrån. Den enkla är för dyr, och den kostnadseffektiva går att '
-        + 'göra billigare: det får du klura ut själv! Din ritning byts ut (Ångra tar tillbaka den).</p>'
+        + 'göra billigare: det får du klura ut själv!</p>'
         + Object.keys(FACIT_NAMN).map(sort => {
             const k = ritningensKostnad(losningsRitning(bana, bana.facit[sort]), bana);
             return '<p><button data-facit="' + sort + '">' + FACIT_NAMN[sort] + ' · ' + kr(k) + '</button>'
                 + (k > bana.budget ? ' <span class="over">över budget</span>' : '') + '<br>' + bana.facit[sort].text + '</p>';
         }).join('')
-        + '</details>';
+        + '<div class="varning dold"></div></details>';
 }
 
 // Byter ritningen (Ångra tar tillbaka den gamla).
@@ -1592,7 +1592,18 @@ menyEl.addEventListener('click', e => {
         const basta = lasBasta(banaNr);
         if (basta) bytRitning(basta.ritning);
     }
-    if (b.dataset.facit && bana.facit) bytRitning(losningsRitning(bana, bana.facit[b.dataset.facit]));
+    // Möjlig lösning: först en (skämtsam) varning, sedan byts ritningen.
+    if (b.dataset.facit) {
+        const ruta = menyEl.querySelector('.facit .varning');
+        ruta.innerHTML = '<p><b>Fusk-varning!</b> Det är roligast att försöka själv först. '
+            + 'Lösningen (' + FACIT_NAMN[b.dataset.facit].toLowerCase() + ') ersätter din nuvarande ritning, men Ångra tar tillbaka den.</p>'
+            + '<p><button data-fusk="' + b.dataset.facit + '">Visa ändå</button> '
+            + '<button data-v="ingetfusk">Jag provar själv</button></p>';
+        ruta.classList.remove('dold');
+        return;
+    }
+    if (b.dataset.v === 'ingetfusk') { menyEl.querySelector('.facit .varning').classList.add('dold'); return; }
+    if (b.dataset.fusk && bana.facit) bytRitning(losningsRitning(bana, bana.facit[b.dataset.fusk]));
     stangMeny();
     if (b.dataset.v === 'guide') visaGuide();
 });

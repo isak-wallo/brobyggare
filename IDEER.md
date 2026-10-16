@@ -713,3 +713,6 @@ och en diagonal i mittfacket (11 350).
 
 v68-test (Isak 2026-10-16): i guiden berättar keIWs som professor (studentmössa, vinkar först,
 sedan handen upp) i en pratbubbla. Glidlagrets rullar större och fast i triangelns fot.
+
+v69-test (Isak 2026-10-16): en möjlig lösning visas först efter en skämtsam fusk-varning
+(ersätter ritningen, Ångra tar tillbaka den): "Visa ändå" eller "Jag provar själv".
