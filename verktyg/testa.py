@@ -200,11 +200,11 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
           x0 >= duk['x'] - 1 and x1 <= duk['x'] + duk['width'] + 1
           and y0 >= duk['y'] - 1 and y1 <= duk['y'] + duk['height'] + 1)
 
-    # Man bygger väg av trä 66×225 från start. Panelen: Material, Typ och
+    # Man bygger väg av trä 66×270 från start. Panelen: Material, Typ och
     # Profil, och under (bredvid när den ligger) Ångra, Riv och Kör i samma rutnät.
     panel = lambda p: sida.inner_text(f'#valjare [data-p={p}]').replace('\n', ' ')
-    kolla(f'{namn}: man bygger väg av trä 66×225 från start', panel('material') == 'Material Trä' and panel('typ') == 'Typ Väg'
-          and '66×225' in panel('profil') and '$$/m' in panel('profil'))
+    kolla(f'{namn}: man bygger väg av trä 66×270 från start', panel('material') == 'Material Trä' and panel('typ') == 'Typ Väg'
+          and '66×270' in panel('profil') and '$$/m' in panel('profil'))
     vb = sida.locator('#styrning').bounding_box()
     rader = sida.evaluate("([kant]) => new Set([...document.querySelectorAll('#styrning button')].map(b => Math.round(b.getBoundingClientRect()[kant]))).size",
                           ['top' if bredd < hojd else 'left'])
@@ -334,6 +334,13 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     kolla(f'{namn}: änden flyttas, den gamla punkten försvinner',
           andar == [(5, 3), (7, 0)] and not any(n['x'] == 4 and n['y'] == 3 for n in r['noder']), str(andar))
     hall(sida, (3, 0))                            # välj vägen till vänster
+    kolla(f'{namn}: den valda balkens längd står under budgeten', 'Vald väg: 7 m' in sida.inner_text('#info'),
+          sida.inner_text('#info'))
+    kolla(f'{namn}: mitt på en kort balk (1 m) träffas balken, inte knutarna', sida.evaluate('''() => {
+        const r = ritning; ritning = { noder: [{ x: 3, y: 3, fast: false, styv: true }, { x: 4, y: 3, fast: false, styv: true }],
+            balkar: [{ a: 0, b: 1, storlek: '66×270', vag: false, material: 'limtra' }] };
+        const t = traffat(3.5, 3), n = traffat(3.05, 3); ritning = r;
+        return t && t.balk === 0 && n && n.nod; }'''))
     ruta(sida, 'profil', '[data-h="360"]')
     kolla(f'{namn}: profilen byts på vald balk',
           sida.evaluate('() => window.bro.ritning.balkar[0].storlek') == '90×360'
@@ -771,6 +778,13 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     sida.click('#info [data-v=nasta]')
     kolla(f'{namn}: pilen byter till bana 2', sida.evaluate('() => window.bro.banaNr') == 1
           and antal_balkar(sida) == 0)
+    sida.evaluate("() => { ritProfil.limtra = '66×225'; }")
+    sida.reload()
+    sida.wait_for_function('() => window.bro')
+    kolla(f'{namn}: efter omladdning på Ån är träprofilen en som finns där',
+          sida.evaluate("() => TRA_ENKEL.bredd.includes(profil('limtra', ritProfil.limtra).b * 1000) "
+                        "&& TRA_ENKEL.hojd.includes(Math.round(profil('limtra', ritProfil.limtra).h * 1000))"),
+          sida.evaluate('() => ritProfil.limtra'))
     kolla(f'{namn}: zoomen nollas vid byte av bana', sida.evaluate('() => window.bro.zoom') == 1)
     v = sida.evaluate('() => BANOR[1].vy')
     duk = sida.locator('#duk').bounding_box()

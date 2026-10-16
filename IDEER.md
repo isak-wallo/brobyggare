@@ -745,3 +745,8 @@ v75–v77 (Isak 2026-10-16): keIWs hoppar till på riktigt när bron rasar av eg
 ihop, skuttar bakåt med armarna upp och stora ögon, utropstecken). Efter resultatet smulas det
 som krossas bort, också bitar fast i ett fäste (Isaks fackverk över Bäcken flög annars iväg).
 Förloppet visar bara första brottet i varje balk (`forloppSteg` i app.js; fysiken oförändrad).
+
+v78–v79 (Isak 2026-10-16): rullagret är samma triangel som det fasta, rullarna helt under.
+Den valda balkens längd står under budgeten. Ligger en balk under fingret träffas knutarna bara
+på halva avståndet (korta balkar gick inte att välja). Träprofilen anpassas till banan också när
+sidan laddas (Ån visade 66×225); man börjar med 66×270.

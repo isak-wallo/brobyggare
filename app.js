@@ -63,7 +63,7 @@ let ritKabel = false;        // ritar kablar i stället (bara drag)
 let varnaNasta = false;      // varningen när man går vidare utan en bro som höll
 // Profilen man bygger med, per material (trä och stål med namn, betong och
 // kabel ett steg 0–5).
-const ritProfil = { limtra: '66×225', stal: 'HEA 100', betong: 2, vajer: 2 };
+const ritProfil = { limtra: '66×270', stal: 'HEA 100', betong: 2, vajer: 2 };
 let ritMaterial = 'limtra';   // materialet man ritar väg och balk med (kabeln har sitt eget)
 let popup = null;             // {typ, ankare}: rutan med val (material, typ, profil, riv allt, banor)
 let hall = null;              // {nod} eller {balk}, p: fingret är nere på något (släpps det där väljs det)
@@ -225,6 +225,14 @@ function sparaBasta(k) {
     return true;
 }
 
+// Träprofilen man bygger med finns på banan (de två första har färre mått).
+function anpassaTra() {
+    if (!bana.tra) return;
+    const p = profil('limtra', ritProfil.limtra);
+    ritProfil.limtra = traMatt(narmast(traBredder(), p.b * 1000), narmast(traHojder(), p.h * 1000), false,
+                               traBredder(), traHojder());
+}
+
 function bytBana(nr) {
     if (lageNu !== 'bygg' || nr < 0 || nr >= BANOR.length) return;
     banaNr = nr;
@@ -241,11 +249,7 @@ function bytBana(nr) {
     if (!bana.pelare) ritPelare = false;
     if (!harMaterial('vajer')) ritKabel = false;
     if (!harMaterial(ritMaterial)) ritMaterial = 'limtra';
-    if (bana.tra) {
-        const p = profil('limtra', ritProfil.limtra);
-        ritProfil.limtra = traMatt(narmast(traBredder(), p.b * 1000), narmast(traHojder(), p.h * 1000), false,
-                                   traBredder(), traHojder());
-    }
+    anpassaTra();
     try { localStorage.setItem(SPARA_BANA, bana.namn); } catch (e) { /* privat läge */ }
     anpassa();
     uppdateraInfo();
@@ -533,12 +537,14 @@ const iDuken = e => {
 };
 // Det man trycker på för att välja: en pelare, en knutpunkt (inte fästena)
 // eller en balk ({ nod } eller { balk: index }), annars null.
+// Ligger en balk under fingret träffas knutpunkterna bara nära (annars är
+// korta balkar svåra att välja); annars på lite större avstånd.
 function traffat(wx, wy, nara = Math.max(0.45, 22 / kam.sk)) {
     const pel = ritning.noder.find(n => n.pelare && Math.hypot(wx - n.x, wy - n.y) < nara * 0.8);
     if (pel) return { nod: pel };
-    const nod = narmasteNod(wx, wy, nara * 0.8, true);
-    if (nod >= 0) return { nod: ritning.noder[nod] };
     const balk = narmasteBalk(wx, wy, Math.max(0.4, 16 / kam.sk));
+    const nod = narmasteNod(wx, wy, nara * (balk >= 0 ? 0.4 : 0.8), true);
+    if (nod >= 0) return { nod: ritning.noder[nod] };
     return balk >= 0 ? { balk } : null;
 }
 
@@ -1162,6 +1168,9 @@ function uppdateraInfo() {
     if (!varnaNasta && !bygger && sim && sim.bygge) rad3 = 'keIWs bygger …';
     else if (!varnaNasta && !bygger && sim) {
         rad3 = sim.brott ? '<span class="over">Bron gick sönder</span>' : 'Högsta utnyttjande ' + Math.round(sim.maxU * 100) + ' %';
+    } else if (bygger && valdBalken()) {
+        const b = valdBalken(), na = ritning.noder[b.a], nb = ritning.noder[b.b];
+        rad3 = 'Vald ' + (arKabel(b) ? 'kabel' : b.vag ? 'väg' : 'balk') + ': ' + tal(Math.hypot(nb.x - na.x, nb.y - na.y), 2) + ' m';
     }
     infoEl.innerHTML = '<div class="rad">' + pil('forra', '‹', !bygger || banaNr === 0)
         + pil('nasta', '›', !bygger || banaNr === BANOR.length - 1)
@@ -2430,6 +2439,7 @@ new ResizeObserver(anpassa).observe(scen);
 lasHistorik();
 // Finns vägen redan hela vägen bygger man balkar.
 ritVag = !vagenHel();
+anpassaTra();
 anpassa();
 uppdateraInfo();
 requestAnimationFrame(loop);
