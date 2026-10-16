@@ -719,7 +719,7 @@ function ritaBit(x1, y1, x2, y2, prof, vag, farg, kant) {
 
 // Knutpunkterna: fyrkant = styv, rund = ledad. Vitt det som går att ändra
 // (det man har byggt och fästena i berget), svart vägens lager. Lagren är
-// lika stora trianglar med knutpunkten i mitten, glidlagret med två rullar under.
+// trianglar med knutpunkten i mitten, glidlagrets lägre med två rullar under.
 function ritaNod(x, y, { fast, styv, lager, pelare }) {
     const r = Math.max(3.5, 0.13 * kam.sk), X = sx(x), Y = sy(y);
     if (pelare) return;                    // pelarens topp är glidlagret (ritaPelare)
@@ -728,13 +728,13 @@ function ritaNod(x, y, { fast, styv, lager, pelare }) {
     ctx.lineWidth = Math.max(1.2, r * 0.3);
     if (lager) {
         // Knutpunkten i triangelns tyngdpunkt: spetsen 2/3 av höjden ovanför.
-        const b = r * 1.7, h = r * 3.2, fot = Y + h / 3;
+        // Glidlagret: lika bred men halva höjden, och två rullar under, så
+        // att det blir ungefär lika högt som det fasta lagret.
+        const b = r * 1.7, h = r * (lager === 'glid' ? 1.6 : 3.2), fot = Y + h / 3;
         ctx.beginPath(); ctx.moveTo(X, Y - h * 2 / 3); ctx.lineTo(X + b, fot); ctx.lineTo(X - b, fot); ctx.closePath(); ctx.fill();
         if (lager === 'glid') {
-            // Två rullar helt under triangelns fot (som då ser likadan ut som
-            // det fasta lagrets), med en liten glipa emellan.
-            const rr = r * 0.55;
-            for (const d of [-0.55, 0.55]) { ctx.beginPath(); ctx.arc(X + d * b, fot + rr, rr, 0, 7); ctx.fill(); }
+            const rr = r * 0.78;
+            for (const d of [-0.52, 0.52]) { ctx.beginPath(); ctx.arc(X + d * b, fot + rr, rr, 0, 7); ctx.fill(); }
         }
         return;
     }
