@@ -84,7 +84,7 @@ const mat = MATERIAL.limtra;
 // 4. Knäckning: tryck 0,5 · Pcr ger utnyttjandet 0,5 mot knäckning.
 {
     const L = 4, p = PROFILER.limtra[1];
-    const Pcr = Math.PI ** 2 * mat.E05 * p.I / (L * L);
+    const Pcr = Math.PI ** 2 * mat.E05 * p.Imin / (L * L);
     const m = byggModell({ noder: [{ x: 0, y: 0, fast: true }, { x: 0, y: L }, { x: 1, y: L, fast: true }],
                            balkar: [{ a: 0, b: 1, storlek: 1 }, { a: 1, b: 2, storlek: 2 }] });
     m.last[2 * m.nodPunkt[1] + 1] = -0.5 * Pcr;

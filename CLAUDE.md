@@ -18,14 +18,15 @@ Idéer och beslut i `IDEER.md` (läs den först).
 ## Filer
 
 - `material.js` – material (limträ GL30c, stål S355, betong C35/45, kabel) och profilerna:
-  trä bredd × höjd (TRA_BREDD, TRA_HOJD), stål IPE/HEA/HEB (STAL_SERIER), betong och kabel
+  trä bredd × höjd (TRA_BREDD, TRA_HOJD), stål IPE/HEA/HEB och fyrkantsrör KKR (STAL_SERIER), betong och kabel
   6 steg (STEGEN). Balkens `storlek` är profilens namn ('90×315', 'HEA 200') eller ett steg
   0–5 i STEGEN (banornas lösningar, äldre ritningar; före version 7 9 steg, se GAMLA_STEG).
   `profil(material, storlek)` ger A, I, W, vikt och pris. Vägbanan och förbanden (vikt och pris;
   `forbandet(ritning, i)` växer med den grövsta balkens dragkraft A·f i knuten).
 - `fysik.js` – FE-lösaren: korotationella Euler–Bernoulli-element, Newmark
   + Newton–Raphson, bandad Cholesky med Cuthill–McKee, brott (spänning,
-  skjuvning, Euler-knäckning). SI-enheter, y uppåt. Blir Newtonmatrisen indefinit
+  skjuvning, Euler-knäckning med I_min, det tunnaste hållet; vägbalkarna hålls i sidled av
+  vägen och knäcks med I). SI-enheter, y uppåt. Blir Newtonmatrisen indefinit
   (knäckta bitar) förstoras diagonalen; ett Newtonsteg högst MAX_DU.
 - `banor.js` – banorna (spann, fästpunkter, marken (`kant`/`dal`, eller `profil`: ojämn mark punkt för punkt), budget, en sparad lösning).
 - `spel.js` – provkörningen utan ritning: keIWs som rörlig last, faller
@@ -55,4 +56,10 @@ tar drag; kablar i vägen spänns vid bygget (`spannKablar`). Stora banor har
 egna `element`, `maxLangd`, `maxKabel` (se banor.js). Största zoom: NARMAST m (minst 3 rutor) på skärmens kortaste sida.
 Massan klumpas i noderna. Egentyngden räknas statiskt (losStatiskt; går
 det inte läggs den på under 1 s), sedan går keIWs (500 kg; bilen 2,5 ton) över. g = 10 m/s². Ett element över 100 %
-utnyttjande tas bort; en balk som knäcks tappar mittelementet.
+utnyttjande tas bort; en balk som knäcks tappar mittelementet. Lösa bitar (inte ihop med
+något fäste, `iFastet`) går inte sönder; över SMUL_GRANS smulas de bort (`smula`), annars
+fastnar Newton när de krossas mot marken.
+
+Banorna (v64): Bäcken 14 m, Ån 26 m, Sundet 38 m (bara trä), Kanalen 50 m (stål och
+rör kommer, stålet ska vinna), Ravinen, Dalgången, Älven (betong, kablar, farled, pelare),
+Havet. Varje bana har en lösning som ska hålla under budget (testa_banor.js).

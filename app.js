@@ -89,18 +89,21 @@ let laddaOmSen = false;       // ny version finns: ladda om när det passar
 // Förut sparades allt per banans nummer, i två olika ordningar (före och
 // efter v37). Nu per namn, så att banorna kan byta plats. Dalgången
 // ritades om helt (v39), Ån (v59, 26 m) och Kanalen (v63, utan farled
-// och pelare): det som sparats där kastas.
+// och pelare; v64, 50 m): det som sparats där kastas. I v64 kom
+// knäckningen åt det tunnaste hållet, så de bästa broarna (som höll
+// förut) kastas på alla banor, men ritningarna är kvar.
 function flyttaSparat() {
     try {
         const ordning = localStorage.getItem('brobyggare-ordning');
-        if (ordning === '5') return;
-        if (ordning === '3' || ordning === '4') {
+        if (ordning === '6') return;
+        if (ordning === '3' || ordning === '4' || ordning === '5') {
             for (const nyckel of [SPARA, SPARA_BASTA]) {
                 if (ordning === '3') localStorage.removeItem(nyckel + 'Ån');
                 localStorage.removeItem(nyckel + 'Kanalen');
             }
+            for (const b of BANOR) localStorage.removeItem(SPARA_BASTA + b.namn);
             sessionStorage.removeItem(SPARA_HISTORIK);     // banornas nummer har bytts
-            localStorage.setItem('brobyggare-ordning', '5');
+            localStorage.setItem('brobyggare-ordning', '6');
             return;
         }
         const forr = ordning === '2' ? ['Bäcken', 'Ån', 'Dalgången', 'Kanalen', 'Älven', 'Havet']
@@ -114,8 +117,9 @@ function flyttaSparat() {
         }
         const nr = localStorage.getItem(SPARA_BANA);
         if (nr !== null && forr[nr]) localStorage.setItem(SPARA_BANA, forr[nr]);
+        for (const b of BANOR) localStorage.removeItem(SPARA_BASTA + b.namn);
         sessionStorage.removeItem(SPARA_HISTORIK);
-        localStorage.setItem('brobyggare-ordning', '5');
+        localStorage.setItem('brobyggare-ordning', '6');
     } catch (e) { /* privat läge */ }
 }
 
@@ -1212,7 +1216,7 @@ function profilRutan(mat, st, vag) {
     } else if (mat === 'stal') {
         const [serie, nr] = p.namn.split(' ');
         html += rad('Serie', Object.keys(STAL_SERIER).map(s => knapp('data-serie="' + s + '"', s, s === serie)))
-            + rad('Höjd', STAL_SERIER[serie].map(([n]) => knapp('data-nr="' + n + '"', n, String(n) === nr)));
+            + rad(serie === 'KKR' ? 'Mått' : 'Höjd', STAL_SERIER[serie].map(([n]) => knapp('data-nr="' + n + '"', n, String(n) === nr)));
     } else {
         html += rad('', STEGEN[mat].map((x, i) => knapp('data-s="' + i + '"', x.namn, x === p)));
     }
@@ -1384,7 +1388,8 @@ som keIWs, så vägen måste vara starkare.</li>
 <li><b>Färgerna</b> visar hur hårt varje bit jobbar: grönt är lugnt, gult är
 mycket och rött nästan för mycket. Över 100 % går biten sönder.</li>
 <li><b>Långa smala balkar som trycks ihop kan knäckas</b>, som ett sugrör
-man trycker på. Kortare eller grövre balkar knäcks inte lika lätt.</li>
+man trycker på. De knäcks åt det tunnaste hållet (en smal träbalk åt sidan),
+så det som trycks bör vara tjockt åt alla håll: ett rör är bäst.</li>
 <li><b>Bygg trianglar.</b> En triangel kan inte tryckas sned, så balkarna i
 ett fackverk dras eller trycks i stället för att böjas. Då räcker små
 balkar långt.</li>
@@ -1477,7 +1482,7 @@ ${brott}
 <p>Ett element som går sönder försvinner, en balk som knäcks går av på mitten.</p>
 <h4>Profiler</h4>
 <p>Limträ: bredd ${TRA_BREDD[0]}–${TRA_BREDD.at(-1)} mm, höjd ${TRA_HOJD[0]}–${TRA_HOJD.at(-1)} mm (lameller
-på 45 mm), höjden högst ${TRA_SLANK} gånger bredden (en högre balk väljs bredare). Stål: IPE 80–600, HEA och HEB 100–600. Några av dem:</p>
+på 45 mm), höjden högst ${TRA_SLANK} gånger bredden (en högre balk väljs bredare). Stål: IPE 80–600, HEA och HEB 100–600, fyrkantsrör KKR 40×3–200×8. Några av dem:</p>
 <div class="rulla"><table class="tabell">
 <tr><th></th><th class="v">Profil</th><th>kg/m</th><th>$$/m</th></tr>
 ${profiler}
@@ -1485,7 +1490,7 @@ ${profiler}
 <h4>Förenklingar</h4>
 <ul>
 <li>Ingen skjuvdeformation (Timoshenko).</li>
-<li>Ingen vippning eller knäckning ut ur planet (stålets I-balkar knäcks bara kring den styva axeln; limträet har i stället ett krav på bredden).</li>
+<li>Knäckning räknas åt det tunnaste hållet (I<sub>min</sub>), ledad i båda ändar, över hela balken. Ingen vippning (limträet har i stället ett krav på bredden).</li>
 <li>Inga partialkoefficienter eller lastkombinationer som i Eurokod.</li>
 <li>Betong räknas som ett homogent armerat tvärsnitt (ingen sprickbildning).</li>
 <li>Kablarna hänger inte i en kedjelinje mellan fästena (ingen egen nedböjning).</li>
@@ -1785,7 +1790,11 @@ popupEl.addEventListener('click', e => {
         let s;
         if (d.b) s = traMatt(+d.b, narmast(TRA_HOJD, p.h * 1000), false);
         else if (d.h) s = traMatt(narmast(TRA_BREDD, p.b * 1000), +d.h, true);
-        else if (d.serie) s = d.serie + ' ' + narmast(STAL_SERIER[d.serie].map(([n]) => n), +p.namn.split(' ')[1]);
+        else if (d.serie) {
+            // Samma höjd (så nära det går) i den nya serien.
+            const rader = STAL_SERIER[d.serie], h = narmast(rader.map(x => x[1]), p.h * 1000);
+            s = d.serie + ' ' + rader.find(x => x[1] === h)[0];
+        }
         else if (d.nr) s = p.namn.split(' ')[0] + ' ' + d.nr;
         else if (d.s !== undefined) s = +d.s;
         if (s === undefined) return;

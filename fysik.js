@@ -75,7 +75,9 @@ function byggModell(ritning, elLangd = ELEMENT_LANGD) {
 
         const balk = {
             L, prof, mat, vag: !!b.vag, element: [], uk: 0, knackt: false,
-            Pcr: Math.PI ** 2 * (mat.E05 || mat.E) * prof.I / (L * L)
+            // Knäckning åt det tunnaste hållet; vägbalkarna hålls i sidled
+            // av vägen ovanpå och knäcks bara i bilden.
+            Pcr: Math.PI ** 2 * (mat.E05 || mat.E) * (b.vag ? prof.I : prof.Imin ?? prof.I) / (L * L)
         };
         for (let k = 0; k < n; k++) {
             balk.element.push(element.length);
@@ -447,7 +449,8 @@ function brottOrsak(e, balk) {
 // montera, så att N och M är aktuella).
 //   element: BROTT efter materialet (trä: drag/tryck N/(A·f) + böjning
 //            M/(W·fm), eller skjuvning 1,5·V/(A·fv), det som är störst)
-//   balk:    tryck mot Eulers knäcklast π²·E05·I/L² (ledad–ledad)
+//   balk:    tryck mot Eulers knäcklast π²·E05·Imin/L² (ledad–ledad, åt
+//            det tunnaste hållet, även ut ur bilden)
 function utnyttjande(m) {
     for (const balk of m.balkar) balk.uk = 0;
     for (const e of m.element) {
@@ -496,5 +499,14 @@ function brott(m) {
             m.brutna.push({ el: varst, balk: bi, u, orsak });
         }
     });
+    smula(m, fast || iFastet(m));
     return m.brutna.length;
+}
+
+// Lösa bitar som trycks sönder mot marken smulas (utan att räknas som
+// brott): annars kan ett hopklämt element få så stora krafter att Newton
+// inte går ihop, och bitarna flyger iväg.
+const SMUL_GRANS = 3;
+function smula(m, fast = iFastet(m)) {
+    for (const e of m.element) if (!e.dod && !fast[e.i] && e.u > SMUL_GRANS) e.dod = true;
 }

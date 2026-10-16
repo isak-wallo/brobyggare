@@ -76,8 +76,9 @@ mycket man får välja och se.
   följer av FE-lösaren med balkelement och styva förband.
 - Profilerna läggs som data (JSON) med värden ur standardtabeller.
 - **Bara 2D (beslut):** balken böjs alltid kring sin starka axel.
-  Ingen vippning, ingen knäckning ut ur planet, ingen lokal buckling –
-  balkarna antas stagade i sidled. Lite förenklat, för att det är ett spel.
+  Ingen vippning, ingen lokal buckling. Knäckningen (från v64) räknas
+  åt det tunnaste hållet (I_min) utom för vägbalkarna, som vägen håller
+  i sidled. Lite förenklat, för att det är ett spel.
 - Ingenjörsläget kan föreslå en dimension upp/ner och visa vilken
   kontroll som styr (moment, tryck/knäckning, drag, skjuv).
 - Pris per meter (och per förband) ungefär som i verkligheten, så att
@@ -665,3 +666,28 @@ bästa (53 580: 4 m högt, fack på 4 m, väg och överram IPE 100, stänger IPE
 dyrare per meter än 42×180, och på 48 m med keIWs blir stängerna klena. Isak ville ha kvar
 både trä och stål; lösningen är stålfackverket, budget 58 000. Farleden och pelarna provas nu
 på Älven (testa.py). Sparade ritningar på Kanalen kastas (ordning 5).
+
+v64-test (Isak 2026-10-16): ny ordning Bäcken 14 m, Ån 26 m, **Sundet 38 m** (ny, bara trä,
+ett fackverk), **Kanalen 50 m** (stål och fyrkantsrör KKR 40×3–200×8 kommer; trä finns kvar
+men stålet ska vinna), Ravinen, Dalgången, Älven, Havet.
+Knäckning åt det tunnaste hållet (Isak: "förenklad knäckningskontroll som bygger på tunnaste
+tvärsnittet"): P_cr = π²·E·I_min/L², I_min = b³h/12 för trä, Iz för IPE/HEA/HEB, I för rör.
+Vägbalkarna knäcks bara i planet (vägen stagar dem). Utan detta vann trä alltid i 2D (smala
+höga strävor var lika starka som rör). Nu: Kanalen stål (bågfackverk, båge KKR 100×5, 60 900)
+mot trä ca 65 700, budget 64 000. Dalgången och Ravinen förblir trä.
+Följder: tryckta trästrävor måste vara tjocka åt sidan (140×180 osv). Nya lösningar och
+budgetar: Bäcken 11 660 / 13 000 (fackverk 3 m högt), Ån 19 880 / 21 500 (strävor 140×180 vid
+7 och 19 m; Isaks gamla bro kostar nu ca 23 350), Sundet 45 160 / 48 000, Kanalen 60 900 /
+64 000, Ravinen 14 870 / 16 000, Dalgången 98 030 / 104 000.
+Lösa bitar som krossades mot marken fick Newton att fastna (bitar flög med 4e6 m/s); nu
+smulas lösa element över 300 % bort (smula). Sparade ritningar på Kanalen kastas och alla
+bästa broar glöms (ordning 6), ritningarna på övriga banor är kvar.
+
+Senare (Isak 2026-10-16):
+- **Facit:** i menyn "Visa möjliga lösningar", välj "enkel" (enkel men dyr) eller
+  "kostnadseffektiv". Inte optimerade, bara något att utgå ifrån; ska inte gå att råka få fram.
+- **Guide:** interaktiv, lyser upp en knapp i taget och beskriver den. Aldrig påtvingad, nås
+  från menyn eller ett "?" bredvid menyn.
+- **Grafik:** fasta lagret = noden själv som svart triangel (ungefär som andra noder), glidlagret
+  en svart triangel med två rullar (eller svart cirkel). Egna knutar: fyrkant (styv) eller rund
+  (ledad) i en färg, svart för det som inte går att ändra.

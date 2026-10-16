@@ -1,7 +1,7 @@
 // Material och tvärsnitt.
 //
 // Trä och stål väljs ur riktiga profiler: limträ bredd × höjd (TRA_BREDD,
-// TRA_HOJD) och stålets IPE, HEA och HEB (STAL), så att lösaren räknar med
+// TRA_HOJD) och stålets IPE, HEA, HEB och KKR (STAL), så att lösaren räknar med
 // verkliga A, I, W, vikt och pris. I ritningen är balkens storlek profilens
 // namn ('90×315', 'HEA 200'), eller ett steg 0–5 i STEGEN (betongen,
 // kabeln, banornas lösningar och äldre ritningar).
@@ -67,13 +67,13 @@ const MATERIAL = {
 const BROTTREGLER = {
     tra: ['N/(A·f<sub>t</sub> eller f<sub>c</sub>) + M/(W·f<sub>m</sub>) ≤ 100 %',
           '1,5·V/(A·f<sub>v</sub>) ≤ 100 %',
-          'Knäckning: tryckkraften < π²·E<sub>05</sub>·I/L²'],
+          'Knäckning: tryckkraften < π²·E<sub>05</sub>·I<sub>min</sub>/L² (I<sub>min</sub>: det tunnaste hållet, h·b³/12)'],
     stal: ['N/(A·f<sub>y</sub>) + M/(W·f<sub>y</sub>) ≤ 100 %',
            'V/(A<sub>v</sub>·f<sub>v</sub>) ≤ 100 % (A<sub>v</sub> = livets area)',
-           'Knäckning: tryckkraften < π²·E·I/L²'],
+           'Knäckning: tryckkraften < π²·E·I<sub>min</sub>/L² (I-balkar kring den veka axeln, I<sub>z</sub>)'],
     betong: ['N/(A·f<sub>t</sub> eller f<sub>c</sub>) + M/(W·f<sub>m</sub>) ≤ 100 %',
              '1,5·V/(A·f<sub>v</sub>) ≤ 100 %',
-             'Knäckning: tryckkraften < π²·E·I/L²'],
+             'Knäckning: tryckkraften < π²·E·I<sub>min</sub>/L²'],
     vajer: ['Bara drag: N/(A·f<sub>u</sub>) ≤ 100 %',
             'Tryck: kabeln slaknar, den bär ingen böjning']
 };
@@ -85,17 +85,30 @@ function rektangel(material, b, h) {
     return {
         namn: b + '×' + h, material, b: bm, h: hm,
         A, I: bm * hm ** 3 / 12, W: bm * hm ** 2 / 6,
+        Imin: Math.max(bm, hm) * Math.min(bm, hm) ** 3 / 12,   // knäckning: det tunnaste hållet
         massa: A * mat.densitet,                       // kg/m
         pris: Math.round(A * mat.prisM3 / 10) * 10     // $$/m
     };
 }
 
-// En I-balk ur tabell (cm², cm⁴, cm³, livets area cm², höjd mm).
-function iprofil(namn, A, I, W, Av, h) {
+// Tröghetsmomentet kring den veka axeln, Iz (cm⁴): I-balkarna knäcks åt
+// det hållet (flänsarnas bredd), inte kring den styva axeln.
+const STAL_IZ = {
+    IPE: [8.49, 15.9, 27.7, 44.9, 68.3, 101, 142, 205, 284, 420, 604, 788, 1043, 1318, 1676, 2142, 2668, 3387],
+    HEA: [134, 231, 389, 616, 925, 1336, 1955, 2769, 3668, 4763, 6310, 6985, 7436, 7887, 8564, 9465, 10370, 10820, 11270],
+    HEB: [167, 318, 550, 889, 1363, 2003, 2843, 3923, 5135, 6595, 8563, 9239, 9690, 10140, 10820, 11720, 12620, 13080, 13530]
+};
+const izFor = namn => {
+    const [serie, nr] = namn.split(' '), i = (STAL_SERIER[serie] || []).findIndex(r => String(r[0]) === nr);
+    return STAL_IZ[serie] && i >= 0 ? STAL_IZ[serie][i] : undefined;
+};
+
+// En I-balk ur tabell (cm², cm⁴, cm³, livets area cm², höjd mm, Iz cm⁴).
+function iprofil(namn, A, I, W, Av, h, Iz = izFor(namn) ?? I) {
     const mat = MATERIAL.stal;
     A /= 1e4;
     return {
-        namn, material: 'stal', h: h / 1000, A, I: I / 1e8, W: W / 1e6, Av: Av / 1e4,
+        namn, material: 'stal', h: h / 1000, A, I: I / 1e8, W: W / 1e6, Av: Av / 1e4, Imin: Math.min(I, Iz) / 1e8,
         massa: A * mat.densitet, pris: Math.round(A * mat.prisM3 / 10) * 10
     };
 }
@@ -150,8 +163,22 @@ const STAL_SERIER = {
           [500, 500, 300, 14.5, 28, 27, 238.6, 107200, 4287], [550, 550, 300, 15, 29, 27, 254.1, 136700, 4971],
           [600, 600, 300, 15.5, 30, 27, 270.0, 171000, 5701]]
 };
+// Kvadratiska rör (KKR, kallformade): [mått 'b×t', b, t (mm)]. Lätta och
+// lika styva åt alla håll, för fackverkens stänger; för böjning är en
+// I-balk bättre. Räknat utan de rundade hörnen; skjuvningen tas av de två
+// liven (A_v = A/2).
+STAL_SERIER.KKR = [[40, 3], [50, 3], [60, 4], [70, 4], [80, 4], [90, 5], [100, 5], [120, 6], [150, 6], [200, 8]]
+    .map(([b, t]) => [b + '×' + t, b, t]);
+function kkr(namn, b, t) {
+    const c = b - 2 * t, A = (b * b - c * c) / 100, I = (b ** 4 - c ** 4) / 12 / 1e4;
+    return iprofil(namn, A, I, I / (b / 20), A / 2, b);
+}
 const STAL = {};
 for (const [serie, rader] of Object.entries(STAL_SERIER)) {
+    if (serie === 'KKR') {
+        for (const [nr, b, t] of rader) STAL['KKR ' + nr] = kkr('KKR ' + nr, b, t);
+        continue;
+    }
     for (const [nr, h, b, tw, tf, r, A, I, W] of rader) {
         const Av = (A * 100 - 2 * b * tf + (tw + 2 * r) * tf) / 100;
         STAL[serie + ' ' + nr] = iprofil(serie + ' ' + nr, A, I, W, Av, h);
@@ -164,7 +191,7 @@ for (const [serie, rader] of Object.entries(STAL_SERIER)) {
 function vajer(d) {
     const mat = MATERIAL.vajer, A = 0.6 * Math.PI * (d / 1000) ** 2 / 4;
     return {
-        namn: 'Ø ' + d, material: 'vajer', h: d / 1000, A, I: 0, W: 0,
+        namn: 'Ø ' + d, material: 'vajer', h: d / 1000, A, I: 0, W: 0, Imin: 0,
         massa: A * mat.densitet, pris: Math.round(A * mat.prisM3)
     };
 }

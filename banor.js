@@ -9,8 +9,8 @@
 //           överst); dal: {djup, bredd} för landbanornas mjuka dal (se
 //           markY i spel.js)
 //   material: vilka material som finns (trä och stål om det saknas);
-//           Bäcken och Ån har bara trä, stålet kommer på Kanalen, betongen
-//           och kablarna på Älven
+//           Bäcken, Ån och Sundet har bara trä, stålet (och rören) kommer
+//           på Kanalen, betongen och kablarna på Älven
 //   fasten: fästpunkterna i berget [x, y] eller [x, y, lager]. Vägbanans
 //           fästen är brolager (alltid ledade): 'fast' låser x och y,
 //           'glid' bara y (rör sig fritt i sidled, som på riktiga broar,
@@ -54,19 +54,20 @@ const BANOR = [
                  [6, -2.95], [7.6, -3.3], [9.6, -3.1], [11.4, -2.9], [12.4, -2.55], [13.0, -1.75],
                  [13.45, -0.9], [13.75, -0.3], [14, 0]],
         vatten: -2,
-        budget: 12000,
+        budget: 13000,
         keiws: 2,
         keiwsInzoomad: 1.35,
         omrade: { x0: -3, x1: 17, y0: -1, y1: 7 },
         vy: { x0: -4, x1: 18, y0: -3.5, y1: 7.5 },
         losning: {
-            // Väg 2 (56×215) med ett fackverk av 1 (56×180) ovanpå, 2 m högt (10 830 $$).
+            // Väg 42×270 med ett fackverk ovanpå, 3 m högt: överramen trycks och
+            // måste vara tjock åt sidan (90×180, 66×180), stängerna 42×180 (11 660 $$).
             noder: [
-                [0, 0], [14, 0], [5, 0], [9, 0], [5, 2], [9, 2]
+                [0, 0], [14, 0], [5, 0], [9, 0], [5, 3], [9, 3]
             ],
             balkar: [
-                [0, 2, 1, true], [2, 3, 1, true], [3, 1, 1, true], [0, 4, 0], [4, 5, 0], [5, 1, 0],
-                [2, 4, 0], [3, 5, 0]
+                [0, 2, '42×270', true], [2, 3, '42×270', true], [3, 1, '42×270', true], [0, 4, '90×180'], [4, 5, '66×180'],
+                [5, 1, '90×180'], [2, 4, '42×180'], [3, 5, '42×180']
             ]
         }
     },
@@ -82,47 +83,77 @@ const BANOR = [
                  [17.5, -11.6], [19.5, -10.9], [21.5, -9.8], [23, -8.6], [23.8, -7.2], [24.2, -5.8], [24.55, -4.3],
                  [24.85, -3], [25.15, -2], [25.45, -1], [25.75, -0.35], [26, 0]],
         vatten: -4,
-        budget: 18500,
+        budget: 21500,
         keiws: 3.5,
         omrade: { x0: -3, x1: 29, y0: -4, y1: 9 },
         vy: { x0: -7, x1: 33, y0: -13.5, y1: 9.5 },
         losning: {
-            // Väg 56×315 med två knutpunkter (9 och 17 m), var och en buren av en
-            // sträva 42×270 från fästet i slänten (Isaks bro, 17 420 $$).
-            noder: [[0, 0], [1, -3], [26, 0], [25, -3], [9, 0], [17, 0]],
-            balkar: [[0, 4, '56×315', true], [4, 5, '56×315', true], [5, 2, '56×315', true], [1, 4, '42×270'], [3, 5, '42×270']]
+            // Väg med två knutpunkter (7 och 19 m), var och en buren av en sträva
+            // från fästet i slänten (som Isaks bro). Strävorna trycks och knäcks
+            // åt sidan om de är smala: 140×180 (19 880 $$).
+            noder: [[0, 0], [1, -3], [26, 0], [25, -3], [7, 0], [19, 0]],
+            balkar: [[0, 4, '56×315', true], [4, 5, '66×360', true], [5, 2, '56×315', true], [1, 4, '140×180'], [3, 5, '140×180']]
         }
     },
     {
-        // 48 m: för långt för en balk på strävor, så det blir ett fackverk.
-        // Här kommer stålet (trä finns kvar).
+        // 38 m: för långt för vägen på strävor från slänterna, så det blir
+        // ett fackverk (bara trä). Ojämna slänter och botten, 8–11 m djupt.
+        namn: 'Sundet',
+        spann: 38,
+        material: ['limtra'],
+        fasten: [[0, 0, 'fast'], [2, -4], [38, 0, 'glid'], [36, -4]],
+        profil: [[0, 0], [0.4, -0.6], [0.9, -1.8], [1.4, -2.9], [2, -4], [2.5, -5.2], [3.3, -6.4], [4.6, -7.6],
+                 [6.5, -8.5], [9, -9.6], [12, -10.4], [15, -10.9], [18, -11.4], [21, -11], [24, -10.6], [27, -10.9],
+                 [30, -9.8], [32.5, -8.4], [34.2, -6.9], [35.2, -5.4], [36, -4], [36.6, -2.8], [37.2, -1.5],
+                 [37.7, -0.5], [38, 0]],
+        vatten: -3,
+        budget: 48000,
+        keiws: 4,
+        omrade: { x0: -3, x1: 41, y0: -4, y1: 12 },
+        vy: { x0: -6, x1: 44, y0: -13, y1: 12 },
+        losning: {
+            // Fackverk 4 m högt med fack på 4 m (3 m kring mitten): väg 42×270,
+            // överram 115×180 och stolpar 78×180 (de trycks), diagonaler 42×180
+            // (dragna) (45 160 $$).
+            noder: [[0, 0], [2, -4], [38, 0], [36, -4], [4, 0], [8, 0], [12, 0], [16, 0], [19, 0], [22, 0], [26, 0],
+                    [30, 0], [34, 0], [4, 4], [8, 4], [12, 4], [16, 4], [19, 4], [22, 4], [26, 4], [30, 4], [34, 4]],
+            balkar: [
+                ...[0, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((a, i, v) => [a, v[i + 1] ?? 2, '42×270', true]),
+                ...[13, 14, 15, 16, 17, 18, 19, 20].map(a => [a, a + 1, '115×180']),
+                [0, 13, '115×180'], [2, 21, '115×180'],
+                ...[4, 5, 6, 7, 8, 9, 10, 11, 12].map(a => [a, a + 9, '78×180']),
+                [13, 5, '42×180'], [14, 6, '42×180'], [15, 7, '42×180'], [16, 8, '42×180'],
+                [8, 18, '42×180'], [9, 19, '42×180'], [10, 20, '42×180'], [11, 21, '42×180']
+            ]
+        }
+    },
+    {
+        // 50 m med raka kanaler: här kommer stålet, och rören (KKR). Trä finns
+        // kvar, men ett fackverk av trä går över budget (ca 65 700).
         namn: 'Kanalen',
-        spann: 48,
-        rutnat: 2,
-        fasten: [[0, 0, 'fast'], [2, -4], [48, 0, 'glid'], [46, -4], [-4, 0], [52, 0]],
+        spann: 50,
+        material: ['limtra', 'stal'],
+        fasten: [[0, 0, 'fast'], [2, -4], [50, 0, 'glid'], [48, -4], [-4, 0], [54, 0]],
         kant: 0.5,
         vatten: -6,
-        budget: 58000,
+        budget: 64000,
         keiws: 5,
-        omrade: { x0: -4, x1: 52, y0: -4, y1: 12 },
-        vy: { x0: -9, x1: 57, y0: -7.5, y1: 12.5 },
-        material: ['limtra', 'stal'],
+        omrade: { x0: -4, x1: 54, y0: -4, y1: 12 },
+        vy: { x0: -9, x1: 59, y0: -7.5, y1: 12.5 },
         losning: {
-            // Fackverk av stål, 4 m högt med fack på 4 m: väg och överram IPE 100,
-            // stänger IPE 80, diagonalerna dragna mot mitten (53 580 $$). Ett
-            // fackverk av trä blir billigare (ca 44 500), men stålets är lättare.
-            noder: [[0, 0], [2, -4], [48, 0], [46, -4], [-4, 0], [52, 0],
-                    [4, 0], [8, 0], [12, 0], [16, 0], [20, 0], [24, 0], [28, 0], [32, 0], [36, 0], [40, 0], [44, 0],
-                    [4, 4], [8, 4], [12, 4], [16, 4], [20, 4], [24, 4], [28, 4], [32, 4], [36, 4], [40, 4], [44, 4]],
+            // Bågfackverk, 6 m högt på mitten, fack på 5 m: väg IPE 100, båge
+            // KKR 100×5 (trycks), hängare KKR 40×3 och diagonaler KKR 60×4 (60 900 $$).
+            noder: [[0, 0], [2, -4], [50, 0], [48, -4], [-4, 0], [54, 0],
+                    [5, 0], [10, 0], [15, 0], [20, 0], [25, 0], [30, 0], [35, 0], [40, 0], [45, 0],
+                    [5, 2], [10, 4], [15, 5], [20, 6], [25, 6], [30, 6], [35, 5], [40, 4], [45, 2]],
             balkar: [
-                ...[0, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16].map((a, i, v) => [a, v[i + 1] ?? 2, 'IPE 100', true, 'stal']),
-                ...[17, 18, 19, 20, 21, 22, 23, 24, 25, 26].map(a => [a, a + 1, 'IPE 100', false, 'stal']),
-                [0, 17, 'IPE 100', false, 'stal'], [2, 27, 'IPE 100', false, 'stal'],
-                ...[6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16].map(a => [a, a + 11, 'IPE 80', false, 'stal']),
-                [17, 7, 'IPE 80', false, 'stal'], [18, 8, 'IPE 80', false, 'stal'], [19, 9, 'IPE 80', false, 'stal'],
-                [20, 10, 'IPE 80', false, 'stal'], [21, 11, 'IPE 80', false, 'stal'], [11, 23, 'IPE 80', false, 'stal'],
-                [12, 24, 'IPE 80', false, 'stal'], [13, 25, 'IPE 80', false, 'stal'], [14, 26, 'IPE 80', false, 'stal'],
-                [15, 27, 'IPE 80', false, 'stal']
+                ...[0, 6, 7, 8, 9, 10, 11, 12, 13, 14].map((a, i, v) => [a, v[i + 1] ?? 2, 'IPE 100', true, 'stal']),
+                ...[15, 16, 17, 18, 19, 20, 21, 22].map(a => [a, a + 1, 'KKR 100×5', false, 'stal']),
+                [0, 15, 'KKR 100×5', false, 'stal'], [2, 23, 'KKR 100×5', false, 'stal'],
+                ...[6, 7, 8, 9, 10, 11, 12, 13, 14].map(a => [a, a + 9, 'KKR 40×3', false, 'stal']),
+                [15, 7, 'KKR 60×4', false, 'stal'], [16, 8, 'KKR 60×4', false, 'stal'], [17, 9, 'KKR 60×4', false, 'stal'],
+                [18, 10, 'KKR 60×4', false, 'stal'], [10, 20, 'KKR 60×4', false, 'stal'], [11, 21, 'KKR 60×4', false, 'stal'],
+                [12, 22, 'KKR 60×4', false, 'stal'], [13, 23, 'KKR 60×4', false, 'stal']
             ]
         }
     },
@@ -140,13 +171,14 @@ const BANOR = [
         omrade: { x0: -3, x1: 23, y0: -9, y1: 8 },
         vy: { x0: -5, x1: 25, y0: -11, y1: 8.5 },
         losning: {
-            // Väg 3 (66×225) på strävor av 1 från fästena i sluttningarna (14 650 $$).
+            // Väg 42×225 på strävor från fästena i sluttningarna, tjocka åt sidan
+            // (66×180 och 90×180) så att de inte knäcks (14 870 $$).
             noder: [
                 [0, 0], [4, -5], [20, 0], [16, -5], [4, 0], [8, 0], [12, 0], [16, 0]
             ],
             balkar: [
-                [0, 4, 2, true], [4, 5, 2, true], [5, 6, 2, true], [6, 7, 2, true], [7, 2, 2, true], [1, 4, 0],
-                [1, 5, 0], [3, 7, 0], [3, 6, 0]
+                [0, 4, '42×225', true], [4, 5, '42×225', true], [5, 6, '42×225', true], [6, 7, '42×225', true],
+                [7, 2, '42×225', true], [1, 4, '66×180'], [1, 5, '90×180'], [3, 7, '66×180'], [3, 6, '90×180']
             ]
         }
     },
@@ -161,14 +193,14 @@ const BANOR = [
         dal: { djup: 24, bredd: 24 },
         vatten: -24,
         torr: true,
-        budget: 87000,
+        budget: 104000,
         keiws: 5.5,
         omrade: { x0: -4, x1: 64, y0: -22, y1: 16 },
         vy: { x0: -8, x1: 68, y0: -25, y1: 17 },
         losning: {
-            // Båge av 4 (90×245) med pelare av 1 till vägen (4), och
-            // snedsträvor av 4 och stöd av 2 (56×215) från de övre
-            // fästena (83 090 $$).
+            // Båge av 140×180 med stolpar av 140×180 till vägen (4), och
+            // snedsträvor (140×225) och stöd från de övre fästena (98 030 $$).
+            // Allt som trycks är tjockt åt sidan, annars knäcks det.
             noder: [
                 [0, 0], [12, -12], [60, 0], [48, -12], [16, -18], [44, -18], [2, 0], [4, 0],
                 [6, 0], [8, 0], [10, 0], [12, 0], [14, 0], [16, 0], [18, 0], [20, 0],
@@ -183,10 +215,10 @@ const BANOR = [
                 [17, 18, 3, true], [18, 19, 3, true], [19, 20, 3, true], [20, 21, 3, true], [21, 22, 3, true], [22, 23, 3, true],
                 [23, 24, 3, true], [24, 25, 3, true], [25, 26, 3, true], [26, 27, 3, true], [27, 28, 3, true], [28, 29, 3, true],
                 [29, 30, 3, true], [30, 31, 3, true], [31, 32, 3, true], [32, 33, 3, true], [33, 34, 3, true], [34, 2, 3, true],
-                [4, 35, 3], [35, 36, 3], [36, 37, 3], [37, 38, 3], [38, 39, 3], [39, 40, 3],
-                [40, 5, 3], [35, 15, 0], [36, 17, 0], [37, 19, 0], [38, 21, 0], [39, 23, 0],
-                [40, 25, 0], [1, 11, 1], [1, 8, 3], [1, 4, 1], [3, 29, 1], [3, 32, 3],
-                [3, 5, 1]
+                [4, 35, '140×180'], [35, 36, '140×180'], [36, 37, '140×180'], [37, 38, '140×180'], [38, 39, '140×180'],
+                [39, 40, '140×180'], [40, 5, '140×180'], [35, 15, '140×180'], [36, 17, '140×180'], [37, 19, '140×180'],
+                [38, 21, '140×180'], [39, 23, '140×180'], [40, 25, '140×180'], [1, 11, '140×180'], [1, 8, '140×225'],
+                [1, 4, '42×180'], [3, 29, '140×180'], [3, 32, '140×225'], [3, 5, '42×180']
             ]
         }
     },
