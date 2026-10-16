@@ -732,3 +732,7 @@ och förslag gjordes om (strävorna 115 breda). Bara ett tryck och släpp välje
 knut och dra bygger en balk, den valda knuten flyttas med ett drag. Lagren är lika stora
 trianglar med knutpunkten i tyngdpunkten, glidlagret med rullarna under. Fästena som går att
 ändra (styv/ledad) är vita, bara vägens lager svarta.
+
+v73-test (Isak 2026-10-16): rasar bron av sin egen tyngd innan keIWs ska gå ut hoppar han till
+och stannar på klippan ("Hoppsan!", resultatet 'rasade'; bron fortsätter att rasa). I menyn
+går det att stänga av att keIWs bygger bron först (sparas i webbläsaren).

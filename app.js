@@ -30,6 +30,7 @@ const SPARA = 'brobyggare-ritning-';   // + banans namn
 const SPARA_BANA = 'brobyggare-bana';     // banans namn
 const SPARA_BASTA = 'brobyggare-basta-';  // + banans namn: billigaste bron som höll
 const SPARA_HISTORIK = 'brobyggare-historik';  // ångra-listan över en omladdning
+const SPARA_BYGGFILM = 'brobyggare-byggfilm';  // 'av': keIWs bygger inte bron först (menyn)
 const UPPDATERA_VAR = 10 * 60 * 1000;     // ms, leta efter en ny version
 
 const FARG = {
@@ -1049,6 +1050,15 @@ function ruta(anim, t) {
     return anim[anim.length - 1].rekt;
 }
 
+// keIWs hoppar till (bron rasade innan han gick ut): [höjd i m, bild] t s efteråt.
+const HOPPSAN_TID = 0.45;
+function hoppsan(t) {
+    const T = HOPPSAN_TID, h = 0.3 * keiwsHojd(bana);
+    if (t < T) return [4 * h * t * (T - t) / (T * T), ruta(FIG.krock, t)];
+    if (t < T + 0.5) return [0, ruta(FIG.landar, t - T)];
+    return [0, FIG.vrid[3]];
+}
+
 function ritaKeiws() {
     const k = sim ? sim.keiws : null;
     if (bana.bil && !(sim && sim.bygge)) {
@@ -1056,6 +1066,7 @@ function ritaKeiws() {
         if (k.lage === 'plask') return;
         if (k.lage === 'klar') { ritaBil(k.x, k.y, ruta(FIG.rekordjubel, sim.t - sim.slutTid), 0); return; }
         if (k.lage === 'faller') { ritaBil(k.x, k.y, ruta(FIG.faller, sim.t), 0); return; }
+        if (k.lage === 'hoppsan') { const [h, bild] = hoppsan(sim.t - sim.slutTid); ritaBil(k.x, k.y + h, bild, 0); return; }
         ritaBil(k.x, k.y, FIG.vrid[3], Math.floor(k.gatt / (0.15 * keiwsHojd(bana))) % 2);
         return;
     }
@@ -1073,6 +1084,7 @@ function ritaKeiws() {
     if (k.lage === 'faller') { ritaFigur(ruta(FIG.faller, sim.t), k.x, k.y); return; }
     if (k.lage === 'klar') { ritaFigur(ruta(FIG.rekordjubel, sim.t - sim.slutTid), k.x, k.y); return; }
     if (k.lage === 'vantar') { ritaFigur(FIG.vrid[3], k.x, k.y); return; }
+    if (k.lage === 'hoppsan') { const [h, bild] = hoppsan(sim.t - sim.slutTid); ritaFigur(bild, k.x, k.y + h); return; }
     // Går: benen kliver i takt med sträckan, armarna pendlar emot.
     const fas = Math.floor(k.gatt / (0.11 * keiwsHojd(bana))) % 2;
     ritaFigur(FIG.vrid[3], k.x, k.y, del => {
@@ -1347,9 +1359,14 @@ function kor() {
     stangPopup();
     sim = nySim(ritning, bana);
     byggVy = { zoom, mitt };
-    if (zoom === 1) sim.bygge = nyttBygge();
+    if (zoom === 1 && visaByggfilm()) sim.bygge = nyttBygge();
     lageNu = 'prov';
     uppdateraInfo();
+}
+
+// Att keIWs bygger bron först går att stänga av i menyn.
+function visaByggfilm() {
+    try { return localStorage.getItem(SPARA_BYGGFILM) !== 'av'; } catch (e) { return true; }
 }
 
 // Bygget är klart (eller överhoppat): keIWs står på startplatsen och
@@ -1527,6 +1544,7 @@ function visaMeny() {
         + '<h3>Bana ' + (banaNr + 1) + ' · ' + bana.namn + ' (budget ' + kr(bana.budget) + ')</h3>' + basta
         + facitText()
         + '<p><button data-v="guide">Visa guiden</button></p>'
+        + '<p><button data-v="byggfilm">keIWs bygger bron först: ' + (visaByggfilm() ? 'Ja' : 'Nej') + '</button></p>'
         + (FELSOK ? '<p><button data-v="dela">Dela konstruktionen (test)</button></p>' : '')
         + '<details><summary>Hur funkar det?</summary>' + LEKMAN_TEXT + '</details>'
         + '<details><summary>Förutsättningar – för nördar</summary>' + nordText() + '</details>'
@@ -1596,6 +1614,11 @@ menyEl.addEventListener('click', e => {
     const b = e.target.closest('button');
     if (!b || b.disabled) return;
     if (b.dataset.v === 'dela') { delaKonstruktion(b); return; }
+    if (b.dataset.v === 'byggfilm') {
+        try { localStorage.setItem(SPARA_BYGGFILM, visaByggfilm() ? 'av' : 'pa'); } catch (err) { /* privat läge */ }
+        b.textContent = 'keIWs bygger bron först: ' + (visaByggfilm() ? 'Ja' : 'Nej');
+        return;
+    }
     // Nollställ rekordet: två tryck, sedan glöms banans billigaste bro.
     if (b.dataset.v === 'nollstall') {
         if (!b.classList.contains('saker')) { b.classList.add('saker'); b.textContent = 'Säker? Tryck igen'; return; }
@@ -1800,6 +1823,9 @@ function visaResultat() {
             + '<br>Högsta utnyttjande ' + Math.round(sim.maxU * 100) + ' %'
             + (basta ? '<br><b>Din billigaste bro hittills på den här banan!</b>' : ''),
             [['bygg', 'Bygg vidare'], banaNr < BANOR.length - 1 ? ['nasta', 'Nästa bana'] : ['kor', 'Kör igen']]);
+    } else if (sim.resultat === 'rasade') {
+        visaRuta('Hoppsan!<br>Bron rasade innan keIWs gick ut.', 'Den klarade inte ens sin egen tyngd.',
+            [['bygg', 'Bygg om'], ['kor', 'Kör igen']].concat(sim.forlopp.length ? [['forlopp', 'Förlopp']] : []));
     } else {
         visaRuta(bana.torr ? 'Aj!<br>keIWs ramlade ner i dalen.' : 'Plask!<br>keIWs ramlade i vattnet.', sim.brott ? 'Bron gick sönder.' : 'Vägen räckte inte hela vägen över.',
             [['bygg', 'Bygg om'], ['kor', 'Kör igen']].concat(sim.forlopp.length ? [['forlopp', 'Förlopp']] : []));

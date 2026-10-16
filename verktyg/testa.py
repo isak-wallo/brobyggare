@@ -596,8 +596,10 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     sida.click('#verktyg [data-v=kor]')
     sida.wait_for_timeout(3300)
     bild(sida, bilder, f'{namn}-6-ras')
-    kolla(f'{namn}: en för klen bro rasar', vanta_resultat(sida).startswith('Plask!'))
-    bild(sida, bilder, f'{namn}-7-plask')
+    kolla(f'{namn}: en för klen bro rasar av sin egen tyngd: Hoppsan, keIWs går inte ut',
+          vanta_resultat(sida).startswith('Hoppsan!') and sida.evaluate('() => window.bro.sim.keiws.lage') == 'hoppsan'
+          and sida.evaluate('() => window.bro.sim.keiws.x === keiwsStart(bana)'))
+    bild(sida, bilder, f'{namn}-7-hoppsan')
 
     # Förloppet: brott för brott, ett tryck på en balk visar utnyttjandet.
     sida.click('#ruta [data-v=forlopp]')
@@ -614,7 +616,7 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
           and 'Väg ' in sida.inner_text('#ruta .valt') and '%' in sida.inner_text('#ruta .valt'))
     bild(sida, bilder, f'{namn}-7-forlopp')
     sida.click('#ruta [data-v=forlopp-klar]')
-    kolla(f'{namn}: Klar går tillbaka till resultatet', sida.inner_text('#ruta h1').startswith('Plask!')
+    kolla(f'{namn}: Klar går tillbaka till resultatet', sida.inner_text('#ruta h1').startswith('Hoppsan!')
           and not sida.evaluate('() => window.bro.forlopp'))
 
     # Menyn: billigaste bron som höll, hämta den, förklaringen och versionen.
@@ -662,6 +664,19 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
           == sida.evaluate('() => ritningensKostnad(losningsRitning(BANOR[0], BANOR[0].facit.enkel), BANOR[0])'))
     sida.click('#verktyg [data-v=angra]')
     kolla(f'{namn}: Ångra tar tillbaka ritningen', sida.evaluate('() => JSON.stringify(window.bro.ritning)') == fore)
+    # Byggfilmen (keIWs bygger bron först) går att stänga av i menyn.
+    sida.click('#menyknapp')
+    sida.click('#meny [data-v=byggfilm]')
+    av = sida.inner_text('#meny [data-v=byggfilm]').endswith('Nej') and sida.locator('#meny').is_visible()
+    sida.click('#meny [data-v=stang]')
+    sida.click('#verktyg [data-v=kor]')
+    kolla(f'{namn}: byggfilmen går att stänga av i menyn', av and not sida.evaluate('() => window.bro.bygger')
+          and sida.evaluate('() => window.bro.lage') == 'prov')
+    sida.click('#verktyg [data-v=kor]')
+    sida.click('#menyknapp')
+    sida.click('#meny [data-v=byggfilm]')
+    kolla(f'{namn}: och på igen', sida.inner_text('#meny [data-v=byggfilm]').endswith('Ja'))
+    sida.click('#meny [data-v=stang]')
     # Guiden: ? under menyknappen, ett steg i taget, Klar stänger.
     sida.click('#guideknapp')
     kolla(f'{namn}: guiden börjar med en välkomst', sida.locator('#guide').is_visible()

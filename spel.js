@@ -7,7 +7,9 @@
 // tyngd) läggs tyngden på gradvis i stället. keIWs är en rörlig last på vägbanan: tyngden fördelas på
 // de två noderna i elementet under fötterna. Finns ingen vägbana under,
 // faller keIWs. Hamnar keIWs i vattnet har bron misslyckats, och kommer
-// keIWs fram till andra sidan har den klarat sig. På banor med `bil` kör
+// keIWs fram till andra sidan har den klarat sig. Har något redan gått
+// sönder när keIWs ska gå (bron rasar av sin egen tyngd) hoppar keIWs till
+// och stannar på klippan (resultatet 'rasade'). På banor med `bil` kör
 // keIWs en bil på 2,5 ton: två hjul med halva tyngden var.
 
 const DT = 1 / 120;          // s, ett fysiksteg
@@ -101,7 +103,7 @@ function nySim(ritning, bana) {
     return {
         bana, m, statisk, t: 0, brott: 0, maxU: 0,
         keiws: { x: keiwsStart(bana), y: 0, vy: 0, lage: 'vantar', luft: 0, gatt: 0 },
-        resultat: null,     // 'klarade' eller 'vatten', med tiden i sim.slutTid
+        resultat: null,     // 'klarade', 'vatten' eller 'rasade', med tiden i sim.slutTid
         forlopp: []         // brotten i ordning (forloppBild), för att stega igenom efteråt
     };
 }
@@ -139,10 +141,16 @@ function keiwsSteg(sim, dt) {
     const k = sim.keiws, m = sim.m;
     m.last.fill(0);
     if (k.lage === 'vantar') {
-        if (sim.t >= START_TID) k.lage = 'gar';
-        else return;
+        if (sim.t < START_TID) return;
+        if (sim.brott) {
+            // Bron har redan rasat: keIWs hoppar till och går inte ut.
+            k.lage = 'hoppsan';
+            if (!sim.resultat) { sim.resultat = 'rasade'; sim.slutTid = sim.t; }
+            return;
+        }
+        k.lage = 'gar';
     }
-    if (k.lage === 'klar' || k.lage === 'plask') return;
+    if (k.lage === 'klar' || k.lage === 'plask' || k.lage === 'hoppsan') return;
 
     const fart = keiwsFart(sim.bana);
     if (k.lage !== 'faller') { k.x += fart * dt; k.gatt += fart * dt; }
@@ -222,8 +230,9 @@ function simSteg(sim, dt = DT) {
     berget(sim);
     // När keIWs har ramlat i är provet avgjort: inget mer går sönder (bitarna
     // som faller och slår i marken skulle annars smulas sönder i onödan).
+    // Rasade bron innan keIWs gick ut fortsätter den att rasa.
     let n = 0;
-    if (!sim.resultat) n = brott(sim.m);
+    if (!sim.resultat || sim.resultat === 'rasade') n = brott(sim.m);
     else { montera(sim.m, false); utnyttjande(sim.m); smula(sim.m); sim.m.brutna = []; }
     sim.brott += n;
     if (n && sim.forlopp.length < FORLOPP_MAX) sim.forlopp.push(forloppBild(sim));

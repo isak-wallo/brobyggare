@@ -170,11 +170,11 @@ const mat = MATERIAL.limtra;
             .map(([a, b, storlek, vag]) => ({ a, b, storlek, vag: !!vag, material: 'limtra' })) };
     const sim = nySim(ritning, bana);
     let vmax = 0;
-    while (!sim.resultat && sim.t < 12) {
+    while (sim.t < 8) {
         simSteg(sim);
         for (let p = 0; p < sim.m.np; p++) vmax = Math.max(vmax, Math.hypot(sim.m.v[2 * p], sim.m.v[2 * p + 1]));
     }
-    kolla('en bro som rasar: bitarna faller, flyger inte', sim.brott > 0 && sim.resultat === 'vatten' && vmax < 40,
+    kolla('en bro som rasar: bitarna faller, flyger inte', sim.brott > 0 && sim.resultat && sim.resultat !== 'klarade' && vmax < 40,
           'brott ' + sim.brott + ', högsta fart ' + vmax.toFixed(1) + ' m/s');
 }
 

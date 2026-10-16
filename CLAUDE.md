@@ -30,7 +30,8 @@ Idéer och beslut i `IDEER.md` (läs den först).
   (knäckta bitar) förstoras diagonalen; ett Newtonsteg högst MAX_DU.
 - `banor.js` – banorna (spann, fästpunkter, marken (`kant`/`dal`, eller `profil`: ojämn mark punkt för punkt), budget, en sparad lösning, `tra`: trädimensionerna på banan, färre på de två första).
 - `spel.js` – provkörningen utan ritning: keIWs som rörlig last, faller
-  utan vägbana, marken (`markY`) stoppar fallande bitar. Brotten sparas i `sim.forlopp`
+  utan vägbana, marken (`markY`) stoppar fallande bitar. Har något gått sönder när keIWs
+  ska gå (START_TID) stannar han (`'hoppsan'`, resultatet `'rasade'`). Brotten sparas i `sim.forlopp`
   (Förlopp i app.js stegar igenom dem). Testerna kör den i node.
 - `app.js` – ritning, verktyg, bygga med fingret, kamera och layout
   (`#styrning` = panelen Material/Typ/Profil + Ångra/Riv/Kör i samma rutnät; stående: två
