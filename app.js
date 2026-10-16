@@ -1053,13 +1053,37 @@ function ruta(anim, t) {
     return anim[anim.length - 1].rekt;
 }
 
-// keIWs hoppar till (bron rasade innan han gick ut): [höjd i m, bild] t s efteråt.
-const HOPPSAN_TID = 0.45;
+// keIWs hoppar till (bron rasade innan han gick ut), t s efteråt: han
+// sjunker ihop, skuttar upp och lite bakåt med armarna i luften och stora
+// ögon, landar (sjunker ihop igen) och blir stående och stirrar, med ett
+// utropstecken över huvudet. Ger {dx, dy (m), bild, lyft, utrop}.
+const HOPPSAN = { ihop: 0.1, hopp: 0.4, landa: 0.14, armar: 0.5, ogon: 1.6, utrop: 1.5 };
 function hoppsan(t) {
-    const T = HOPPSAN_TID, h = 0.3 * keiwsHojd(bana);
-    if (t < T) return [4 * h * t * (T - t) / (T * T), ruta(FIG.krock, t)];
-    if (t < T + 0.5) return [0, ruta(FIG.landar, t - T)];
-    return [0, FIG.vrid[3]];
+    const H = HOPPSAN, hojd = keiwsBild();
+    const t1 = H.ihop, t2 = t1 + H.hopp, t3 = t2 + H.landa;
+    const u = Math.min(1, Math.max(0, (t - t1) / H.hopp));       // hur långt i hoppet
+    const dy = t > t1 && t < t2 ? 4 * 0.3 * hojd * u * (1 - u) : 0;
+    const dx = -0.25 * hojd * (u * u * (3 - 2 * u));
+    // Ihopsjunken före hoppet och när han landar: kroppen ner, benen kvar.
+    const ihop = t < t1 ? 14 * t / t1 : t >= t2 && t < t3 ? 16 * Math.sin(Math.PI * (t - t2) / H.landa) : 0;
+    // Armarna upp i hoppet, sjunker sedan sakta ner igen.
+    const armar = t < t1 ? 6 : t < t3 ? -80 : -80 * Math.max(0, 1 - (t - t3) / H.armar);
+    const lyft = del => del === 'nara_ben' || del === 'bortre_ben' ? (dy > 0 ? 8 : 0)
+        : ihop + (del === 'nara_arm' || del === 'bortre_arm' ? armar : 0);
+    // Stora (höga) ögon tills han har hämtat sig.
+    const stora = t >= t1 * 0.5 && t < H.ogon;
+    const bild = FIG.vrid[3].map(([x0, y0, x1, y1, farg, del]) =>
+        stora && del === 'oga' ? [x0, y0 - 8, x1, y1 + 8, farg, del] : [x0, y0, x1, y1, farg, del]);
+    return { dx, dy, bild, lyft, utrop: t > 0.05 && t < H.utrop };
+}
+
+// Ett utropstecken ovanför figuren vid (x, y) (fötterna), som studsar lite.
+function ritaUtrop(x, y, t) {
+    const s = keiwsBild() / 204 * kam.sk, X = sx(x) - 80 * s + 74 * s;
+    const Y = sy(y) - 204 * s - (34 + 8 * Math.abs(Math.sin(t * 9))) * s;
+    ctx.fillStyle = FIG.farger.stjarna;
+    ctx.fillRect(X, Y - 90 * s, 20 * s, 64 * s);
+    ctx.fillRect(X, Y - 18 * s, 20 * s, 18 * s);
 }
 
 function ritaKeiws() {
@@ -1069,7 +1093,12 @@ function ritaKeiws() {
         if (k.lage === 'plask') return;
         if (k.lage === 'klar') { ritaBil(k.x, k.y, ruta(FIG.rekordjubel, sim.t - sim.slutTid), 0); return; }
         if (k.lage === 'faller') { ritaBil(k.x, k.y, ruta(FIG.faller, sim.t), 0); return; }
-        if (k.lage === 'hoppsan') { const [h, bild] = hoppsan(sim.t - sim.slutTid); ritaBil(k.x, k.y + h, bild, 0); return; }
+        if (k.lage === 'hoppsan') {
+            const t = sim.t - sim.slutTid, h = hoppsan(t);
+            ritaBil(k.x, k.y + h.dy * 0.5, h.bild, 0, h.lyft);
+            if (h.utrop) ritaUtrop(k.x - 10 * keiwsBild() / 204, k.y + h.dy * 0.5 + 60 * keiwsBild() / 204, t);
+            return;
+        }
         ritaBil(k.x, k.y, FIG.vrid[3], Math.floor(k.gatt / (0.15 * keiwsHojd(bana))) % 2);
         return;
     }
@@ -1087,7 +1116,12 @@ function ritaKeiws() {
     if (k.lage === 'faller') { ritaFigur(ruta(FIG.faller, sim.t), k.x, k.y); return; }
     if (k.lage === 'klar') { ritaFigur(ruta(FIG.rekordjubel, sim.t - sim.slutTid), k.x, k.y); return; }
     if (k.lage === 'vantar') { ritaFigur(FIG.vrid[3], k.x, k.y); return; }
-    if (k.lage === 'hoppsan') { const [h, bild] = hoppsan(sim.t - sim.slutTid); ritaFigur(bild, k.x, k.y + h); return; }
+    if (k.lage === 'hoppsan') {
+        const t = sim.t - sim.slutTid, h = hoppsan(t);
+        ritaFigur(h.bild, k.x + h.dx, k.y + h.dy, h.lyft);
+        if (h.utrop) ritaUtrop(k.x + h.dx, k.y + h.dy, t);
+        return;
+    }
     // Går: benen kliver i takt med sträckan, armarna pendlar emot.
     const fas = Math.floor(k.gatt / (0.11 * keiwsHojd(bana))) % 2;
     ritaFigur(FIG.vrid[3], k.x, k.y, del => {
