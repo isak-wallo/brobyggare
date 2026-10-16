@@ -38,7 +38,7 @@ const FARG = {
     material: { limtra: ['#c9975b', '#8a6438'], stal: ['#8d9aa6', '#4f5b66'], betong: ['#b4afa5', '#7f7a71'],
                 vajer: ['#3f4a54', '#2a323a'] },
     betong: '#b4afa5', betongMork: '#948f86',
-    nod: '#2f3f4c', punkt: 'rgba(47, 63, 76, 0.28)', fel: '#d0503c', text: '#2f3f4c'
+    nod: '#2f3f4c', knut: '#ffffff', fast: '#16191c', punkt: 'rgba(47, 63, 76, 0.28)', fel: '#d0503c', text: '#2f3f4c'
 };
 
 const duk = document.getElementById('duk');
@@ -702,29 +702,29 @@ function ritaBit(x1, y1, x2, y2, prof, vag, farg, kant) {
     }
 }
 
+// Knutpunkterna: fyrkant = styv, rund = ledad. Svart det som inte går att
+// flytta (fästen och lager), vitt det man själv har byggt. Lagren är noden
+// själv som en triangel (spetsen i knutpunkten), glidlagret med två rullar.
 function ritaNod(x, y, { fast, styv, lager, pelare }) {
-    const r = Math.max(3.5, 0.13 * kam.sk);
-    ctx.fillStyle = FARG.nod;
-    // Glidlager: en svart rund nod (på en pelare är det pelarens topp, se
-    // ritaPelare). Fast lager ritas som ett ledat fäste.
-    if (lager === 'glid') {
-        if (!pelare) { ctx.beginPath(); ctx.arc(sx(x), sy(y), r * 1.6, 0, 7); ctx.fill(); }
+    const r = Math.max(3.5, 0.13 * kam.sk), X = sx(x), Y = sy(y);
+    if (pelare) return;                    // pelarens topp är glidlagret (ritaPelare)
+    ctx.fillStyle = fast ? FARG.fast : FARG.knut;
+    ctx.strokeStyle = FARG.fast;
+    ctx.lineWidth = Math.max(1.2, r * 0.3);
+    if (lager) {
+        const b = r * 1.7, fot = Y + (lager === 'glid' ? r * 1.0 : r * 1.6);
+        ctx.beginPath(); ctx.moveTo(X, Y - r * 1.6); ctx.lineTo(X + b, fot); ctx.lineTo(X - b, fot); ctx.closePath(); ctx.fill();
+        if (lager === 'glid') {
+            const rr = r * 0.5;
+            for (const d of [-0.55, 0.55]) { ctx.beginPath(); ctx.arc(X + d * b, fot + rr + 1, rr, 0, 7); ctx.fill(); }
+        }
         return;
     }
-    if (fast) {
-        // Fästpunkt: en kloss i berget.
-        ctx.fillRect(sx(x) - r * 1.6, sy(y) - r * 1.6, r * 3.2, r * 3.2);
-        ctx.fillStyle = styv ? FARG.nod : '#e8ecef';
-        ctx.beginPath(); ctx.arc(sx(x), sy(y), r * 0.8, 0, 7); ctx.fill();
-        return;
-    }
-    if (styv) {
-        ctx.fillRect(sx(x) - r, sy(y) - r, 2 * r, 2 * r);
-    } else {
-        ctx.beginPath(); ctx.arc(sx(x), sy(y), r * 1.15, 0, 7); ctx.fill();
-        ctx.fillStyle = '#e8ecef';
-        ctx.beginPath(); ctx.arc(sx(x), sy(y), r * 0.55, 0, 7); ctx.fill();
-    }
+    ctx.beginPath();
+    if (styv) ctx.rect(X - r, Y - r, 2 * r, 2 * r);
+    else ctx.arc(X, Y, r * 1.15, 0, 7);
+    ctx.fill();
+    if (!fast) ctx.stroke();
 }
 
 function ritaBygg() {
@@ -1394,8 +1394,10 @@ så det som trycks bör vara tjockt åt alla håll: ett rör är bäst.</li>
 ett fackverk dras eller trycks i stället för att böjas. Då räcker små
 balkar långt.</li>
 <li><b>Styv knut</b> (fyrkant): balkarna sitter ihop och vrider sig
-tillsammans. <b>Ledad knut</b> (ring): de vrider sig fritt, som ett
-gångjärn. Tryck på en knut för att byta.</li>
+tillsammans. <b>Ledad knut</b> (rund): de vrider sig fritt, som ett
+gångjärn. Tryck på en knut för att byta. Vita knutar har du byggt, svarta
+sitter fast i berget. Vägens lager är svarta trianglar: det fasta låser
+vägen, glidlagret (med rullar) låter den glida i sidled.</li>
 <li><b>Håll fingret på en balk eller knut</b> för att välja den: byt
 material, typ eller profil, flytta den eller riv den.</li>
 <li><b>Dra från en knut</b> för att bygga en balk. Drar man på tom yta

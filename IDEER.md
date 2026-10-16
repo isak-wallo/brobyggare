@@ -691,3 +691,7 @@ Senare (Isak 2026-10-16):
 - **Grafik:** fasta lagret = noden själv som svart triangel (ungefär som andra noder), glidlagret
   en svart triangel med två rullar (eller svart cirkel). Egna knutar: fyrkant (styv) eller rund
   (ledad) i en färg, svart för det som inte går att ändra.
+
+v65-test: ny grafik för knutarna (Isak 2026-10-16). Svart = går inte att flytta (fästen i
+berget: fyrkant styv, rund ledad), vitt med mörk kant = egna knutar (fyrkant styv, rund ledad).
+Vägens lager är noden själv som en svart triangel, glidlagret med två rullar under.
