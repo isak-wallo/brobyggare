@@ -725,9 +725,10 @@ function ritaNod(x, y, { fast, styv, lager, pelare }) {
         const b = r * 1.7, h = r * 3.2, fot = Y + h / 3;
         ctx.beginPath(); ctx.moveTo(X, Y - h * 2 / 3); ctx.lineTo(X + b, fot); ctx.lineTo(X - b, fot); ctx.closePath(); ctx.fill();
         if (lager === 'glid') {
-            // Rullarna sitter under triangelns fot (överlappar den lite).
-            const rr = r * 0.62;
-            for (const d of [-0.5, 0.5]) { ctx.beginPath(); ctx.arc(X + d * b, fot + rr * 0.8, rr, 0, 7); ctx.fill(); }
+            // Två rullar helt under triangelns fot (som då ser likadan ut som
+            // det fasta lagrets), med en liten glipa emellan.
+            const rr = r * 0.55;
+            for (const d of [-0.55, 0.55]) { ctx.beginPath(); ctx.arc(X + d * b, fot + rr, rr, 0, 7); ctx.fill(); }
         }
         return;
     }
