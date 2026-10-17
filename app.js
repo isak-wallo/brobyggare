@@ -46,6 +46,7 @@ const duk = document.getElementById('duk');
 const ctx = duk.getContext('2d');
 const scen = document.getElementById('scen');
 const infoEl = document.getElementById('info');
+const stortMyntEl = document.getElementById('stortMynt');  // ett tryck på ett mynt i budgeten
 const rutaEl = document.getElementById('ruta');
 const valjareEl = document.getElementById('valjare');
 const popupEl = document.getElementById('popup');
@@ -2103,6 +2104,7 @@ popupEl.addEventListener('click', e => {
 });
 
 infoEl.addEventListener('click', e => {
+    if (e.target.closest('.mynt')) { stortMyntEl.classList.remove('dold'); return; }
     const b = e.target.closest('button');
     if (!b || b.disabled) return;
     if (b.dataset.v === 'banor') {
@@ -2119,6 +2121,9 @@ infoEl.addEventListener('click', e => {
     varnaNasta = false;
     bytBana(banaNr + (b.dataset.v === 'nasta' ? 1 : -1));
 });
+
+// Det stora myntet stängs med ett tryck var som helst.
+stortMyntEl.addEventListener('click', () => stortMyntEl.classList.add('dold'));
 
 // Ett tryck utanför rutan med val stänger den (och gör inget mer på spelytan).
 // Är en balk vald och rutan gäller den (material, typ, profil) väljer ett

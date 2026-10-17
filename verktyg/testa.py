@@ -356,6 +356,11 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
           and sida.locator('#popup [data-t=kabel]').count() == 0 and sida.locator('#popup [data-t=pelare]').count() == 0)
     sida.click('#valjare [data-p=typ]')
     kolla(f'{namn}: rubriken har spannet', 'Bäcken (14 m)' in sida.inner_text('#info'))
+    sida.locator('#info .mynt').last.click()
+    stort = sida.is_visible('#stortMynt .mynt')
+    bild(sida, bilder, f'{namn}-0-mynt')
+    sida.click('#stortMynt')
+    kolla(f'{namn}: ett tryck på myntet i budgeten visar ett stort mynt', stort and not sida.is_visible('#stortMynt'))
     bild(sida, bilder, f'{namn}-0-andra')
     for _ in range(2):
         sida.click('#verktyg [data-v=angra]')

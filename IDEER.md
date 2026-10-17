@@ -757,3 +757,6 @@ på samma höjd som det fasta lagrets.
 v82-test (Isak 2026-10-16): pengarna heter **mynt** (en nolla mindre, guldmynt med keIWs, `.mynt`
 i style.css). Bara visningen (`kr` i app.js delar med 10): priser och budgetar i material.js och
 banor.js och sparade rekord står kvar i gamla $$. Åns budget 22 000 $$ = 2 200 mynt.
+
+v83-test (Isak 2026-10-17): keIWs på myntet är blå (samma blå som figuren, mörka ögon). Ett tryck
+på ett mynt i budgeten visar ett stort mynt (`#stortMynt`); ett tryck var som helst stänger det.
