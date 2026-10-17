@@ -795,3 +795,6 @@ och keIWs vid målet precis får plats till höger om keIWs (keIWs och marken st
 v90-test (Isak 2026-10-17): Bäcken har byggyta bara över bäcken (`omrade` 0–14 m, inget bakåt över land),
 så att den inte går ut till vänster. Testerna för bygge över land ligger nu på Ån. Största zoom är minst
 MIN_ZOOM = 2 gånger (Bäcken liggande gick nästan inte att zooma in).
+
+v91-test (Isak 2026-10-17): Sundets vatten 2 m lägre (ytan −5, botten ner till −13,4) så att man inte
+bygger ner i vattnet; kanterna ner till de nedre fästena (−4) som förut, brantare under dem.
