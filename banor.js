@@ -48,6 +48,23 @@
 // Trädimensionerna på de två första banorna (färre att välja bland).
 const TRA_ENKEL = { bredd: [42, 56, 66, 90, 115], hojd: [180, 270, 360, 450, 540] };
 
+// Sundets fackverk (facit): 4 m högt med fack på 4 m (3 m kring mitten),
+// vägen, överramen, stolparna och diagonalerna i var sin profil; typ 'ledad'
+// ger ledade knutar (annars styva).
+function sundetsFackverk(vag, ram, stolpe, diag, typ) {
+    const xs = [4, 8, 12, 16, 19, 22, 26, 30, 34], nod = (x, y) => typ ? [x, y, typ] : [x, y];
+    return {
+        noder: [[0, 0], [2, -4], [38, 0], [36, -4], ...xs.map(x => nod(x, 0)), ...xs.map(x => nod(x, 4))],
+        balkar: [
+            ...[0, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((a, i, v) => [a, v[i + 1] ?? 2, vag, true]),
+            ...[13, 14, 15, 16, 17, 18, 19, 20].map(a => [a, a + 1, ram]),
+            [0, 13, ram], [2, 21, ram],
+            ...[4, 5, 6, 7, 8, 9, 10, 11, 12].map(a => [a, a + 9, stolpe]),
+            ...[[13, 5], [14, 6], [15, 7], [16, 8], [8, 18], [9, 19], [10, 20], [11, 21]].map(([a, b]) => [a, b, diag])
+        ]
+    };
+}
+
 const BANOR = [
     {
         namn: 'Bäcken',
@@ -164,6 +181,19 @@ const BANOR = [
                 [13, 5, '42×180'], [14, 6, '42×180'], [15, 7, '42×180'], [16, 8, '42×180'],
                 [8, 18, '42×180'], [9, 19, '42×180'], [10, 20, '42×180'], [11, 21, '42×180']
             ]
+        },
+        facit: {
+            // Allt 115×360 (98 340 $$); ledat med lite för grova balkar (45 900 $$).
+            enkel: {
+                text: 'Ett fackverk där alla balkar har samma grova profil. Det håller med råge, men är alldeles för dyrt.',
+                ...sundetsFackverk('115×360', '115×360', '115×360', '115×360')
+            },
+            effektiv: {
+                text: 'Ett fackverk 4 m högt: vägen dras, överramen trycks, och stolparna och diagonalerna bildar '
+                    + 'trianglar. Knutarna är ledade, så att balkarna dras eller trycks i stället för att böjas. '
+                    + 'Det går att göra billigare.',
+                ...sundetsFackverk('56×270', '115×225', '78×180', '56×180', 'ledad')
+            }
         }
     },
     {

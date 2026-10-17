@@ -835,3 +835,8 @@ på spelytan utan att stänga den; först ett tryck (släppt utan att ha rört s
 v101-test (Isak 2026-10-17): Förloppsrutan tillbaka nedtill, mindre (mindre text och luft, inga tips, även
 glidlagertipset borta), och stående nere på panelen (rutans underkant i jämnhöjd med den vilande
 Material/Typ/Profil-raden, ovanför Ångra/Riv/Stopp). Liggande upptill som förut.
+
+v102-test (Isak 2026-10-17): Sundet har möjliga lösningar (`facit`, byggda med `sundetsFackverk` i banor.js):
+enkel = fackverket med alla balkar 115×360 (98 340 $$, långt över budget), effektiv = samma fackverk med
+ledade knutar och lite för grova balkar (väg 56×270, överram 115×225, stolpar 78×180, diagonaler 56×180;
+45 900 $$ av 48 000). Ledat med lösningens profiler blir 40 940 $$, så det finns mer att hämta.
