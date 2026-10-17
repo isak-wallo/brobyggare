@@ -666,9 +666,8 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     text = sida.evaluate('() => document.querySelector("#ruta").textContent')
     kolla(f'{namn}: Förlopp visar första brottet', f and f['nr'] == 0 and text.startswith('Brott 1 av')
           and 'Balken under vägen ' in text and 'böjning' in text and 'egentyngden' in text, text)
-    tips = sida.inner_text('#ruta .tips')
-    kolla(f'{namn}: brotten utan procent, med ett tips', '%' not in sida.inner_text('#ruta p:first-of-type')
-          and 'Balken under vägen böjdes sönder, välj en större profil' in tips, tips)
+    kolla(f'{namn}: brotten utan procent och utan tips', '%' not in sida.inner_text('#ruta p:first-of-type')
+          and sida.locator('#ruta .tips').count() == 0)
     if f['antal'] > 1:
         sida.click('#ruta [data-v=forlopp-nasta]')
     kolla(f'{namn}: › går till nästa brott', f['antal'] == 1 or sida.evaluate('() => window.bro.forlopp.nr') == 1)
@@ -677,12 +676,14 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     kolla(f'{namn}: ett tryck på balken visar dess utnyttjande', sida.evaluate('() => window.bro.forlopp.valt') == 0
           and 'Balken under vägen ' in sida.inner_text('#ruta .valt') and '%' in sida.inner_text('#ruta .valt'))
     bild(sida, bilder, f'{namn}-7-forlopp')
-    ringar = sida.evaluate('() => forloppRingar()')
     rb = sida.locator('#ruta').bounding_box()
-    db = sida.locator('#duk').bounding_box()
-    kolla(f'{namn}: förloppsrutan skymmer inte det som gick sönder',
-          all(not (rb['x'] < db['x'] + x < rb['x'] + rb['width'] and rb['y'] < db['y'] + y < rb['y'] + rb['height']) for x, y, _ in ringar),
-          f"ruta {rb['y']:.0f}–{rb['y'] + rb['height']:.0f}, ringar {ringar}")
+    vb = sida.locator('#valjare').bounding_box()
+    kb = sida.locator('#verktyg').bounding_box()
+    if namn == 'staende':
+        kolla(f'{namn}: förloppsrutan ligger nere på panelen, ovanför Ångra Riv Stopp',
+              abs(rb['y'] + rb['height'] - (vb['y'] + vb['height'])) < 2 and rb['y'] + rb['height'] <= kb['y'],
+              f"ruta {rb['y']:.0f}–{rb['y'] + rb['height']:.0f}, panelen {vb['y']:.0f}–{vb['y'] + vb['height']:.0f}")
+    kolla(f'{namn}: förloppsrutan är liten', rb['height'] < 230, f"{rb['height']:.0f} px")
     sida.click('#ruta [data-v=forlopp-klar]')
     kolla(f'{namn}: Klar i förloppet är samma som Bygg om', sida.evaluate('() => window.bro.lage') == 'bygg'
           and not sida.is_visible('#ruta') and not sida.evaluate('() => window.bro.forlopp'))

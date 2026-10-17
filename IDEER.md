@@ -831,3 +831,7 @@ mellan infotexten och brons överkant (med ringarna), annars under bron, annars 
 
 v100-test (Isak 2026-10-17): Med en ruta med val öppen (profil, material …) panorerar/zoomar ett drag eller nyp
 på spelytan utan att stänga den; först ett tryck (släppt utan att ha rört sig) stänger den (`popupTryck`).
+
+v101-test (Isak 2026-10-17): Förloppsrutan tillbaka nedtill, mindre (mindre text och luft, inga tips, även
+glidlagertipset borta), och stående nere på panelen (rutans underkant i jämnhöjd med den vilande
+Material/Typ/Profil-raden, ovanför Ångra/Riv/Stopp). Liggande upptill som förut.

@@ -196,8 +196,6 @@ function keiwsSteg(sim, dt) {
 // Bitar som faller in i marken stannar på ytan (enkelt: noden flyttas ut
 // till närmaste yta, uppåt eller i sidled, och tappar farten in i berget).
 // Glidlagret har stopp: det rör sig bara några dm (även när bron rasar).
-// Slår det i stoppet (på väg utåt) sparas tiden i sim.glidSlag: går något
-// sönder strax efter är det smällen (bron trycker isär lagren, se GLID_SLAG).
 function lagerStopp(sim) {
     const m = sim.m;
     for (let p = 0; p < m.np; p++) {
@@ -205,10 +203,7 @@ function lagerStopp(sim) {
         const ix = 2 * p, u = m.q[ix];
         if (Math.abs(u) <= GLID_MAX) continue;
         m.q[ix] = Math.sign(u) * GLID_MAX;
-        if (m.v[ix] * u > 0) {
-            m.v[ix] = 0;
-            if ((m.punkter[p].x0 > sim.bana.spann / 2) === (u > 0)) sim.glidSlag = sim.t;   // utåt
-        }
+        if (m.v[ix] * u > 0) m.v[ix] = 0;
         m.a[ix] = 0;
     }
 }
@@ -259,12 +254,10 @@ function simSteg(sim, dt = DT) {
 // utnyttjandet i varje element och balk (de som just gick sönder med sitt
 // värde före brottet) och keIWs. Bara de första FORLOPP_MAX.
 const FORLOPP_MAX = 40;
-const GLID_SLAG = 0.15;   // s efter att glidlagret slog i stoppet som ett brott räknas som smällen
 function forloppBild(sim) {
     const m = sim.m;
     return {
         t: sim.t, brutna: m.brutna, q: Float64Array.from(m.q),
-        glidSlag: sim.glidSlag != null && sim.t - sim.glidSlag <= GLID_SLAG,
         dod: Uint8Array.from(m.element, e => e.dod ? 1 : 0),
         u: Float32Array.from(m.element, e => e.u), uk: Float32Array.from(m.balkar, b => b.uk),
         keiws: { x: sim.keiws.x, y: sim.keiws.y, lage: sim.keiws.lage }

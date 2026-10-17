@@ -1968,18 +1968,6 @@ const balkNamn = i => {
     return (arKabel(b) ? 'Kabel' : b.vag ? 'Balken under vägen' : 'Balk') + ' ' + profil(b.material || 'limtra', b.storlek).namn;
 };
 
-// Ett tips per brott: vad som hände och ett allmänt råd (bredd, höjd och
-// area spelar in olika, och den bredaste kan redan vara vald).
-const SONDER = { tryck: 'trycktes sönder', drag: 'drogs sönder', 'böjning': 'böjdes sönder',
-                 skjuvning: 'skjuvades sönder', 'knäckning': 'knäcktes' };
-function brottTips(b) {
-    const balk = ritning.balkar[b.balk], kabel = arKabel(balk);
-    const vad = kabel ? 'Kabeln' : balk.vag ? 'Balken under vägen' : 'Balken';
-    const rad = kabel ? 'välj en grövre kabel' : b.orsak === 'knäckning'
-        ? 'välj en större profil eller gör balken kortare' : 'välj en större profil';
-    return vad + ' ' + (SONDER[b.orsak] || 'gick sönder') + ', ' + rad + '.';
-}
-
 // Ringarna runt det som gick sönder i förloppets steg: [x, y, r] i px på duken,
 // mitt på balken (jämnt antal element: knuten mellan de två mittersta).
 function forloppRingar() {
@@ -1992,36 +1980,22 @@ function forloppRingar() {
     });
 }
 
-// Förloppsrutan ska inte skymma bron: helst i himlen ovanför den (under
-// infotexten), annars under den, annars där den står (CSS: nedtill stående,
-// upptill liggande).
+// Förloppsrutan: stående nedtill, nere på panelen (där Material, Typ och
+// Profil vilar under provkörningen), så att bron syns; liggande upptill (CSS).
 function placeraForlopp() {
-    rutaEl.style.top = rutaEl.style.bottom = '';
-    const m = sim.m, h = rutaEl.offsetHeight, kant = 10;
-    let topp = Infinity, botten = -Infinity;
-    for (const e of m.element) {
-        if (e.dod) continue;
-        for (const p of [e.i, e.j]) { const y = sy(lage(m, p)[1]); topp = Math.min(topp, y); botten = Math.max(botten, y); }
-    }
-    for (const [, y, r] of forloppRingar()) { topp = Math.min(topp, y - r); botten = Math.max(botten, y + r); }
-    if (topp > botten) return;
-    const info = infoLuft(), ovan = topp - kant - info, under = scen.clientHeight - kant - botten - kant;
-    let y = null;
-    if (ovan >= h) y = info + (ovan - h) / 2;
-    else if (under >= h) y = botten + kant + (under - h) / 2;
-    if (y === null) return;
-    rutaEl.style.top = y + 'px';
-    rutaEl.style.bottom = 'auto';
+    rutaEl.style.position = rutaEl.style.bottom = '';
+    if (innerWidth > innerHeight) return;
+    rutaEl.style.position = 'fixed';
+    rutaEl.style.bottom = innerHeight - valjareEl.getBoundingClientRect().bottom + 'px';
 }
+addEventListener('resize', () => { if (forlopp) placeraForlopp(); });
 
 function forloppRuta() {
     const st = forloppSteg()[forlopp.nr], f = st.f, n = forloppSteg().length, m = sim.m;
     const fler = sim.forlopp.length >= FORLOPP_MAX ? '+' : '';
-    // Bara vad som gick sönder och hur (balkarna syns i bilden), och ett tips.
+    // Bara vad som gick sönder och hur (balkarna syns i bilden).
     const rader = st.brutna.slice(0, 3).map(b => balkNamn(b.balk) + ': ' + b.orsak);
     if (st.brutna.length > 3) rader.push('och ' + (st.brutna.length - 3) + ' till');
-    const tips = f.glidSlag ? ['Glidlagret gled till stoppet, bron trycker isär lagren. Bind ihop den med en väg hela vägen.']
-        : [...new Set(st.brutna.slice(0, 3).map(brottTips))];
     let valt = 'Tryck på en balk för att se dess utnyttjande.';
     if (forlopp.valt >= 0) {
         const balk = m.balkar[forlopp.valt];
@@ -2030,7 +2004,7 @@ function forloppRuta() {
             + (balk.uk >= u && u > 0 ? ' (knäckning)' : '');
     }
     rutaEl.innerHTML = '<h1>Brott ' + (forlopp.nr + 1) + ' av ' + n + fler + '</h1><p>'
-        + (f.t < START_TID ? 'Under egentyngden' : tal(f.t - START_TID, 1) + ' s efter att keIWs började gå') + '<br>' + rader.join('<br>') + '</p><p class="tips">' + tips.join('<br>') + '</p><p class="valt">' + valt + '</p>'
+        + (f.t < START_TID ? 'Under egentyngden' : tal(f.t - START_TID, 1) + ' s efter att keIWs började gå') + '<br>' + rader.join('<br>') + '</p><p class="valt">' + valt + '</p>'
         + '<button data-v="forlopp-forra"' + (forlopp.nr ? '' : ' disabled') + '>‹</button> '
         + '<button data-v="forlopp-nasta"' + (forlopp.nr < n - 1 ? '' : ' disabled') + '>›</button> '
         + '<button data-v="forlopp-klar">Klar</button>';
@@ -2044,6 +2018,7 @@ function stangForlopp() {
     forlopp = null;
     stallTill(sim.slutBild, false);
     rutaEl.className = '';
+    rutaEl.style.position = rutaEl.style.bottom = '';
 }
 
 // Balken närmast punkten i förloppets läge (de böjda elementen), eller -1.
