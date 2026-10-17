@@ -663,6 +663,12 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     kolla(f'{namn}: ett tryck på balken visar dess utnyttjande', sida.evaluate('() => window.bro.forlopp.valt') == 0
           and 'Balken under vägen ' in sida.inner_text('#ruta .valt') and '%' in sida.inner_text('#ruta .valt'))
     bild(sida, bilder, f'{namn}-7-forlopp')
+    ringar = sida.evaluate('() => forloppRingar()')
+    rb = sida.locator('#ruta').bounding_box()
+    db = sida.locator('#duk').bounding_box()
+    kolla(f'{namn}: förloppsrutan skymmer inte det som gick sönder',
+          all(not (rb['x'] < db['x'] + x < rb['x'] + rb['width'] and rb['y'] < db['y'] + y < rb['y'] + rb['height']) for x, y, _ in ringar),
+          f"ruta {rb['y']:.0f}–{rb['y'] + rb['height']:.0f}, ringar {ringar}")
     sida.click('#ruta [data-v=forlopp-klar]')
     kolla(f'{namn}: Klar i förloppet är samma som Bygg om', sida.evaluate('() => window.bro.lage') == 'bygg'
           and not sida.is_visible('#ruta') and not sida.evaluate('() => window.bro.forlopp'))

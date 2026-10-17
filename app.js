@@ -1009,14 +1009,7 @@ function ritaProv() {
     if (forlopp) {
         ctx.strokeStyle = '#d0503c';
         ctx.lineWidth = 3;
-        for (const b of forloppSteg()[forlopp.nr].brutna) {
-            const el = m.balkar[b.balk].element, mitt = m.element[el[el.length >> 1]];
-            const [x1, y1] = lage(m, mitt.i), [x2, y2] = lage(m, mitt.j);
-            // Jämnt antal element: knuten mellan de två mittersta, annars mitt på det mittersta.
-            const [x, y] = el.length % 2 ? [(x1 + x2) / 2, (y1 + y2) / 2] : [x1, y1];
-            const r = Math.max(14, 0.6 * Math.hypot(x2 - x1, y2 - y1) * kam.sk);
-            ctx.beginPath(); ctx.arc(sx(x), sy(y), r, 0, 7); ctx.stroke();
-        }
+        for (const [x, y, r] of forloppRingar()) { ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.stroke(); }
     }
 }
 
@@ -1987,6 +1980,40 @@ function brottTips(b) {
     return vad + ' ' + (SONDER[b.orsak] || 'gick sönder') + ', ' + rad + '.';
 }
 
+// Ringarna runt det som gick sönder i förloppets steg: [x, y, r] i px på duken,
+// mitt på balken (jämnt antal element: knuten mellan de två mittersta).
+function forloppRingar() {
+    const m = sim.m;
+    return forloppSteg()[forlopp.nr].brutna.map(b => {
+        const el = m.balkar[b.balk].element, mitt = m.element[el[el.length >> 1]];
+        const [x1, y1] = lage(m, mitt.i), [x2, y2] = lage(m, mitt.j);
+        const [x, y] = el.length % 2 ? [(x1 + x2) / 2, (y1 + y2) / 2] : [x1, y1];
+        return [sx(x), sy(y), Math.max(14, 0.6 * Math.hypot(x2 - x1, y2 - y1) * kam.sk)];
+    });
+}
+
+// Förloppsrutan ska inte skymma bron: helst i himlen ovanför den (under
+// infotexten), annars under den, annars där den står (CSS: nedtill stående,
+// upptill liggande).
+function placeraForlopp() {
+    rutaEl.style.top = rutaEl.style.bottom = '';
+    const m = sim.m, h = rutaEl.offsetHeight, kant = 10;
+    let topp = Infinity, botten = -Infinity;
+    for (const e of m.element) {
+        if (e.dod) continue;
+        for (const p of [e.i, e.j]) { const y = sy(lage(m, p)[1]); topp = Math.min(topp, y); botten = Math.max(botten, y); }
+    }
+    for (const [, y, r] of forloppRingar()) { topp = Math.min(topp, y - r); botten = Math.max(botten, y + r); }
+    if (topp > botten) return;
+    const info = infoLuft(), ovan = topp - kant - info, under = scen.clientHeight - kant - botten - kant;
+    let y = null;
+    if (ovan >= h) y = info + (ovan - h) / 2;
+    else if (under >= h) y = botten + kant + (under - h) / 2;
+    if (y === null) return;
+    rutaEl.style.top = y + 'px';
+    rutaEl.style.bottom = 'auto';
+}
+
 function forloppRuta() {
     const st = forloppSteg()[forlopp.nr], f = st.f, n = forloppSteg().length, m = sim.m;
     const fler = sim.forlopp.length >= FORLOPP_MAX ? '+' : '';
@@ -2009,6 +2036,7 @@ function forloppRuta() {
         + '<button data-v="forlopp-klar">Klar</button>';
     rutaEl.className = 'forlopp';
     rutaEl.style.top = rutaEl.style.left = '';
+    placeraForlopp();
 }
 
 function stangForlopp() {

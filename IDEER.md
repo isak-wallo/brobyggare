@@ -825,3 +825,6 @@ kortare"; kabel: "välj en grövre kabel"), eftersom bredd, höjd och area spela
 kan redan vara vald. När bron inte höll (Plask, rasade, gick sönder) är ett tryck utanför rutan samma som Bygg om.
 
 v98-test (Isak 2026-10-17): Klar i förloppet är samma som Bygg om (inte tillbaka till resultatrutan först).
+
+v99-test (Isak 2026-10-17): Förloppsrutan placeras där den inte skymmer bron (`placeraForlopp`): helst i himlen
+mellan infotexten och brons överkant (med ringarna), annars under bron, annars som förut.
