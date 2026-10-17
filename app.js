@@ -1989,7 +1989,8 @@ function forloppRuta() {
     // Bara vad som gick sönder och hur (balkarna syns i bilden), och ett tips.
     const rader = st.brutna.slice(0, 3).map(b => balkNamn(b.balk) + ': ' + b.orsak);
     if (st.brutna.length > 3) rader.push('och ' + (st.brutna.length - 3) + ' till');
-    const tips = [...new Set(st.brutna.slice(0, 3).map(brottTips))];
+    const tips = f.glidSlag ? ['Glidlagret gled till stoppet, bron trycker isär lagren. Bind ihop den med en väg hela vägen.']
+        : [...new Set(st.brutna.slice(0, 3).map(brottTips))];
     let valt = 'Tryck på en balk för att se dess utnyttjande.';
     if (forlopp.valt >= 0) {
         const balk = m.balkar[forlopp.valt];

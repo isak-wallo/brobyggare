@@ -197,6 +197,27 @@ const mat = MATERIAL.limtra;
           'högsta fart ' + vmax.toFixed(1) + ' m/s');
 }
 
+// Isaks bro över Bäcken (v94): vägen saknas mellan 5 och 9 m, så bron trycker
+// isär lagren som en båge; glidlagret glider till stoppet och smällen trycker
+// sönder vägen vid lagret. Förloppet ska säga att det var glidlagret.
+{
+    const korSim = S('korSim'), bana = S('BANOR').find(b => b.namn === 'Bäcken');
+    const n = (x, y, lager, styv) => ({ x, y, fast: !!lager, styv: !!styv, ...(lager ? { lager } : {}) });
+    const ritning = { version: 7, noder: [n(0, 0, 'fast'), n(14, 0, 'glid'), n(5, 0), n(9, 0), n(5, 2), n(9, 2, null, true)],
+        balkar: [[0, 2, '42×270', true], [3, 1, '42×270', true], [0, 4, '90×180'], [4, 5, '90×180'], [5, 1, '90×180'],
+                 [4, 2, '42×180'], [5, 3, '42×180']]
+            .map(([a, b, storlek, vag]) => ({ a, b, storlek, vag: !!vag, material: 'limtra' })) };
+    const sim = korSim(ritning, bana, 3);
+    const f = sim.forlopp[0];
+    kolla('bron utan väg i mitten: glidlagret slår i stoppet och det märks i förloppet',
+          f && f.glidSlag && f.brutna.some(b => b.orsak === 'tryck'), f && JSON.stringify(f.brutna));
+    // En för klen rak väg går av på mitten, inte av glidlagret.
+    const rak = { version: 7, noder: [n(0, 0, 'fast'), n(14, 0, 'glid'), n(7, 0)],
+        balkar: [{ a: 0, b: 2, storlek: '42×180', vag: true }, { a: 2, b: 1, storlek: '42×180', vag: true }] };
+    const g = korSim(rak, bana, 3).forlopp[0];
+    kolla('en för klen rak väg: brottet räknas inte som glidlagrets', g && !g.glidSlag);
+}
+
 require(path.join(__dirname, 'testa_banor.js'))(S, kolla);
 
 console.log(fel ? fel + ' FEL' : 'Allt OK');

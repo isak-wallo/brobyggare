@@ -806,3 +806,8 @@ rasade av sin egen tyngd) heter nu "Hoppsan, bron rasade!".
 v93-test (Isak 2026-10-17): Förloppet visar bara vad som gick sönder och hur ("Väg 42×270: tryck"), utan
 procent och plats, och ett tips under (`brottTips`: tryck/drag → bredare, böjning/skjuvning → högre,
 stål → grövre/högre profil, kabel → grövre). Utnyttjandet i procent syns fortfarande när man trycker på en balk.
+
+v94-test (Isak 2026-10-17): Går något sönder strax efter (GLID_SLAG = 0,15 s) att glidlagret slagit i sitt
+stopp på väg utåt (bron trycker isär lagren som en båge, t.ex. utan väg i mitten), säger förloppet det i
+stället för tipset om grövre balk: "Glidlagret gled till stoppet, bron trycker isär lagren. Bind ihop den
+med en väg hela vägen." Fysiken är som förut (stoppet är hårt).
