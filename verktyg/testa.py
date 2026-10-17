@@ -595,6 +595,10 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     sida.wait_for_timeout(4000)
     bild(sida, bilder, f'{namn}-5-fackverk-prov')
     kolla(f'{namn}: fackverket håller', vanta_resultat(sida).startswith('Bron höll!'))
+    sida.evaluate("() => { window.bro.sim.resultat = 'sonder'; visaResultat(); }")
+    kolla(f'{namn}: kom keIWs över men något gick sönder är det underkänt',
+          sida.inner_text('#ruta h1').startswith('keIWs kom över') and sida.locator('#ruta [data-v=bygg]').inner_text() == 'Bygg om')
+    sida.evaluate("() => { window.bro.sim.resultat = 'klarade'; visaResultat(); }")
 
     # Inzoomad: inget bygge, kameran följer keIWs, och Bygg ger tillbaka vyn.
     sida.click('#ruta [data-v=bygg]')

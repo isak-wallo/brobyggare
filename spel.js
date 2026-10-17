@@ -110,7 +110,7 @@ function nySim(ritning, bana) {
     return {
         bana, m, statisk, t: 0, brott: 0, maxU: 0,
         keiws: { x: keiwsStart(bana), y: 0, vy: 0, lage: 'vantar', luft: 0, gatt: 0 },
-        resultat: null,     // 'klarade', 'vatten' eller 'rasade', med tiden i sim.slutTid
+        resultat: null,     // 'klarade', 'sonder' (kom över, men något gick sönder), 'vatten' eller 'rasade', med tiden i sim.slutTid
         forlopp: []         // brotten i ordning (forloppBild), för att stega igenom efteråt
     };
 }
@@ -188,7 +188,8 @@ function keiwsSteg(sim, dt) {
         if (!sim.resultat) { sim.resultat = 'vatten'; sim.slutTid = sim.t; }
     } else if (k.x > keiwsMal(sim.bana) && k.lage === 'gar') {
         k.lage = 'klar';
-        if (!sim.resultat) { sim.resultat = 'klarade'; sim.slutTid = sim.t; }
+        // Bron ska hålla hela vägen: har något gått sönder räknas det inte.
+        if (!sim.resultat) { sim.resultat = sim.brott ? 'sonder' : 'klarade'; sim.slutTid = sim.t; }
     }
 }
 

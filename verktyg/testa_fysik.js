@@ -218,6 +218,20 @@ const mat = MATERIAL.limtra;
     kolla('en för klen rak väg: brottet räknas inte som glidlagrets', g && !g.glidSlag);
 }
 
+// Bron ska hålla hela vägen (v96): har något gått sönder när keIWs kommer
+// över är resultatet 'sonder', inte 'klarade'. (Lösningen på Bäcken med ett
+// låtsat brott medan han går.)
+{
+    const nySim = S('nySim'), simSteg = S('simSteg'), bana = S('BANOR').find(b => b.namn === 'Bäcken');
+    const ritning = S('losningsRitning')(bana);
+    const hel = nySim(ritning, bana);
+    while (!hel.resultat && hel.t < 30) simSteg(hel);
+    const sim = nySim(ritning, bana);
+    while (!sim.resultat && sim.t < 30) { simSteg(sim); if (sim.keiws.lage === 'gar' && !sim.brott) sim.brott = 1; }
+    kolla('keIWs kom över men något gick sönder: underkänt', hel.resultat === 'klarade' && sim.resultat === 'sonder',
+          hel.resultat + ', ' + sim.resultat);
+}
+
 require(path.join(__dirname, 'testa_banor.js'))(S, kolla);
 
 console.log(fel ? fel + ' FEL' : 'Allt OK');

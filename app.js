@@ -1121,7 +1121,7 @@ function ritaKeiws() {
     if (bana.bil && !(sim && sim.bygge)) {
         if (!k) { ritaBil(keiwsStart(bana), 0, ruta(FIG.idle, performance.now() / 1000), 0); return; }
         if (k.lage === 'plask') return;
-        if (k.lage === 'klar') { ritaBil(k.x, k.y, ruta(FIG.rekordjubel, sim.t - sim.slutTid), 0); return; }
+        if (k.lage === 'klar') { ritaBil(k.x, k.y, ruta(sim.resultat === 'klarade' ? FIG.rekordjubel : FIG.idle, sim.t - sim.slutTid), 0); return; }
         if (k.lage === 'faller') { ritaBil(k.x, k.y, ruta(FIG.faller, sim.t), 0); return; }
         if (k.lage === 'hoppsan') {
             const t = sim.t - sim.slutTid, h = hoppsan(t);
@@ -1144,7 +1144,7 @@ function ritaKeiws() {
     }
     if (k.lage === 'plask') return;
     if (k.lage === 'faller') { ritaFigur(ruta(FIG.faller, sim.t), k.x, k.y); return; }
-    if (k.lage === 'klar') { ritaFigur(ruta(FIG.rekordjubel, sim.t - sim.slutTid), k.x, k.y); return; }
+    if (k.lage === 'klar') { ritaFigur(ruta(sim.resultat === 'klarade' ? FIG.rekordjubel : FIG.idle, sim.t - sim.slutTid), k.x, k.y); return; }
     if (k.lage === 'vantar') { ritaFigur(FIG.vrid[3], k.x, k.y); return; }
     if (k.lage === 'hoppsan') {
         const t = sim.t - sim.slutTid, h = hoppsan(t);
@@ -1924,6 +1924,9 @@ function visaResultat() {
             + '<br>Högsta utnyttjande ' + Math.round(sim.maxU * 100) + ' %'
             + (basta ? '<br><b>Din billigaste bro hittills på den här banan!</b>' : ''),
             [['bygg', 'Bygg vidare'], banaNr < BANOR.length - 1 ? ['nasta', 'Nästa bana'] : ['kor', 'Kör igen']]);
+    } else if (sim.resultat === 'sonder') {
+        visaRuta('keIWs kom över,<br>men bron gick sönder.', 'Bron måste hålla hela vägen, utan att något går sönder.',
+            [['bygg', 'Bygg om'], ['kor', 'Kör igen']].concat(forloppSteg().length ? [['forlopp', 'Förlopp']] : []));
     } else if (sim.resultat === 'rasade') {
         visaRuta('Hoppsan, bron rasade!', 'Den klarade inte ens sin egen tyngd.',
             [['bygg', 'Bygg om'], ['kor', 'Kör igen']].concat(forloppSteg().length ? [['forlopp', 'Förlopp']] : []));

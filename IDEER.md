@@ -815,3 +815,7 @@ med en väg hela vägen." Fysiken är som förut (stoppet är hårt).
 v95-test (Isak 2026-10-17): Förloppets röda ring sitter mitt på balken som gick sönder (inte på elementet där
 den gick av), och vägens balkar heter "Balken under vägen" i förloppet ("Balken under vägen böjdes sönder,
 välj en högre balk.").
+
+v96-test (Isak 2026-10-17): Bron ska hålla hela vägen: kommer keIWs över men något har gått sönder blir
+resultatet 'sonder' ("keIWs kom över, men bron gick sönder."), underkänt, inget rekord, keIWs jublar inte,
+och rutan har Bygg om, Kör igen och Förlopp.
