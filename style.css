@@ -808,13 +808,13 @@ html, body {
     background-color: #5cb260;
 }
 
-/* Myntet (spelets pengar): guld med en liten keIWs på */
+/* Myntet (spelets pengar): guld med en liten keIWs på (myntSvg i app.js) */
 .mynt {
     display: inline-block;
     width: 1em;
     height: 1em;
     vertical-align: -0.14em;
-    background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' shape-rendering='crispEdges'><circle cx='16' cy='16' r='15.5' fill='%23c9921c'/><circle cx='16' cy='16' r='13.5' fill='%23f5c842'/><circle cx='16' cy='16' r='11.5' fill='none' stroke='%23e0ab2a' stroke-width='1'/><g fill='%235685d7'><rect x='10' y='9' width='12' height='12'/><rect x='7' y='13' width='3' height='3'/><rect x='22' y='13' width='3' height='3'/><rect x='11' y='21' width='3' height='3'/><rect x='18' y='21' width='3' height='3'/></g><g fill='%231e1e24'><rect x='12' y='11' width='3' height='3'/><rect x='17' y='11' width='3' height='3'/></g></svg>") center / contain no-repeat;
+    background: var(--mynt) center / contain no-repeat;  /* sätts i app.js (myntSvg) */
 }
 
 /* Mynten i budgeten: ett tryck visar ett stort mynt (lite större träffyta). */
@@ -849,4 +849,9 @@ html, body {
     font-size: min(70vw, 60vh);
     vertical-align: 0;
     filter: drop-shadow(0 6px 18px rgba(0, 0, 0, 0.4));
+    background: none;
+}
+
+#stortMynt .mynt svg {
+    display: block;
 }

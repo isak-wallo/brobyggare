@@ -360,7 +360,16 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     kolla(f'{namn}: rubriken har spannet', 'Bäcken (14 m)' in sida.inner_text('#info'))
     sida.locator('#info .mynt').last.click()
     stort = sida.is_visible('#stortMynt .mynt')
+    arm_uppe = '() => [...document.querySelectorAll("#stortMynt rect")].some(r => +r.getAttribute("y") < 0)'
+    stilla = not sida.evaluate(arm_uppe)
+    sida.wait_for_timeout(1600)
+    vinkar = sida.evaluate(arm_uppe)
     bild(sida, bilder, f'{namn}-0-mynt')
+    sida.wait_for_timeout(2000)
+    slutat = not sida.evaluate(arm_uppe)
+    kolla(f'{namn}: keIWs på det stora myntet vinkar en gång efter en stund', stilla and vinkar and slutat)
+    kolla(f'{namn}: keIWs på myntet har glipor mot armar och ben',
+          sida.evaluate('() => getComputedStyle(document.querySelector("#info .mynt")).backgroundImage.includes("y%3D%22168%22")'))
     sida.click('#stortMynt')
     kolla(f'{namn}: ett tryck på myntet i budgeten visar ett stort mynt', stort and not sida.is_visible('#stortMynt'))
     bild(sida, bilder, f'{namn}-0-andra')
@@ -626,7 +635,7 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     sida.wait_for_timeout(3300)
     bild(sida, bilder, f'{namn}-6-ras')
     kolla(f'{namn}: en för klen bro rasar av sin egen tyngd: Hoppsan, keIWs går inte ut',
-          vanta_resultat(sida).startswith('Hoppsan!') and sida.evaluate('() => window.bro.sim.keiws.lage') == 'hoppsan'
+          vanta_resultat(sida).startswith('Hoppsan, bron rasade!') and sida.evaluate('() => window.bro.sim.keiws.lage') == 'hoppsan'
           and sida.evaluate('() => window.bro.sim.keiws.x === keiwsStart(bana)'))
     bild(sida, bilder, f'{namn}-7-hoppsan')
 
@@ -648,7 +657,7 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
           and 'Väg ' in sida.inner_text('#ruta .valt') and '%' in sida.inner_text('#ruta .valt'))
     bild(sida, bilder, f'{namn}-7-forlopp')
     sida.click('#ruta [data-v=forlopp-klar]')
-    kolla(f'{namn}: Klar går tillbaka till resultatet', sida.inner_text('#ruta h1').startswith('Hoppsan!')
+    kolla(f'{namn}: Klar går tillbaka till resultatet', sida.inner_text('#ruta h1').startswith('Hoppsan, bron rasade!')
           and not sida.evaluate('() => window.bro.forlopp'))
 
     # Menyn: billigaste bron som höll, hämta den, förklaringen och versionen.

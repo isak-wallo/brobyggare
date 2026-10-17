@@ -798,3 +798,7 @@ MIN_ZOOM = 2 gånger (Bäcken liggande gick nästan inte att zooma in).
 
 v91-test (Isak 2026-10-17): Sundets vatten 2 m lägre (ytan −5, botten ner till −13,4) så att man inte
 bygger ner i vattnet; kanterna ner till de nedre fästena (−4) som förut, brantare under dem.
+
+v92-test (Isak 2026-10-17): keIWs på mynten ritas med figurens rektanglar (`myntSvg` i app.js, glipor mot
+armar och ben); på det stora myntet vinkar han en gång efter en sekund (MYNT_VINKA). Rasrutan (bron
+rasade av sin egen tyngd) heter nu "Hoppsan, bron rasade!".

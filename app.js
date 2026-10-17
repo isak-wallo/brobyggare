@@ -1921,7 +1921,7 @@ function visaResultat() {
             + (basta ? '<br><b>Din billigaste bro hittills på den här banan!</b>' : ''),
             [['bygg', 'Bygg vidare'], banaNr < BANOR.length - 1 ? ['nasta', 'Nästa bana'] : ['kor', 'Kör igen']]);
     } else if (sim.resultat === 'rasade') {
-        visaRuta('Hoppsan!<br>Bron rasade innan keIWs gick ut.', 'Den klarade inte ens sin egen tyngd.',
+        visaRuta('Hoppsan, bron rasade!', 'Den klarade inte ens sin egen tyngd.',
             [['bygg', 'Bygg om'], ['kor', 'Kör igen']].concat(forloppSteg().length ? [['forlopp', 'Förlopp']] : []));
     } else {
         visaRuta(bana.torr ? 'Aj!<br>keIWs ramlade ner i dalen.' : 'Plask!<br>keIWs ramlade i vattnet.', sim.brott ? 'Bron gick sönder.' : 'Vägen räckte inte hela vägen över.',
@@ -2148,7 +2148,7 @@ popupEl.addEventListener('click', e => {
 });
 
 infoEl.addEventListener('click', e => {
-    if (e.target.closest('.mynt')) { stortMyntEl.classList.remove('dold'); return; }
+    if (e.target.closest('.mynt')) { visaStortMynt(); return; }
     const b = e.target.closest('button');
     if (!b || b.disabled) return;
     if (b.dataset.v === 'banor') {
@@ -2166,8 +2166,43 @@ infoEl.addEventListener('click', e => {
     bytBana(banaNr + (b.dataset.v === 'nasta' ? 1 : -1));
 });
 
+// Myntet: guld med keIWs på, ritad med figurens rektanglar (glipor mot armar
+// och ben). Det lilla är en bakgrund (--mynt i CSS); det stora en svg som
+// vinkar en gång en stund efter att det har öppnats.
+const MYNT_VINKA = 1000;  // ms innan keIWs vinkar på det stora myntet
+function myntSvg(rekt) {
+    const s = 0.07, dx = 16 - 80 * s, dy = 16.6 - 102 * s;
+    const delar = rekt.map(([x0, y0, x1, y1, f]) =>
+        `<rect x="${x0}" y="${y0}" width="${x1 - x0}" height="${y1 - y0}" fill="${FIG.farger[f]}"/>`).join('');
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="100%" height="100%">`
+        + `<circle cx="16" cy="16" r="15.5" fill="#c9921c"/><circle cx="16" cy="16" r="13.5" fill="#f5c842"/>`
+        + `<circle cx="16" cy="16" r="11.5" fill="none" stroke="#e0ab2a" stroke-width="1"/>`
+        + `<g transform="translate(${dx} ${dy}) scale(${s})">${delar}</g></svg>`;
+}
+document.documentElement.style.setProperty('--mynt',
+    `url("data:image/svg+xml,${encodeURIComponent(myntSvg(FIG.idle[0].rekt))}")`);
+
+const stortMyntBild = stortMyntEl.querySelector('.mynt');
+let myntVinkStart = null, myntRam = null;
+function visaStortMynt() {
+    stortMyntBild.innerHTML = myntSvg(FIG.idle[0].rekt);
+    stortMyntEl.classList.remove('dold');
+    myntVinkStart = performance.now() + MYNT_VINKA;
+    cancelAnimationFrame(myntRam);
+    const total = FIG.vinka.reduce((s, r) => s + r.tid, 0);
+    let forra = null;
+    const steg = nu => {
+        if (stortMyntEl.classList.contains('dold')) return;
+        const t = nu - myntVinkStart;
+        const rekt = t < 0 || t >= total ? FIG.idle[0].rekt : ruta(FIG.vinka, t / 1000);
+        if (rekt !== forra) { stortMyntBild.innerHTML = myntSvg(rekt); forra = rekt; }
+        if (t < total) myntRam = requestAnimationFrame(steg);
+    };
+    myntRam = requestAnimationFrame(steg);
+}
+
 // Det stora myntet stängs med ett tryck var som helst.
-stortMyntEl.addEventListener('click', () => stortMyntEl.classList.add('dold'));
+stortMyntEl.addEventListener('click', () => { stortMyntEl.classList.add('dold'); cancelAnimationFrame(myntRam); });
 
 // Ett tryck utanför rutan med val stänger den (och gör inget mer på spelytan).
 // Är en balk vald och rutan gäller den (material, typ, profil) väljer ett
