@@ -802,3 +802,7 @@ bygger ner i vattnet; kanterna ner till de nedre fästena (−4) som förut, bra
 v92-test (Isak 2026-10-17): keIWs på mynten ritas med figurens rektanglar (`myntSvg` i app.js, glipor mot
 armar och ben); på det stora myntet vinkar han en gång efter en sekund (MYNT_VINKA). Rasrutan (bron
 rasade av sin egen tyngd) heter nu "Hoppsan, bron rasade!".
+
+v93-test (Isak 2026-10-17): Förloppet visar bara vad som gick sönder och hur ("Väg 42×270: tryck"), utan
+procent och plats, och ett tips under (`brottTips`: tryck/drag → bredare, böjning/skjuvning → högre,
+stål → grövre/högre profil, kabel → grövre). Utnyttjandet i procent syns fortfarande när man trycker på en balk.

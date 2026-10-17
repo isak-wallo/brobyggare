@@ -762,6 +762,10 @@ html, body {
     font-size: 14px;
 }
 
+#ruta.forlopp p.tips {
+    font-style: italic;
+}
+
 /* Liggande: upptill (under infotexten), bron ligger mitt i bild. */
 @media (orientation: landscape) {
     #ruta.forlopp {

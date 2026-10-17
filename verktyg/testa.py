@@ -648,6 +648,9 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     text = sida.evaluate('() => document.querySelector("#ruta").textContent')
     kolla(f'{namn}: Förlopp visar första brottet', f and f['nr'] == 0 and text.startswith('Brott 1 av')
           and 'Väg ' in text and 'böjning' in text and 'egentyngden' in text, text)
+    tips = sida.inner_text('#ruta .tips')
+    kolla(f'{namn}: brotten utan procent, med ett tips', '%' not in sida.inner_text('#ruta p:first-of-type')
+          and 'böjdes sönder, välj en högre väg' in tips, tips)
     if f['antal'] > 1:
         sida.click('#ruta [data-v=forlopp-nasta]')
     kolla(f'{namn}: › går till nästa brott', f['antal'] == 1 or sida.evaluate('() => window.bro.forlopp.nr') == 1)

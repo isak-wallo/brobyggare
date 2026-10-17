@@ -1967,14 +1967,29 @@ const balkNamn = i => {
     return TYPNAMN[arKabel(b) ? 'kabel' : b.vag ? 'vag' : 'balk'] + ' ' + profil(b.material || 'limtra', b.storlek).namn;
 };
 
+// Ett tips per brott: vad som hände och vad man kan välja i stället.
+const SONDER = { tryck: 'trycktes sönder', drag: 'drogs sönder', 'böjning': 'böjdes sönder',
+                 skjuvning: 'skjuvades sönder', 'knäckning': 'knäcktes' };
+function brottTips(b) {
+    const balk = ritning.balkar[b.balk], mat = balk.material || 'limtra';
+    const typ = arKabel(balk) ? 'kabel' : balk.vag ? 'väg' : 'balk';
+    const vad = typ === 'kabel' ? 'Kabeln' : typ === 'väg' ? 'Vägen' : 'Balken';
+    let rad;
+    if (typ === 'kabel') rad = 'välj en grövre kabel';
+    else if (mat === 'stal') rad = b.orsak === 'böjning' || b.orsak === 'skjuvning' ? 'välj en högre profil' : 'välj en grövre profil';
+    else if (b.orsak === 'böjning' || b.orsak === 'skjuvning') rad = 'välj en högre ' + typ;
+    else if (mat === 'betong') rad = 'välj en grövre ' + typ;
+    else rad = 'välj en bredare ' + typ;
+    return vad + ' ' + (SONDER[b.orsak] || 'gick sönder') + ', ' + rad + '.';
+}
+
 function forloppRuta() {
     const st = forloppSteg()[forlopp.nr], f = st.f, n = forloppSteg().length, m = sim.m;
     const fler = sim.forlopp.length >= FORLOPP_MAX ? '+' : '';
-    // Var på balken (en balk är flera element och kan gå av på flera ställen):
-    // elementets mitt, räknat från vänstra kanten.
-    const var_ = b => { const e = m.element[b.el]; return tal((m.punkter[e.i].x0 + m.punkter[e.j].x0) / 2, 1) + ' m'; };
-    const rader = st.brutna.slice(0, 3).map(b => balkNamn(b.balk) + ' vid ' + var_(b) + ': ' + b.orsak + ' ' + Math.round(b.u * 100) + ' %');
+    // Bara vad som gick sönder och hur (balkarna syns i bilden), och ett tips.
+    const rader = st.brutna.slice(0, 3).map(b => balkNamn(b.balk) + ': ' + b.orsak);
     if (st.brutna.length > 3) rader.push('och ' + (st.brutna.length - 3) + ' till');
+    const tips = [...new Set(st.brutna.slice(0, 3).map(brottTips))];
     let valt = 'Tryck på en balk för att se dess utnyttjande.';
     if (forlopp.valt >= 0) {
         const balk = m.balkar[forlopp.valt];
@@ -1983,7 +1998,7 @@ function forloppRuta() {
             + (balk.uk >= u && u > 0 ? ' (knäckning)' : '');
     }
     rutaEl.innerHTML = '<h1>Brott ' + (forlopp.nr + 1) + ' av ' + n + fler + '</h1><p>'
-        + (f.t < START_TID ? 'Under egentyngden' : tal(f.t - START_TID, 1) + ' s efter att keIWs började gå') + '<br>' + rader.join('<br>') + '</p><p class="valt">' + valt + '</p>'
+        + (f.t < START_TID ? 'Under egentyngden' : tal(f.t - START_TID, 1) + ' s efter att keIWs började gå') + '<br>' + rader.join('<br>') + '</p><p class="tips">' + tips.join('<br>') + '</p><p class="valt">' + valt + '</p>'
         + '<button data-v="forlopp-forra"' + (forlopp.nr ? '' : ' disabled') + '>‹</button> '
         + '<button data-v="forlopp-nasta"' + (forlopp.nr < n - 1 ? '' : ' disabled') + '>›</button> '
         + '<button data-v="forlopp-klar">Klar</button>';
