@@ -509,15 +509,17 @@ function anpassa() {
     duk.style.width = w + 'px';
     duk.style.height = h + 'px';
     // Luft för infotexten upptill. Marken (y = 0) ligger på samma höjd på
-    // skärmen på alla banor (markNiva av höjden under infotexten). Vyns
-    // bredd (x0–x1) ska synas och det som är högst (y1) få plats ovanför
-    // marken; djupast nere kan vattnet hamna bakom profilrutan. keIWs står
-    // också på samma ställe i sidled, nära vänsterkanten (keiwsX() px, bilen sticker ut lite mer; marken
-    // bakom honom får skäras av): skärmen visar så mycket mer av vyn som behövs.
+    // skärmen på alla banor (markNiva av höjden under infotexten), och keIWs
+    // står på samma ställe i sidled, nära vänsterkanten (keiwsX() px, bilen
+    // sticker ut lite mer; marken bakom honom skärs av). Skalan: så stor att
+    // byggytan, fästena och keIWs vid målet precis får plats till höger, och
+    // det högsta i vyn (y1) ovanför marken; djupast nere kan vattnet hamna
+    // bakom profilrutan.
     const vy = bana.vy, luft = luftNu, start = keiwsStart(bana), X = keiwsX() / w;
-    const bred = Math.max(vy.x1 - vy.x0, (vy.x1 - start) / (1 - X));
+    const halv = (bana.bil ? BIL_BILD * 202 : 124) / 204 * KEIWS_ANDEL * Math.min(innerWidth, innerHeight);
+    const hoger = Math.max(bana.omrade.x1, keiwsMal(bana), ...bana.fasten.map(f => f[0]));
     const niva = markNiva();
-    const sk = Math.min(w / bred, niva * (h - luft) / vy.y1);
+    const sk = Math.min((w - keiwsX() - halv - 6) / (hoger - start), niva * (h - luft) / vy.y1);
     const oy = luft + niva * (h - luft), cy = (oy - (luft + h) / 2) / sk;
     const cx = start + (0.5 - X) * w / sk;
     const hw = w / 2 / sk, hh = (h - luft) / 2 / sk;

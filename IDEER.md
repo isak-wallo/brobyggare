@@ -787,3 +787,7 @@ behövs). Testas stående och liggande.
 v88-test (Isak 2026-10-17): keIWs står närmare vänsterkanten: mitten halva hans bredd + 12 px in
 (`keiwsX` i app.js, samma i px stående och liggande). Det som ligger till vänster om honom får
 skäras av när hela banan syns (lite av byggytan längst ut till vänster på t.ex. Bäcken).
+
+v89-test (Isak 2026-10-17): mindre tomt till höger: skalan sätts så att byggytan (`omrade.x1`), fästena
+och keIWs vid målet precis får plats till höger om keIWs (keIWs och marken står kvar på sina ställen).
+`vy` används nu bara för höjden (y1) och keIWs storlek i meter (`keiwsBildHojd`).

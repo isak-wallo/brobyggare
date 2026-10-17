@@ -195,9 +195,10 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     else:
         kolla(f'{namn}: verktygen ligger till höger', lista['x'] >= duk['x'] + duk['width'] - 1)
     v = sida.evaluate('() => BANOR[0].vy')
-    v['x0'] = sida.evaluate('() => keiwsStart(bana) - keiwsHalv(bana)')     # vänster om keIWs får skäras av
-    (x0, y0), (x1, y1) = skarm(sida, (v['x0'], v['y1'])), skarm(sida, (v['x1'], -3))
-    kolla(f'{namn}: hela banan syns (ner till bäckens botten)',
+    v['x0'] = sida.evaluate('() => keiwsStart(bana) - 124 / 204 * keiwsBild()')     # vänster om keIWs får skäras av
+    v['x1'] = sida.evaluate('() => Math.max(bana.omrade.x1, keiwsMal(bana), ...bana.fasten.map(f => f[0]))')  # byggytan, fästena och målet
+    (x0, y0), (x1, y1) = skarm(sida, (v['x0'], v['y1'])), skarm(sida, (v['x1'], -2))
+    kolla(f'{namn}: hela banan syns (ner till vattnet)',
           x0 >= duk['x'] - 1 and x1 <= duk['x'] + duk['width'] + 1
           and y0 >= duk['y'] - 1 and y1 <= duk['y'] + duk['height'] + 1)
 
@@ -475,7 +476,7 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     x2, y2 = skarm(sida, (7, 2))
     zoom = sida.evaluate('() => window.bro.zoom')
     kolla(f'{namn}: nyp med två fingrar zoomar (1,25×), punkten står kvar, inget byggs',
-          abs(zoom - 1.25) < 0.02 and abs(x2 - x) < 2 and abs(y2 - y) < 2 and antal_balkar(sida) == 2,
+          abs(zoom - min(1.25, sida.evaluate('() => maxZoom()'))) < 0.02 and abs(x2 - x) < 2 and abs(y2 - y) < 2 and antal_balkar(sida) == 2,
           f'zoom {zoom:.2f}')
     bild(sida, bilder, f'{namn}-0-zoom')
     m = sida.evaluate('''() => { const z = zoom; zoom = 99; sattKamera();
@@ -794,7 +795,8 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
           sida.evaluate('() => ritProfil.limtra'))
     kolla(f'{namn}: zoomen nollas vid byte av bana', sida.evaluate('() => window.bro.zoom') == 1)
     v = sida.evaluate('() => BANOR[1].vy')
-    v['x0'] = sida.evaluate('() => keiwsStart(bana) - keiwsHalv(bana)')
+    v['x0'] = sida.evaluate('() => keiwsStart(bana) - 124 / 204 * keiwsBild()')
+    v['x1'] = sida.evaluate('() => Math.max(bana.omrade.x1, keiwsMal(bana), ...bana.fasten.map(f => f[0]))')  # byggytan, fästena och målet
     duk = sida.locator('#duk').bounding_box()
     (x0, y0), (x1, y1) = skarm(sida, (v['x0'], v['y1'])), skarm(sida, (v['x1'], 0))
     info = sida.locator('#info').bounding_box()
