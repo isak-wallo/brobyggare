@@ -65,7 +65,7 @@ const BANOR = [
                  [13.45, -0.9], [13.75, -0.3], [14, 0]],
         vatten: -2,
         budget: 13000,
-        omrade: { x0: -3, x1: 17, y0: -1, y1: 7 },
+        omrade: { x0: 0, x1: 14, y0: -1, y1: 7 },
         vy: { x0: -4, x1: 18, y0: -3.5, y1: 7.5 },
         losning: {
             // Väg 42×270 med ett fackverk ovanpå, 3 m högt, ledade knutar och en

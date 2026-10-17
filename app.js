@@ -18,7 +18,9 @@ const START_NARA = 24;       // px: så nära en knutpunkt börjar en ny balk i 
 const RATTA_TID = 2.5;       // s som en ny balks startände går att dra rätt
 const MAX_STEG = 8;          // fysiksteg per bildruta (annars går det långsamt)
 // Största zoom: lika många pixlar per meter på alla banor och åt båda hållen
-// (skärmens kortaste sida visar NARMAST m, men minst 3 rutor på de grova rutnäten).
+// (skärmens kortaste sida visar NARMAST m, men minst 3 rutor på de grova rutnäten),
+// och alltid minst MIN_ZOOM gånger (Bäcken liggande är redan nära utan zoom).
+const MIN_ZOOM = 2;
 const NARMAST = 10;
 const HALL_TID = 300;        // ms: så länge man håller inne Riv för att riva allt
 const BYGG_PER_BALK = 0.2;   // s per balk när keIWs bygger ...
@@ -324,7 +326,7 @@ function vaxlaPelare(x, y) {
 }
 
 const rutnat = () => bana.rutnat || 1;   // m mellan punkterna man bygger på
-const maxZoom = () => Math.max(1, Math.min(innerWidth, innerHeight) / Math.max(NARMAST, 3 * rutnat()) / bas.sk);
+const maxZoom = () => Math.max(MIN_ZOOM, Math.min(innerWidth, innerHeight) / Math.max(NARMAST, 3 * rutnat()) / bas.sk);
 const harMaterial = nyckel => (bana.material || ['limtra', 'stal']).includes(nyckel);
 const arKabel = b => b.material === 'vajer';
 const ritStorlek = () => ritProfil[ritKabel ? 'vajer' : ritMaterial];

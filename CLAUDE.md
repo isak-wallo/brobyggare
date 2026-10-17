@@ -55,7 +55,7 @@ i ritningen; de kostar efter höjden över botten (`ritningensKostnad`).
 Farleden (`farled`) stoppar knutpunkter och balkar i app.js, inte i fysiken.
 Kablar (`material: 'vajer'`) är ett enda element utan böjstyvhet som bara
 tar drag; kablar i vägen spänns vid bygget (`spannKablar`). Stora banor har
-egna `element`, `maxLangd`, `maxKabel` (se banor.js). Största zoom: NARMAST m (minst 3 rutor) på skärmens kortaste sida.
+egna `element`, `maxLangd`, `maxKabel` (se banor.js). Största zoom: NARMAST m (minst 3 rutor) på skärmens kortaste sida, men minst MIN_ZOOM (2) gånger.
 Massan klumpas i noderna. Egentyngden räknas statiskt (losStatiskt; går
 det inte läggs den på under 1 s), sedan går keIWs (500 kg; bilen 2,5 ton) över. keIWs ritas lika stor på skärmen på alla banor
 (8 % av kortaste sidan utzoomad, `keiwsBild`) och går lika fort på skärmen (`keiwsFart`, från `keiwsBildHojd`).

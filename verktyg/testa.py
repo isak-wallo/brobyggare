@@ -481,7 +481,8 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     bild(sida, bilder, f'{namn}-0-zoom')
     m = sida.evaluate('''() => { const z = zoom; zoom = 99; sattKamera();
         const m = Math.min(innerWidth, innerHeight) / kam.sk; zoom = z; sattKamera(); return m; }''')
-    kolla(f'{namn}: största zoom visar 10 m på skärmens kortaste sida', abs(m - 10) < 0.01, m)
+    kolla(f'{namn}: största zoom visar 10 m på skärmens kortaste sida (eller zoomar 2 gånger)',
+          abs(m - 10) < 0.01 or (m < 10 and sida.evaluate('() => maxZoom()') == 2), m)
     sida.mouse.wheel(0, 3000)
     sida.wait_for_timeout(100)
     # Snedbalkarna trycks och knäcks åt sidan om de är smala: 115×270.
@@ -726,19 +727,23 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     kolla(f'{namn}: håll inne Riv: Riv allt tömmer banan',
           antal_balkar(sida) == 0 and sida.evaluate('() => window.bro.ritning.noder.length')
           == sida.evaluate('() => BANOR[window.bro.banaNr].fasten.length'))
-    # Rutnätet går bakåt över land (bara ovanför marken) och högre upp.
+    # På Bäcken går rutnätet bara över bäcken (0–14 m), upp till toppen.
     # Bäcken har bara vägens två lager som fästen.
     o = sida.evaluate('() => BANOR[window.bro.banaNr].omrade')
-    dra(sida, (0, 0), (-1, 4))
-    dra(sida, (-1, 4), (2, o['y1']))
+    dra(sida, (0, 0), (1, 4))
+    dra(sida, (1, 4), (2, o['y1']))
     r = sida.evaluate('() => window.bro.ritning')
     a = r['noder'][r['balkar'][0]['a']]
-    kolla(f'{namn}: balkar från lagret över land upp till rutnätets topp', len(r['balkar']) == 2
+    kolla(f'{namn}: balkar från lagret upp till rutnätets topp', len(r['balkar']) == 2
           and a['fast'] and (a['x'], a['y']) == (0, 0)
           and any((n['x'], n['y']) == (2, o['y1']) for n in r['noder']), f"{len(r['balkar'])} balkar")
-    kolla(f'{namn}: inga knutpunkter i marken (kanten lutar lite)', sida.evaluate(
-        '() => tillaten(-2, 1) && !tillaten(-2, 0) && !tillaten(-2, -1) && !tillaten(-3, 0) && !tillaten(-4, 1)'
-        ' && !tillaten(0, -1) && tillaten(1, -1) && !tillaten(3, -2) && BANOR[0].fasten.length === 2'))
+    kolla(f'{namn}: Bäcken har ingen byggyta över land', sida.evaluate(
+        '() => !tillaten(-1, 1) && !tillaten(15, 1) && tillaten(0, 1) && tillaten(14, 1) && !tillaten(0, -1)'
+        ' && tillaten(1, -1) && !tillaten(3, -2) && BANOR[0].fasten.length === 2'))
+    # Ån har byggyta bakåt över land, bara ovanför marken.
+    kolla(f'{namn}: inga knutpunkter i marken på Ån (kanten lutar lite)', sida.evaluate(
+        '() => { const b = bana; bana = BANOR[1]; const ok = tillaten(-2, 1) && !tillaten(-2, 0) && !tillaten(-2, -1)'
+        ' && !tillaten(-3, 0) && !tillaten(-4, 1) && !tillaten(0, -1) && tillaten(1, -1); bana = b; return ok; }'))
     sida.click('#verktyg [data-v=angra]')
     sida.click('#verktyg [data-v=angra]')
     sida.click('#verktyg [data-v=angra]')

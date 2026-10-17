@@ -791,3 +791,7 @@ skäras av när hela banan syns (lite av byggytan längst ut till vänster på t
 v89-test (Isak 2026-10-17): mindre tomt till höger: skalan sätts så att byggytan (`omrade.x1`), fästena
 och keIWs vid målet precis får plats till höger om keIWs (keIWs och marken står kvar på sina ställen).
 `vy` används nu bara för höjden (y1) och keIWs storlek i meter (`keiwsBildHojd`).
+
+v90-test (Isak 2026-10-17): Bäcken har byggyta bara över bäcken (`omrade` 0–14 m, inget bakåt över land),
+så att den inte går ut till vänster. Testerna för bygge över land ligger nu på Ån. Största zoom är minst
+MIN_ZOOM = 2 gånger (Bäcken liggande gick nästan inte att zooma in).
