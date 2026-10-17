@@ -2253,19 +2253,30 @@ function visaStortMynt() {
 stortMyntEl.addEventListener('click', () => { stortMyntEl.classList.add('dold'); cancelAnimationFrame(myntRam); });
 
 // Ett tryck utanför rutan med val stänger den (och gör inget mer på spelytan).
-// Är en balk vald och rutan gäller den (material, typ, profil) väljer ett
-// tryck på en annan balk den i stället, och rutan står kvar för den.
-let stangdeRutan = false;
+// På spelytan avgörs det när fingret släpps: ett drag (eller nyp) panorerar
+// (zoomar) och rutan står kvar. Är en balk vald och rutan gäller den
+// (material, typ, profil) väljer ett tryck på en annan balk den i stället,
+// och rutan står kvar för den.
+let stangdeRutan = false, popupTryck = null;
 document.addEventListener('pointerdown', e => {
     stangdeRutan = false;
     if (popup && !e.target.closest('#popup') && !e.target.closest(popup.ankare)) {
         stangdeRutan = !!e.target.closest('#duk');
-        const t = stangdeRutan && lageNu === 'bygg' && !pekare.size && valdBalken()
-            && ['material', 'typ', 'profil'].includes(popup.typ) && traffat(...tillVarld(e));
-        if (t && t.balk >= 0 && t.balk !== vald) { vald = t.balk; uppdateraInfo(); return; }
-        stangPopup();
+        if (!stangdeRutan) { stangPopup(); return; }
+        popupTryck = pekare.size ? null : { id: e.pointerId, p: iDuken(e), varld: tillVarld(e) };
     }
 }, true);
+
+function slappPopupTryck(e) {
+    const t = popupTryck;
+    if (!t || t.id !== e.pointerId) return;
+    popupTryck = null;
+    const p = iDuken(e);
+    if (!popup || Math.hypot(p[0] - t.p[0], p[1] - t.p[1]) >= 8) return;
+    const b = lageNu === 'bygg' && valdBalken() && ['material', 'typ', 'profil'].includes(popup.typ) && traffat(...t.varld);
+    if (b && b.balk >= 0 && b.balk !== vald) { vald = b.balk; uppdateraInfo(); return; }
+    stangPopup();
+}
 
 // Långa tryck ska välja, inte visa webbläsarens meny.
 document.getElementById('app').addEventListener('contextmenu', e => e.preventDefault());
@@ -2350,18 +2361,19 @@ function byggHar() {
 }
 
 duk.addEventListener('pointerdown', e => {
-    if (stangdeRutan) return;
     pekare.set(e.pointerId, iDuken(e));
     try { duk.setPointerCapture(e.pointerId); } catch (err) { /* syntetiska händelser i testerna */ }
     if (pekare.size >= 2) {
         drag = flytt = panorera = null;
+        popupTryck = null;
         slappHall();
         const n = nypLage();
         nyp = { d: n.d, zoom, varld: [(n.mx - kam.ox) / kam.sk, (kam.oy - n.my) / kam.sk] };
         return;
     }
-    if (lageNu !== 'bygg') {
-        if (sim && sim.bygge) byggKlart();       // ett tryck hoppar över bygget
+    // Med en ruta med val öppen panorerar ett drag bara (ett tryck stänger den).
+    if (lageNu !== 'bygg' || stangdeRutan) {
+        if (sim && sim.bygge && !stangdeRutan) byggKlart();       // ett tryck hoppar över bygget
         panorera = { p: iDuken(e), mitt: vynsMitt() };
         return;
     }
@@ -2460,6 +2472,13 @@ duk.addEventListener('pointermove', e => {
 });
 
 function slapp(e) {
+    if (popupTryck && popupTryck.id === e.pointerId) {
+        slappPopupTryck(e);
+        pekare.delete(e.pointerId);
+        if (pekare.size < 2) nyp = null;
+        if (!pekare.size) panorera = null;
+        return;
+    }
     // Förloppet: ett tryck (utan att dra) väljer balken där.
     if (forlopp && panorera && pekare.size === 1) {
         const p = iDuken(e);
@@ -2527,6 +2546,7 @@ function slapp(e) {
 }
 duk.addEventListener('pointerup', slapp);
 duk.addEventListener('pointercancel', e => {
+    if (popupTryck && popupTryck.id === e.pointerId) popupTryck = null;
     pekare.delete(e.pointerId);
     slappHall();
     if (pekare.size < 2) nyp = null;

@@ -457,6 +457,20 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
           sida.evaluate('() => window.bro.zoom') > 1.2 and abs(efter[0] - fore[0]) > 20 and antal_balkar(sida) == 2,
           f'{efter[0] - fore[0]:.0f} px')
     bild(sida, bilder, f'{namn}-0-panorera')
+
+    # Med profilrutan öppen panorerar ett drag utan att stänga den; ett tryck stänger.
+    sida.click('#valjare [data-p=profil]')
+    fore = skarm(sida, (7, 0))
+    hy = d['y'] + d['height'] * 0.3     # i himlen (profilrutan ligger nedtill stående)
+    sida.mouse.move(d['x'] + 12, hy)
+    sida.mouse.down()
+    sida.mouse.move(d['x'] + 70, hy, steps=6)
+    sida.mouse.up()
+    efter = skarm(sida, (7, 0))
+    kolla(f'{namn}: ett drag med profilrutan öppen panorerar och rutan står kvar',
+          sida.is_visible('#popup') and abs(efter[0] - fore[0]) > 20 and antal_balkar(sida) == 2, f'{efter[0] - fore[0]:.0f} px')
+    sida.mouse.click(d['x'] + 70, hy)
+    kolla(f'{namn}: ett tryck utanför profilrutan stänger den', not sida.is_visible('#popup') and antal_balkar(sida) == 2)
     sida.mouse.wheel(0, 3000)
     sida.wait_for_timeout(100)
 
