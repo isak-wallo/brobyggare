@@ -840,3 +840,10 @@ v102-test (Isak 2026-10-17): Sundet har möjliga lösningar (`facit`, byggda med
 enkel = fackverket med alla balkar 115×360 (98 340 $$, långt över budget), effektiv = samma fackverk med
 ledade knutar och lite för grova balkar (väg 56×270, överram 115×225, stolpar 78×180, diagonaler 56×180;
 45 900 $$ av 48 000). Ledat med lösningens profiler blir 40 940 $$, så det finns mer att hämta.
+
+v103-test (Isak 2026-10-17): Menyn är fem likadana veck (som "Hur funkar det?"), utan rubriken Brobyggare:
+"Bana N · Namn" (budget, billigaste bron med Hämta/Nollställ, möjliga lösningar längst ner), "Guiden"
+(guidens steg som text, från `GUIDE`, och knappen "Visa guiden med professorn"), "Inställningar" (keIWs bygger
+bron först), "Hur funkar det?" och "Förutsättningar – för nördar"; versionen under. Dela konstruktionen är
+knappen "!" under "?" (bara testsidan/lokalt, `FELSOK`): texten kopieras och visas i en ruta, ett tryck
+utanför stänger.

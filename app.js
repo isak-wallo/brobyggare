@@ -1578,22 +1578,30 @@ ${profiler}
 </ul>`;
 }
 
-function visaMeny() {
+// Guiden som text i menyn: samma steg som professorn visar (utom
+// välkomsten och de två sista, om menyn och ?).
+const guideText = () => '<p>Bygg en bro så att keIWs kommer över, och håll budgeten.</p><ul>'
+    + GUIDE.slice(1, -2).map(s => '<li>' + s.text + '</li>').join('') + '</ul>';
+
+// Menyn: fem likadana veck (banan, guiden, inställningar, hur det funkar och
+// för nördar) med knapparna i vecken. oppna: vecken som ska vara öppna när
+// menyn ritas om (efter Nollställ).
+function visaMeny(oppna = []) {
     const b = lasBasta(banaNr);
     const basta = b
         ? '<p>Billigaste bron som höll: <b>' + kr(b.kostnad) + '</b>'
             + (b.kostnad > bana.budget ? ' (över budget)' : '') + '.</p>'
             + '<p><button data-v="hamta">Hämta den ritningen</button> <button data-v="nollstall">Nollställ rekordet</button></p>'
         : '<p>Ingen bro har hållit här än.</p>';
+    const veck = (namn, rubrik, innehall) => '<details data-veck="' + namn + '"' + (oppna.includes(namn) ? ' open' : '') + '>'
+        + '<summary>' + rubrik + '</summary>' + innehall + '</details>';
     menyEl.firstChild.innerHTML = '<button class="stang" data-v="stang">✕</button>'
-        + '<h2>Brobyggare</h2>'
-        + '<h3>Bana ' + (banaNr + 1) + ' · ' + bana.namn + ' (budget ' + kr(bana.budget) + ')</h3>' + basta
-        + facitText()
-        + '<p><button data-v="guide">Visa guiden</button></p>'
-        + '<p><button data-v="byggfilm">keIWs bygger bron först: ' + (visaByggfilm() ? 'Ja' : 'Nej') + '</button></p>'
-        + (FELSOK ? '<p><button data-v="dela">Dela konstruktionen (test)</button></p>' : '')
-        + '<details><summary>Hur funkar det?</summary>' + LEKMAN_TEXT + '</details>'
-        + '<details><summary>Förutsättningar – för nördar</summary>' + nordText() + '</details>'
+        + veck('bana', 'Bana ' + (banaNr + 1) + ' · ' + bana.namn, '<p>Budget ' + kr(bana.budget) + '.</p>' + basta + facitText())
+        + veck('guide', 'Guiden', guideText() + '<p><button data-v="guide">Visa guiden med professorn</button></p>')
+        + veck('installningar', 'Inställningar',
+            '<p><button data-v="byggfilm">keIWs bygger bron först: ' + (visaByggfilm() ? 'Ja' : 'Nej') + '</button></p>')
+        + veck('lekman', 'Hur funkar det?', LEKMAN_TEXT)
+        + veck('nord', 'Förutsättningar – för nördar', nordText())
         + '<p class="liten">Version ' + (version || 'okänd') + '</p>';
     menyEl.classList.remove('dold');
 }
@@ -1624,27 +1632,28 @@ function bytRitning(ny) {
 }
 
 // Felsökning: konstruktionen som text (version, bana, ritning och senaste
-// provkörningen) som kopieras och visas i menyn, så att den kan klistras in
-// i en chatt och återskapas exakt.
-function delaKonstruktion(knapp) {
+// provkörningen) som kopieras och visas i en ruta, så att den kan klistras in
+// i en chatt och återskapas exakt. Knappen ! under ? (bara på testsidan och
+// lokalt); ett tryck utanför rutan stänger den.
+const delaEl = document.getElementById('dela'), delaknapp = document.getElementById('delaknapp');
+delaknapp.hidden = !FELSOK;
+function delaKonstruktion() {
     const text = 'BROBYGGARE ' + JSON.stringify({
         version, bana: banaNr, namn: bana.namn, kostnad: kostnad(), ritning,
         prov: sim && sim.resultat ? { resultat: sim.resultat, brott: sim.brott, maxU: Math.round(sim.maxU * 100) / 100 } : null
     });
-    let ruta = menyEl.querySelector('.dela');
-    if (!ruta) {
-        ruta = document.createElement('textarea');
-        ruta.className = 'dela';
-        ruta.readOnly = true;
-        knapp.parentNode.after(ruta);
-    }
+    const ruta = delaEl.querySelector('textarea'), status = delaEl.querySelector('p');
+    status.textContent = 'Konstruktionen som text:';
+    delaEl.classList.remove('dold');
     ruta.value = text;
     ruta.select();
-    const klart = () => { knapp.textContent = 'Kopierad – klistra in i chatten'; };
     try {
-        navigator.clipboard.writeText(text).then(klart, () => { knapp.textContent = 'Markera och kopiera texten'; });
-    } catch (e) { knapp.textContent = 'Markera och kopiera texten'; }
+        navigator.clipboard.writeText(text).then(() => { status.textContent = 'Kopierad – klistra in i chatten:'; },
+            () => { status.textContent = 'Markera och kopiera texten:'; });
+    } catch (e) { status.textContent = 'Markera och kopiera texten:'; }
 }
+delaknapp.addEventListener('click', delaKonstruktion);
+delaEl.addEventListener('click', e => { if (e.target === delaEl) delaEl.classList.add('dold'); });
 
 function stangMeny() {
     menyEl.classList.add('dold');
@@ -1659,7 +1668,6 @@ menyEl.addEventListener('click', e => {
     if (e.target === menyEl) { stangMeny(); return; }   // utanför panelen
     const b = e.target.closest('button');
     if (!b || b.disabled) return;
-    if (b.dataset.v === 'dela') { delaKonstruktion(b); return; }
     if (b.dataset.v === 'byggfilm') {
         try { localStorage.setItem(SPARA_BYGGFILM, visaByggfilm() ? 'av' : 'pa'); } catch (err) { /* privat läge */ }
         b.textContent = 'keIWs bygger bron först: ' + (visaByggfilm() ? 'Ja' : 'Nej');
@@ -1669,7 +1677,7 @@ menyEl.addEventListener('click', e => {
     if (b.dataset.v === 'nollstall') {
         if (!b.classList.contains('saker')) { b.classList.add('saker'); b.textContent = 'Säker? Tryck igen'; return; }
         glomBasta();
-        visaMeny();
+        visaMeny(['bana']);
         return;
     }
     if (b.dataset.v === 'hamta') {
@@ -1732,7 +1740,7 @@ const GUIDE = [
     { mal: () => elRuta('#verktyg [data-v=riv]'), text: '<b>Riv</b> tar bort det du har valt. Håll inne Riv för att riva allt.' },
     { mal: () => elRuta('#verktyg [data-v=kor]'), text: '<b>Kör:</b> keIWs går över bron. Färgerna visar hur hårt varje bit jobbar, '
         + 'och går något sönder kan du se förloppet steg för steg.' },
-    { mal: () => elRuta('#menyknapp'), text: 'I <b>menyn</b> finns din billigaste bro, möjliga lösningar att utgå ifrån och hur allt fungerar.' },
+    { mal: () => elRuta('#menyknapp'), text: 'I <b>menyn</b> finns banan med din billigaste bro och möjliga lösningar, guiden i text, inställningar och hur allt fungerar.' },
     { mal: () => elRuta('#guideknapp'), text: 'Och här startar du guiden igen. Lycka till!' }
 ];
 

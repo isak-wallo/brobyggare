@@ -41,6 +41,7 @@ import functools
 import http.server
 import json
 import os
+import re
 import subprocess
 import sys
 import threading
@@ -702,22 +703,32 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
           sida.evaluate('() => window.bro.lage') == 'bygg' and not sida.is_visible('#ruta'), str(punkt))
 
     # Menyn: billigaste bron som höll, hämta den, förklaringen och versionen.
-    sida.click('#menyknapp')
-    text = sida.locator('#meny').inner_text()
-    kolla(f'{namn}: menyn visar billigaste bron och förklaringen',
-          'Billigaste bron som höll' in text and '(budget 1 300 )' in text and 'Hur funkar det?' in text
-          and 'Förutsättningar – för nördar' in text and 'Version v' in text)
-    sida.click('#meny [data-v=dela]')
-    dela = sida.locator('#meny .dela').input_value()
-    kolla(f'{namn}: dela konstruktionen ger ritningen som text', dela.startswith('BROBYGGARE ')
+    sida.click('#delaknapp')
+    dela = sida.locator('#dela textarea').input_value()
+    kolla(f'{namn}: ! (dela konstruktionen) ger ritningen som text', dela.startswith('BROBYGGARE ')
           and json.loads(dela[11:])['ritning'] == sida.evaluate('() => window.bro.ritning'))
-    sida.click('#meny details:nth-of-type(2) summary')
+    bild(sida, bilder, f'{namn}-7-dela')
+    sida.mouse.click(5, 5)
+    kolla(f'{namn}: ett tryck utanför stänger rutan med texten', not sida.is_visible('#dela'))
+    sida.click('#menyknapp')
+    veck = sida.locator('#meny details[data-veck] > summary').all_inner_texts()
+    kolla(f'{namn}: menyn är fem veck, utan rubriken Brobyggare',
+          veck == ['Bana 1 · Bäcken', 'Guiden', 'Inställningar', 'Hur funkar det?', 'Förutsättningar – för nördar']
+          and 'Brobyggare' not in sida.inner_text('#meny') and 'Version v' in sida.inner_text('#meny'), str(veck))
+    bild(sida, bilder, f'{namn}-7-meny')
+    sida.click('#meny [data-veck=bana] summary')
+    text = sida.inner_text('#meny [data-veck=bana]')
+    kolla(f'{namn}: banans veck visar budgeten och billigaste bron', 'Billigaste bron som höll' in text
+          and re.search(r'Budget 1.300', text), text[:200])
+    sida.click('#meny [data-veck=guide] summary')
+    kolla(f'{namn}: guidens veck har texten och en knapp till professorn',
+          'Dra med fingret' in sida.inner_text('#meny [data-veck=guide]') and sida.is_visible('#meny [data-v=guide]'))
+    sida.click('#meny [data-veck=nord] summary')
     kolla(f'{namn}: materialtabellen har limträ, stål, betong och kabel',
           sida.locator('#meny .tabell th:has-text("Limträ GL30c")').count() == 1
           and sida.locator('#meny .tabell th:has-text("Betong C35/45")').count() == 1
           and sida.locator('#meny .tabell th:has-text("Kabel (stållina)")').count() == 1
           and sida.locator('#meny .tabell th.kommer').count() == 0)
-    bild(sida, bilder, f'{namn}-7-meny')
     sida.click('#meny [data-v=hamta]')
     kolla(f'{namn}: hämta ger den bästa ritningen och stänger menyn',
           antal_balkar(sida) > 1 and not sida.locator('#meny').is_visible())
@@ -728,6 +739,7 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     fore = sida.evaluate('() => JSON.stringify(window.bro.ritning)')
     sida.click('#menyknapp')
     kolla(f'{namn}: möjliga lösningar är gömda tills man öppnar dem', not sida.locator('#meny [data-facit=enkel]').is_visible())
+    sida.click('#meny [data-veck=bana] summary')
     sida.click('#meny .facit summary')
     bild(sida, bilder, f'{namn}-7-facit')
     sida.click('#meny [data-facit=enkel]')
@@ -747,6 +759,7 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     kolla(f'{namn}: Ångra tar tillbaka ritningen', sida.evaluate('() => JSON.stringify(window.bro.ritning)') == fore)
     # Byggfilmen (keIWs bygger bron först) går att stänga av i menyn.
     sida.click('#menyknapp')
+    sida.click('#meny [data-veck=installningar] summary')
     sida.click('#meny [data-v=byggfilm]')
     av = sida.inner_text('#meny [data-v=byggfilm]').endswith('Nej') and sida.locator('#meny').is_visible()
     sida.click('#meny [data-v=stang]')
@@ -755,6 +768,7 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
           and sida.evaluate('() => window.bro.lage') == 'prov')
     sida.click('#verktyg [data-v=kor]')
     sida.click('#menyknapp')
+    sida.click('#meny [data-veck=installningar] summary')
     sida.click('#meny [data-v=byggfilm]')
     kolla(f'{namn}: och på igen', sida.inner_text('#meny [data-v=byggfilm]').endswith('Ja'))
     sida.click('#meny [data-v=stang]')
@@ -1037,10 +1051,12 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     kolla(f'{namn}: keIWs kör bil över hängbron på Havet', vanta_resultat(sida, 90).startswith('Bron höll!'))
     # Rekordet går att hämta direkt efter provet, och att nollställa (två tryck).
     sida.click('#menyknapp')
+    sida.click('#meny [data-veck=bana] summary')
     sida.click('#meny [data-v=hamta]')
     kolla(f'{namn}: hämta rekordet efter provet går tillbaka till att bygga', sida.evaluate('() => window.bro.lage') == 'bygg'
           and not sida.locator('#ruta').is_visible() and antal_balkar(sida) > 1)
     sida.click('#menyknapp')
+    sida.click('#meny [data-veck=bana] summary')
     sida.click('#meny [data-v=nollstall]')
     forst = 'Billigaste bron som höll' in sida.inner_text('#meny')
     sida.click('#meny [data-v=nollstall]')

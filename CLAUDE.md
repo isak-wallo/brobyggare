@@ -68,8 +68,10 @@ Banorna (v64): Bäcken 14 m, Ån 26 m, Sundet 38 m (bara trä), Kanalen 50 m (st
 rör kommer, stålet ska vinna), Ravinen, Dalgången, Älven (betong, kablar, farled, pelare),
 Havet. Varje bana har en lösning som ska hålla under budget (testa_banor.js).
 Banor kan ha `facit` {enkel, effektiv}: möjliga lösningar som spelaren hämtar i menyn
-("Visa möjliga lösningar"); de ska hålla, den enkla gå över budget och den effektiva rymmas.
+(banans veck, "Visa möjliga lösningar"); de ska hålla, den enkla gå över budget och den effektiva rymmas.
 Guiden (`GUIDE` i app.js, knappen "?" under menyn eller i menyn) lyser upp ett mål i taget;
 steg vars mål saknas på banan hoppas över.
+Menyn (`visaMeny`) är fem likadana veck (`data-veck`: bana, guide, installningar, lekman, nord); guidens
+veck visar stegen som text. Knappen "!" under "?" (bara `FELSOK`) delar konstruktionen som text (`#dela`).
 Nyheter (`NYHETER` i app.js): första gången på en bana med något nytt visar professor keIWs det med
 guidens rutor (`visaGuide(lista)`); i testerna bara med `?test&nyheter`.
