@@ -29,8 +29,8 @@
 //           emellan, se profilY i spel.js)
 //   budget: i $$ (spelets pengar); man får bygga över, men då blir det
 //           inga stjärnor
-//   keiws:  keIWs höjd i meter (bara utseendet, större på långa banor)
-//   keiwsInzoomad: så mycket större keIWs ritas vid största zoom (1 om det saknas)
+//   keiws:  keIWs storlek i meter: farten följer den (i bild är han lika stor
+//           på skärmen på alla banor, se keiwsBildHojd i spel.js)
 //   bil:    keIWs kör bil (2,5 ton på två hjul) i stället för att gå
 //   omrade: där man får sätta knutpunkter (över land bara ovanför marken)
 //   vy:     det som syns utan zoom
@@ -67,7 +67,6 @@ const BANOR = [
         vatten: -2,
         budget: 13000,
         keiws: 2,
-        keiwsInzoomad: 1.35,
         omrade: { x0: -3, x1: 17, y0: -1, y1: 7 },
         vy: { x0: -4, x1: 18, y0: -3.5, y1: 7.5 },
         losning: {
@@ -153,7 +152,7 @@ const BANOR = [
         budget: 48000,
         keiws: 4,
         omrade: { x0: -3, x1: 41, y0: -4, y1: 12 },
-        vy: { x0: -6, x1: 44, y0: -13, y1: 12 },
+        vy: { x0: -7, x1: 45, y0: -13, y1: 12 },
         losning: {
             // Fackverk 4 m högt med fack på 4 m (3 m kring mitten): väg 42×270,
             // överram 115×180 och stolpar 78×180 (de trycks), diagonaler 42×180
@@ -239,7 +238,7 @@ const BANOR = [
         budget: 104000,
         keiws: 5.5,
         omrade: { x0: -4, x1: 64, y0: -22, y1: 16 },
-        vy: { x0: -8, x1: 68, y0: -25, y1: 17 },
+        vy: { x0: -9.5, x1: 69.5, y0: -25, y1: 17 },
         losning: {
             // Båge av 140×180 med stolpar av 140×180 till vägen (4), och
             // snedsträvor (140×225) och stöd från de övre fästena (98 030 $$).
@@ -282,7 +281,7 @@ const BANOR = [
         bil: true,
         keiws: 8,
         omrade: { x0: -5, x1: 165, y0: -8, y1: 50 },
-        vy: { x0: -15, x1: 175, y0: -10, y1: 52 },
+        vy: { x0: -31, x1: 191, y0: -10, y1: 52 },
         farled: { x0: 45, x1: 115, y: -1 },
         pelare: { botten: -16, pris: 3000, perMeter: 150 },
         losning: {
@@ -330,7 +329,7 @@ const BANOR = [
         keiws: 12,
         ö: 60,
         omrade: { x0: -40, x1: 440, y0: -30, y1: 100 },
-        vy: { x0: -50, x1: 470, y0: -32, y1: 102 },
+        vy: { x0: -78, x1: 478, y0: -32, y1: 102 },
         farled: { x0: 100, x1: 300, y: -5 },
         pelare: { botten: -60, pris: 3000, perMeter: 150 },
         losning: {

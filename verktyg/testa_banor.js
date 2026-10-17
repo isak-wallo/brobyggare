@@ -20,6 +20,11 @@ module.exports = function (S, kolla) {
               + (Date.now() - t0) + ' ms för ' + sim.t.toFixed(1) + ' s');
         const k = ritningensKostnad(losningsRitning(bana), bana);
         kolla(namn + ': lösningen ryms i budgeten', k <= bana.budget, k + ' av ' + bana.budget + ' $$');
+        // keIWs (eller bilen) syns helt vid start och mål när hela banan syns, och står på land.
+        const H = S('keiwsHalv')(bana), x0 = S('keiwsStart')(bana), x1 = S('keiwsMal')(bana);
+        kolla(namn + ': keIWs syns helt i vyn på klippan', x0 - H >= bana.vy.x0 && x1 + H <= bana.vy.x1
+              && x0 + H < 0 && x1 - H > bana.spann,
+              'keIWs ' + (x0 - H).toFixed(1) + '…' + (x1 + H).toFixed(1) + ', vyn ' + bana.vy.x0 + '…' + bana.vy.x1);
         // Träet i lösningarna finns att välja på banan (och är inte för slankt).
         const bredder = bana.tra ? bana.tra.bredd : TRA_BREDD, hojder = bana.tra ? bana.tra.hojd : TRA_HOJD;
         const fel = [bana.losning, ...Object.values(bana.facit || {})].flatMap(l => l.balkar)

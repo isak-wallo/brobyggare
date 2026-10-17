@@ -23,12 +23,21 @@ const KLIV_UPP = 0.25;       // m, så högt kliver keIWs upp utan att hoppa
 const LUFT_TID = 0.15;       // s i luften innan det räknas som att falla
 const GLID_MAX = 0.3;        // m, så långt glidlagret kan glida åt varje håll
 
-// keIWs storlek (m, fötter till huvud) beror på banan, så att han syns lika
-// bra på långa banor. Vikten är densamma. Startpunkten, målet och farten
-// följer storleken (större kliv).
+// keIWs storlek (m) beror på banan, så att han går fortare på långa banor
+// (farten följer banans keiws). Vikten är densamma.
+// I bild är han lika stor på skärmen på alla banor (app.js): när hela banan
+// syns på en stående mobil (vyns bredd fyller skärmen) är han KEIWS_ANDEL
+// av vyns bredd hög (med bilen BIL_BILD av det, bilen är bred). Han står på
+// klippan nära kanten och går till samma avstånd på andra sidan, så att han
+// syns helt (vyn måste ha plats, testa_banor.js).
+const KEIWS_ANDEL = 0.08;
+const BIL_BILD = 0.75;
 const keiwsHojd = bana => bana.keiws || 2;
-const keiwsStart = bana => -1.25 * keiwsHojd(bana);
-const keiwsMal = bana => bana.spann + 1.25 * keiwsHojd(bana);
+const keiwsBildHojd = bana => bana.vy ? KEIWS_ANDEL * (bana.vy.x1 - bana.vy.x0) : 0.875 * keiwsHojd(bana);
+// Halva bredden i bild (m) när hela banan syns: figuren 248 px bred, bilen 404 px, på 204 px höjd.
+const keiwsHalv = bana => (bana.bil ? BIL_BILD * 202 : 124) / 204 * keiwsBildHojd(bana);
+const keiwsStart = bana => -(keiwsHalv(bana) + 0.2 * keiwsBildHojd(bana));
+const keiwsMal = bana => bana.spann + keiwsHalv(bana) + 0.2 * keiwsBildHojd(bana);
 const keiwsFart = bana => 1.8 * keiwsHojd(bana);      // m/s
 
 // Marken: höjden vid x. Utanför spannet är det land (y = 0, eller vatten

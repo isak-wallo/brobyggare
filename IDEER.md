@@ -760,3 +760,10 @@ banor.js och sparade rekord står kvar i gamla $$. Åns budget 22 000 $$ = 2 200
 
 v83-test (Isak 2026-10-17): keIWs på myntet är blå (samma blå som figuren, mörka ögon). Ett tryck
 på ett mynt i budgeten visar ett stort mynt (`#stortMynt`); ett tryck var som helst stänger det.
+
+v84-test (Isak 2026-10-17): keIWs är lika stor på skärmen på alla banor: 8 % av skärmens kortaste
+sida när hela banan syns, 1,6 gånger så stor fullt inzoomad (`keiwsBild` i app.js; banans `keiws`
+styr bara farten nu, `keiwsInzoomad` borta). Han står nära kanten, så att han syns helt
+(`keiwsStart`/`keiwsMal` från storleken i bild, `keiwsBildHojd` = 8 % av vyns bredd). Bilen ritas
+i 75 % storlek (den är bred). Vyn breddades på Sundet, Dalgången, Älven och Havet så att han får
+plats på klippan (testas i testa_banor.js).

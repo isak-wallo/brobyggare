@@ -591,7 +591,7 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     sida.mouse.wheel(0, -3000)                    # full zoom
     sida.wait_for_timeout(100)
     inzoomad = sida.evaluate('() => window.bro.keiwsPx')
-    kolla(f'{namn}: keIWs är större fullt inzoomad på Bäcken', abs(inzoomad / utzoomad - 1.35 / 0.7) < 0.02,
+    kolla(f'{namn}: keIWs är 8 % av skärmen utzoomad, 1,6 gånger större fullt inzoomad', abs(inzoomad / utzoomad - 1.6) < 0.02 and abs(utzoomad - 0.08 * sida.evaluate('() => Math.min(innerWidth, innerHeight)')) < 0.5,
           f'{utzoomad:.0f} -> {inzoomad:.0f} px')
     fore = sida.evaluate('() => [window.bro.zoom, window.bro.mitt]')
     sida.click('#verktyg [data-v=kor]')

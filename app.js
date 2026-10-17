@@ -1004,16 +1004,13 @@ function ritaProv() {
 
 const FIG = FIGUR_DATA.keiws;
 
-// keIWs ritas lika stor på skärmen hur man än zoomar, och lite större än
-// banans keiws-höjd: hans höjd i meter i bilden (fysiken bryr sig inte om
-// storleken).
-const KEIWS_BILD = 1.25;
-const KEIWS_UTZOOMAD = 0.7;  // så stor som inzoomad (största zoom) när man ser hela banan
-// keIWs ritas nästan lika stor på skärmen vid alla zoomnivåer: full storlek
-// inzoomad, lite mindre utzoomad (jämnt emellan, räknat på log-zoom).
-// Banans keiwsInzoomad gör honom större än så vid största zoom.
-const keiwsBild = () => KEIWS_BILD * keiwsHojd(bana) / zoom
-    * (KEIWS_UTZOOMAD + ((bana.keiwsInzoomad || 1) - KEIWS_UTZOOMAD) * Math.log(zoom) / Math.log(Math.max(1.01, maxZoom())));
+// keIWs höjd i meter i bilden (fysiken bryr sig inte om storleken). Han är
+// lika stor på skärmen på alla banor: KEIWS_ANDEL av skärmens kortaste sida
+// när hela banan syns, och växer jämnt (räknat på log-zoom) till
+// KEIWS_INZOOMAD gånger så stor vid största zoom.
+const KEIWS_INZOOMAD = 1.6;
+const keiwsBild = () => KEIWS_ANDEL * (bana.bil ? BIL_BILD : 1) * Math.min(innerWidth, innerHeight) / kam.sk
+    * (1 + (KEIWS_INZOOMAD - 1) * Math.log(zoom) / Math.log(Math.max(1.01, maxZoom())));
 
 // Rektanglar [x0, y0, x1, y1, färg, del] med fötternas mitt i (x, y).
 function ritaFigur(rekt, x, y, lyft) {
@@ -1112,7 +1109,7 @@ function ritaKeiws() {
             if (h.utrop) ritaUtrop(k.x - 10 * keiwsBild() / 204, k.y + h.dy * 0.5 + 60 * keiwsBild() / 204, t);
             return;
         }
-        ritaBil(k.x, k.y, FIG.vrid[3], Math.floor(k.gatt / (0.15 * keiwsHojd(bana))) % 2);
+        ritaBil(k.x, k.y, FIG.vrid[3], Math.floor(k.gatt / (0.17 * keiwsBildHojd(bana))) % 2);
         return;
     }
     if (!k) {
@@ -1136,7 +1133,7 @@ function ritaKeiws() {
         return;
     }
     // Går: benen kliver i takt med sträckan, armarna pendlar emot.
-    const fas = Math.floor(k.gatt / (0.11 * keiwsHojd(bana))) % 2;
+    const fas = Math.floor(k.gatt / (0.125 * keiwsBildHojd(bana))) % 2;
     ritaFigur(FIG.vrid[3], k.x, k.y, del => {
         if (del === 'nara_ben') return fas ? -12 : 0;
         if (del === 'bortre_ben') return fas ? 0 : -12;
@@ -2409,7 +2406,7 @@ function foljKeiws(dt) {
     const k = sim.keiws, [cx, cy] = mitt || vynsMitt();
     const f = Math.min(1, dt * 4);
     // Mitt på figuren som den ritas (den är lika stor på skärmen hur man
-    // än zoomar, så keiwsHojd i meter blir för högt när man zoomat in).
+    // än zoomar, så banans keiws i meter blir fel).
     mitt = [cx + (k.x - cx) * f, cy + (k.y + keiwsBild() * 0.6 - cy) * f];
     sattKamera();
 }
