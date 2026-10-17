@@ -1004,14 +1004,18 @@ function ritaProv() {
         const [x, y] = n.lager ? [n.x, n.y] : lage(m, m.nodPunkt[i]);
         ritaNod(x, y, n);
     });
-    // Förloppet: en röd ring runt det som just gick sönder.
+    // Förloppet: en röd ring mitt på balken som just gick sönder (inte där
+    // på balken, det står vad som hände i rutan).
     if (forlopp) {
         ctx.strokeStyle = '#d0503c';
         ctx.lineWidth = 3;
         for (const b of forloppSteg()[forlopp.nr].brutna) {
-            const e = m.element[b.el], [x1, y1] = lage(m, e.i), [x2, y2] = lage(m, e.j);
+            const el = m.balkar[b.balk].element, mitt = m.element[el[el.length >> 1]];
+            const [x1, y1] = lage(m, mitt.i), [x2, y2] = lage(m, mitt.j);
+            // Jämnt antal element: knuten mellan de två mittersta, annars mitt på det mittersta.
+            const [x, y] = el.length % 2 ? [(x1 + x2) / 2, (y1 + y2) / 2] : [x1, y1];
             const r = Math.max(14, 0.6 * Math.hypot(x2 - x1, y2 - y1) * kam.sk);
-            ctx.beginPath(); ctx.arc(sx((x1 + x2) / 2), sy((y1 + y2) / 2), r, 0, 7); ctx.stroke();
+            ctx.beginPath(); ctx.arc(sx(x), sy(y), r, 0, 7); ctx.stroke();
         }
     }
 }
@@ -1962,9 +1966,10 @@ function stallTill(f, medBrutna) {
     Object.assign(sim.keiws, f.keiws);
 }
 
+// I förloppet heter vägens balkar "Balken under vägen" (vägen själv går inte sönder).
 const balkNamn = i => {
     const b = ritning.balkar[i];
-    return TYPNAMN[arKabel(b) ? 'kabel' : b.vag ? 'vag' : 'balk'] + ' ' + profil(b.material || 'limtra', b.storlek).namn;
+    return (arKabel(b) ? 'Kabel' : b.vag ? 'Balken under vägen' : 'Balk') + ' ' + profil(b.material || 'limtra', b.storlek).namn;
 };
 
 // Ett tips per brott: vad som hände och vad man kan välja i stället.
@@ -1972,8 +1977,8 @@ const SONDER = { tryck: 'trycktes sönder', drag: 'drogs sönder', 'böjning': '
                  skjuvning: 'skjuvades sönder', 'knäckning': 'knäcktes' };
 function brottTips(b) {
     const balk = ritning.balkar[b.balk], mat = balk.material || 'limtra';
-    const typ = arKabel(balk) ? 'kabel' : balk.vag ? 'väg' : 'balk';
-    const vad = typ === 'kabel' ? 'Kabeln' : typ === 'väg' ? 'Vägen' : 'Balken';
+    const typ = arKabel(balk) ? 'kabel' : 'balk';
+    const vad = typ === 'kabel' ? 'Kabeln' : balk.vag ? 'Balken under vägen' : 'Balken';
     let rad;
     if (typ === 'kabel') rad = 'välj en grövre kabel';
     else if (mat === 'stal') rad = b.orsak === 'böjning' || b.orsak === 'skjuvning' ? 'välj en högre profil' : 'välj en grövre profil';

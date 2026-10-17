@@ -811,3 +811,7 @@ v94-test (Isak 2026-10-17): Går något sönder strax efter (GLID_SLAG = 0,15 s)
 stopp på väg utåt (bron trycker isär lagren som en båge, t.ex. utan väg i mitten), säger förloppet det i
 stället för tipset om grövre balk: "Glidlagret gled till stoppet, bron trycker isär lagren. Bind ihop den
 med en väg hela vägen." Fysiken är som förut (stoppet är hårt).
+
+v95-test (Isak 2026-10-17): Förloppets röda ring sitter mitt på balken som gick sönder (inte på elementet där
+den gick av), och vägens balkar heter "Balken under vägen" i förloppet ("Balken under vägen böjdes sönder,
+välj en högre balk.").

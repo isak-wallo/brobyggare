@@ -647,17 +647,17 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
           and f['antal'] <= sida.evaluate('() => window.bro.sim.forlopp.length'), str(balkar))
     text = sida.evaluate('() => document.querySelector("#ruta").textContent')
     kolla(f'{namn}: Förlopp visar första brottet', f and f['nr'] == 0 and text.startswith('Brott 1 av')
-          and 'Väg ' in text and 'böjning' in text and 'egentyngden' in text, text)
+          and 'Balken under vägen ' in text and 'böjning' in text and 'egentyngden' in text, text)
     tips = sida.inner_text('#ruta .tips')
     kolla(f'{namn}: brotten utan procent, med ett tips', '%' not in sida.inner_text('#ruta p:first-of-type')
-          and 'böjdes sönder, välj en högre väg' in tips, tips)
+          and 'Balken under vägen böjdes sönder, välj en högre balk' in tips, tips)
     if f['antal'] > 1:
         sida.click('#ruta [data-v=forlopp-nasta]')
     kolla(f'{namn}: › går till nästa brott', f['antal'] == 1 or sida.evaluate('() => window.bro.forlopp.nr') == 1)
     sida.click('#ruta [data-v=forlopp-forra]') if f['antal'] > 1 else None
     tryck(sida, (2, 0))
     kolla(f'{namn}: ett tryck på balken visar dess utnyttjande', sida.evaluate('() => window.bro.forlopp.valt') == 0
-          and 'Väg ' in sida.inner_text('#ruta .valt') and '%' in sida.inner_text('#ruta .valt'))
+          and 'Balken under vägen ' in sida.inner_text('#ruta .valt') and '%' in sida.inner_text('#ruta .valt'))
     bild(sida, bilder, f'{namn}-7-forlopp')
     sida.click('#ruta [data-v=forlopp-klar]')
     kolla(f'{namn}: Klar går tillbaka till resultatet', sida.inner_text('#ruta h1').startswith('Hoppsan, bron rasade!')
