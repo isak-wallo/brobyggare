@@ -492,8 +492,10 @@ let markYta = [];             // marken på skärmen [X, y, Y] (ritaBakgrund), f
 // Luften ovanför banan: infotexten (panelen ligger under spelytan).
 const beraknaLuft = infoLuft;
 
-// keIWs plats i sidled när hela banan syns: andel av bredden (som på Bäcken).
-const KEIWS_X = 0.117;
+// keIWs plats i sidled när hela banan syns: hans mitt så här många px från
+// vänsterkanten utöver halva hans bredd (samma i px stående och liggande).
+const KEIWS_KANT = 12;
+const keiwsX = () => 124 / 204 * KEIWS_ANDEL * Math.min(innerWidth, innerHeight) + KEIWS_KANT;
 // Liggande längre ner: profilrutan står mitt på skärmen bredvid panelen.
 const markNiva = () => staende() ? 0.5 : 0.72;
 
@@ -510,14 +512,14 @@ function anpassa() {
     // skärmen på alla banor (markNiva av höjden under infotexten). Vyns
     // bredd (x0–x1) ska synas och det som är högst (y1) få plats ovanför
     // marken; djupast nere kan vattnet hamna bakom profilrutan. keIWs står
-    // också på samma ställe i sidled (KEIWS_X av bredden): skärmen visar så
-    // mycket mer av vyn som behövs för det.
-    const vy = bana.vy, luft = luftNu, start = keiwsStart(bana);
-    const bred = Math.max(vy.x1 - vy.x0, (vy.x1 - start) / (1 - KEIWS_X), (start - vy.x0) / KEIWS_X);
+    // också på samma ställe i sidled, nära vänsterkanten (keiwsX() px, bilen sticker ut lite mer; marken
+    // bakom honom får skäras av): skärmen visar så mycket mer av vyn som behövs.
+    const vy = bana.vy, luft = luftNu, start = keiwsStart(bana), X = keiwsX() / w;
+    const bred = Math.max(vy.x1 - vy.x0, (vy.x1 - start) / (1 - X));
     const niva = markNiva();
     const sk = Math.min(w / bred, niva * (h - luft) / vy.y1);
     const oy = luft + niva * (h - luft), cy = (oy - (luft + h) / 2) / sk;
-    const cx = start + (0.5 - KEIWS_X) * w / sk;
+    const cx = start + (0.5 - X) * w / sk;
     const hw = w / 2 / sk, hh = (h - luft) / 2 / sk;
     bas = { sk, cx, cy, B: { x0: cx - hw, x1: cx + hw, y0: cy - hh, y1: cy + hh } };
     sattKamera();

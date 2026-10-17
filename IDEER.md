@@ -783,3 +783,7 @@ prickar, Älven betong, kablar, pelare, farleden och bilen. Marken liggande på 
 v87-test (Isak 2026-10-17): keIWs står på exakt samma ställe på skärmen på alla banor när hela
 banan syns (`KEIWS_X` = 0,117 av bredden, som på Bäcken; `anpassa` visar så mycket mer av vyn som
 behövs). Testas stående och liggande.
+
+v88-test (Isak 2026-10-17): keIWs står närmare vänsterkanten: mitten halva hans bredd + 12 px in
+(`keiwsX` i app.js, samma i px stående och liggande). Det som ligger till vänster om honom får
+skäras av när hela banan syns (lite av byggytan längst ut till vänster på t.ex. Bäcken).

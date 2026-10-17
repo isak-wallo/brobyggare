@@ -195,6 +195,7 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     else:
         kolla(f'{namn}: verktygen ligger till höger', lista['x'] >= duk['x'] + duk['width'] - 1)
     v = sida.evaluate('() => BANOR[0].vy')
+    v['x0'] = sida.evaluate('() => keiwsStart(bana) - keiwsHalv(bana)')     # vänster om keIWs får skäras av
     (x0, y0), (x1, y1) = skarm(sida, (v['x0'], v['y1'])), skarm(sida, (v['x1'], -3))
     kolla(f'{namn}: hela banan syns (ner till bäckens botten)',
           x0 >= duk['x'] - 1 and x1 <= duk['x'] + duk['width'] + 1
@@ -437,9 +438,9 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     sida.wait_for_timeout(100)
     fore = skarm(sida, (7, 0))
     d = sida.locator('#duk').bounding_box()
-    sida.mouse.move(d['x'] + 12, d['y'] + d['height'] - 40)
+    sida.mouse.move(d['x'] + 70, d['y'] + d['height'] - 40)
     sida.mouse.down()
-    sida.mouse.move(d['x'] + 70, d['y'] + d['height'] - 40, steps=6)
+    sida.mouse.move(d['x'] + 12, d['y'] + d['height'] - 40, steps=6)
     sida.mouse.up()
     efter = skarm(sida, (7, 0))
     kolla(f'{namn}: inzoomad flyttar ett finger utanför rutnätet vyn',
@@ -793,6 +794,7 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
           sida.evaluate('() => ritProfil.limtra'))
     kolla(f'{namn}: zoomen nollas vid byte av bana', sida.evaluate('() => window.bro.zoom') == 1)
     v = sida.evaluate('() => BANOR[1].vy')
+    v['x0'] = sida.evaluate('() => keiwsStart(bana) - keiwsHalv(bana)')
     duk = sida.locator('#duk').bounding_box()
     (x0, y0), (x1, y1) = skarm(sida, (v['x0'], v['y1'])), skarm(sida, (v['x1'], 0))
     info = sida.locator('#info').bounding_box()
