@@ -58,7 +58,8 @@ tar drag; kablar i vägen spänns vid bygget (`spannKablar`). Stora banor har
 egna `element`, `maxLangd`, `maxKabel` (se banor.js). Största zoom: NARMAST m (minst 3 rutor) på skärmens kortaste sida.
 Massan klumpas i noderna. Egentyngden räknas statiskt (losStatiskt; går
 det inte läggs den på under 1 s), sedan går keIWs (500 kg; bilen 2,5 ton) över. keIWs ritas lika stor på skärmen på alla banor
-(8 % av kortaste sidan utzoomad, `keiwsBild`); banans `keiws` (m) styr bara farten. g = 10 m/s². Ett element över 100 %
+(8 % av kortaste sidan utzoomad, `keiwsBild`) och går lika fort på skärmen (`keiwsFart`, från `keiwsBildHojd`).
+Marken (y = 0) ligger på samma höjd på skärmen på alla banor (`MARK_NIVA` i app.js). g = 10 m/s². Ett element över 100 %
 utnyttjande tas bort; en balk som knäcks tappar mittelementet. Lösa bitar (inte ihop med
 något fäste, `iFastet`) går inte sönder; över SMUL_GRANS smulas de bort (`smula`), annars
 fastnar Newton när de krossas mot marken.

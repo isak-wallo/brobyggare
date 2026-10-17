@@ -236,9 +236,9 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
         slank.append(sida.evaluate('() => window.bro.ritProfil.limtra'))
     kolla(f'{namn}: höjden högst 7 gånger bredden', slank == ['56×270', '66×450', '90×540', '42×270', '90×270', '90×270'], slank)
     if namn == 'staende':
-        luft = sida.evaluate('''() => [document.querySelector('#popup').getBoundingClientRect().top
-            - document.querySelector('#duk').getBoundingClientRect().top - sy(bana.vy.y0), profilRutansHojd()]''')
-        kolla(f'{namn}: profilrutan skymmer inte banan', luft[0] >= 0, luft)
+        luft = sida.evaluate('''() => document.querySelector('#popup').getBoundingClientRect().top
+            - document.querySelector('#duk').getBoundingClientRect().top - sy(0)''')
+        kolla(f'{namn}: profilrutan skymmer inte marken', luft >= 0, luft)
     d = sida.locator('#duk').bounding_box()
     sida.mouse.click(d['x'] + 15, d['y'] + sida.evaluate('() => luftNu') + 15)
     kolla(f'{namn}: ett tryck på spelytan stänger rutan och bygger inget',

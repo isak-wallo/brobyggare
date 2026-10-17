@@ -767,3 +767,9 @@ styr bara farten nu, `keiwsInzoomad` borta). Han står nära kanten, så att han
 (`keiwsStart`/`keiwsMal` från storleken i bild, `keiwsBildHojd` = 8 % av vyns bredd). Bilen ritas
 i 75 % storlek (den är bred). Vyn breddades på Sundet, Dalgången, Älven och Havet så att han får
 plats på klippan (testas i testa_banor.js).
+
+v85-test (Isak 2026-10-17): keIWs går lika fort på skärmen på alla banor (`keiwsFart` = 2,05 ×
+storleken i bild; banornas `keiws` borta). Det blev fortare på de långa banorna: Dalgångens
+lösning fick vägen steg 4 (100 620 $$) och Havets väg IPE 360 (1 024 190 $$, budgeten höjd till
+1 050 000 $$). Marken ligger på samma höjd på skärmen på alla banor (`MARK_NIVA` = 0,5 av höjden
+under infotexten; vattnet längst ner får hamna bakom profilrutan). Ån 20 % grundare under −3 m.

@@ -29,11 +29,10 @@
 //           emellan, se profilY i spel.js)
 //   budget: i $$ (spelets pengar); man får bygga över, men då blir det
 //           inga stjärnor
-//   keiws:  keIWs storlek i meter: farten följer den (i bild är han lika stor
-//           på skärmen på alla banor, se keiwsBildHojd i spel.js)
 //   bil:    keIWs kör bil (2,5 ton på två hjul) i stället för att gå
 //   omrade: där man får sätta knutpunkter (över land bara ovanför marken)
-//   vy:     det som syns utan zoom
+//   vy:     det som syns utan zoom: bredden x0–x1 och upp till y1 (marken på samma
+//           höjd på skärmen på alla banor, nedåt syns det som får plats)
 //   farled: {x0, x1, y}: under y mellan x0 och x1 får inget byggas (båtarna)
 //   pelare: {botten, pris, perMeter}: här får man bygga pelare över vattnet,
 //           från botten upp till en knutpunkt (med glidlager överst)
@@ -66,7 +65,6 @@ const BANOR = [
                  [13.45, -0.9], [13.75, -0.3], [14, 0]],
         vatten: -2,
         budget: 13000,
-        keiws: 2,
         omrade: { x0: -3, x1: 17, y0: -1, y1: 7 },
         vy: { x0: -4, x1: 18, y0: -3.5, y1: 7.5 },
         losning: {
@@ -106,15 +104,14 @@ const BANOR = [
         material: ['limtra'],
         tra: TRA_ENKEL,
         fasten: [[0, 0, 'fast'], [1, -3], [26, 0, 'glid'], [25, -3]],
-        profil: [[0, 0], [0.3, -0.4], [0.7, -1.5], [0.9, -2.4], [1.15, -3], [1.6, -4.2], [1.9, -5.5], [2.6, -6.8],
-                 [3.2, -8.2], [4.5, -9.4], [6, -10.3], [8, -11.4], [10.5, -12.2], [13, -12.8], [15.5, -12.4],
-                 [17.5, -11.6], [19.5, -10.9], [21.5, -9.8], [23, -8.6], [23.8, -7.2], [24.2, -5.8], [24.55, -4.3],
+        profil: [[0, 0], [0.3, -0.4], [0.7, -1.5], [0.9, -2.4], [1.15, -3], [1.6, -4], [1.9, -5], [2.6, -6],
+                 [3.2, -7.2], [4.5, -8.1], [6, -8.8], [8, -9.7], [10.5, -10.4], [13, -10.8], [15.5, -10.5],
+                 [17.5, -9.9], [19.5, -9.3], [21.5, -8.4], [23, -7.5], [23.8, -6.4], [24.2, -5.2], [24.55, -4],
                  [24.85, -3], [25.15, -2], [25.45, -1], [25.75, -0.35], [26, 0]],
         vatten: -4,
         budget: 22000,
-        keiws: 3.5,
         omrade: { x0: -3, x1: 29, y0: -4, y1: 9 },
-        vy: { x0: -7, x1: 33, y0: -13.5, y1: 9.5 },
+        vy: { x0: -7, x1: 33, y0: -11.5, y1: 9.5 },
         losning: {
             // Väg med två knutpunkter (7 och 19 m), var och en buren av en sträva
             // från fästet i slänten (som Isaks bro). Strävorna trycks och knäcks
@@ -150,7 +147,6 @@ const BANOR = [
                  [37.7, -0.5], [38, 0]],
         vatten: -3,
         budget: 48000,
-        keiws: 4,
         omrade: { x0: -3, x1: 41, y0: -4, y1: 12 },
         vy: { x0: -7, x1: 45, y0: -13, y1: 12 },
         losning: {
@@ -179,7 +175,6 @@ const BANOR = [
         kant: 0.5,
         vatten: -6,
         budget: 64000,
-        keiws: 5,
         omrade: { x0: -4, x1: 54, y0: -4, y1: 12 },
         vy: { x0: -9, x1: 59, y0: -7.5, y1: 12.5 },
         losning: {
@@ -209,7 +204,6 @@ const BANOR = [
         vatten: -10,
         torr: true,
         budget: 16000,
-        keiws: 3,
         omrade: { x0: -3, x1: 23, y0: -9, y1: 8 },
         vy: { x0: -5, x1: 25, y0: -11, y1: 8.5 },
         losning: {
@@ -236,12 +230,11 @@ const BANOR = [
         vatten: -24,
         torr: true,
         budget: 104000,
-        keiws: 5.5,
         omrade: { x0: -4, x1: 64, y0: -22, y1: 16 },
         vy: { x0: -9.5, x1: 69.5, y0: -25, y1: 17 },
         losning: {
             // Båge av 140×180 med stolpar av 140×180 till vägen (4), och
-            // snedsträvor (140×225) och stöd från de övre fästena (98 030 $$).
+            // snedsträvor (140×225) och stöd från de övre fästena (100 620 $$; vägen steg 4, steg 3 går av när keIWs går fort).
             // Allt som trycks är tjockt åt sidan, annars knäcks det.
             noder: [
                 [0, 0], [12, -12], [60, 0], [48, -12], [16, -18], [44, -18], [2, 0], [4, 0],
@@ -252,11 +245,11 @@ const BANOR = [
                 [40, -12]
             ],
             balkar: [
-                [0, 6, 3, true], [6, 7, 3, true], [7, 8, 3, true], [8, 9, 3, true], [9, 10, 3, true], [10, 11, 3, true],
-                [11, 12, 3, true], [12, 13, 3, true], [13, 14, 3, true], [14, 15, 3, true], [15, 16, 3, true], [16, 17, 3, true],
-                [17, 18, 3, true], [18, 19, 3, true], [19, 20, 3, true], [20, 21, 3, true], [21, 22, 3, true], [22, 23, 3, true],
-                [23, 24, 3, true], [24, 25, 3, true], [25, 26, 3, true], [26, 27, 3, true], [27, 28, 3, true], [28, 29, 3, true],
-                [29, 30, 3, true], [30, 31, 3, true], [31, 32, 3, true], [32, 33, 3, true], [33, 34, 3, true], [34, 2, 3, true],
+                [0, 6, 4, true], [6, 7, 4, true], [7, 8, 4, true], [8, 9, 4, true], [9, 10, 4, true], [10, 11, 4, true],
+                [11, 12, 4, true], [12, 13, 4, true], [13, 14, 4, true], [14, 15, 4, true], [15, 16, 4, true], [16, 17, 4, true],
+                [17, 18, 4, true], [18, 19, 4, true], [19, 20, 4, true], [20, 21, 4, true], [21, 22, 4, true], [22, 23, 4, true],
+                [23, 24, 4, true], [24, 25, 4, true], [25, 26, 4, true], [26, 27, 4, true], [27, 28, 4, true], [28, 29, 4, true],
+                [29, 30, 4, true], [30, 31, 4, true], [31, 32, 4, true], [32, 33, 4, true], [33, 34, 4, true], [34, 2, 4, true],
                 [4, 35, '140×180'], [35, 36, '140×180'], [36, 37, '140×180'], [37, 38, '140×180'], [38, 39, '140×180'],
                 [39, 40, '140×180'], [40, 5, '140×180'], [35, 15, '140×180'], [36, 17, '140×180'], [37, 19, '140×180'],
                 [38, 21, '140×180'], [39, 23, '140×180'], [40, 25, '140×180'], [1, 11, '140×180'], [1, 8, '140×225'],
@@ -279,7 +272,6 @@ const BANOR = [
         vatten: -8,
         budget: 240000,
         bil: true,
-        keiws: 8,
         omrade: { x0: -5, x1: 165, y0: -8, y1: 50 },
         vy: { x0: -31, x1: 191, y0: -10, y1: 52 },
         farled: { x0: 45, x1: 115, y: -1 },
@@ -324,9 +316,8 @@ const BANOR = [
         fasten: [[0, 0, 'fast'], [400, 0, 'glid'], [-40, 0], [440, 0], [80, -30], [320, -30]],
         kant: 0.4,
         vatten: -30,
-        budget: 1000000,
+        budget: 1050000,
         bil: true,
-        keiws: 12,
         ö: 60,
         omrade: { x0: -40, x1: 440, y0: -30, y1: 100 },
         vy: { x0: -78, x1: 478, y0: -32, y1: 102 },
@@ -335,7 +326,8 @@ const BANOR = [
         losning: {
             // Hängbro: pyloner av betong 5 (90 m), huvudkabel 6 (Ø 32)
             // förankrad på land, hängare 2 (Ø 14) var 20 m, väg av stål
-            // IPE 330 och pelare var 10 m under sidospannen (961 250 $$).
+            // IPE 360 och pelare var 10 m under sidospannen (1 024 190 $$; IPE 330
+            // går av när bilen kör fort).
             noder: [
                 [0, 0], [400, 0], [-40, 0], [440, 0], [80, -30, 'styv'], [320, -30, 'styv'], [10, 0, 'pelare'], [20, 0, 'pelare'],
                 [30, 0, 'pelare'], [40, 0, 'pelare'], [50, 0, 'pelare'], [60, 0, 'pelare'], [70, 0, 'pelare'], [80, 0], [90, 0], [100, 0],
@@ -348,14 +340,14 @@ const BANOR = [
                 [280, 30], [300, 40]
             ],
             balkar: [
-                [0, 6, 'IPE 330', true, 'stal'], [6, 7, 'IPE 330', true, 'stal'], [7, 8, 'IPE 330', true, 'stal'], [8, 9, 'IPE 330', true, 'stal'], [9, 10, 'IPE 330', true, 'stal'],
-                [10, 11, 'IPE 330', true, 'stal'], [11, 12, 'IPE 330', true, 'stal'], [12, 13, 'IPE 330', true, 'stal'], [13, 14, 'IPE 330', true, 'stal'], [14, 15, 'IPE 330', true, 'stal'],
-                [15, 16, 'IPE 330', true, 'stal'], [16, 17, 'IPE 330', true, 'stal'], [17, 18, 'IPE 330', true, 'stal'], [18, 19, 'IPE 330', true, 'stal'], [19, 20, 'IPE 330', true, 'stal'],
-                [20, 21, 'IPE 330', true, 'stal'], [21, 22, 'IPE 330', true, 'stal'], [22, 23, 'IPE 330', true, 'stal'], [23, 24, 'IPE 330', true, 'stal'], [24, 25, 'IPE 330', true, 'stal'],
-                [25, 26, 'IPE 330', true, 'stal'], [26, 27, 'IPE 330', true, 'stal'], [27, 28, 'IPE 330', true, 'stal'], [28, 29, 'IPE 330', true, 'stal'], [29, 30, 'IPE 330', true, 'stal'],
-                [30, 31, 'IPE 330', true, 'stal'], [31, 32, 'IPE 330', true, 'stal'], [32, 33, 'IPE 330', true, 'stal'], [33, 34, 'IPE 330', true, 'stal'], [34, 35, 'IPE 330', true, 'stal'],
-                [35, 36, 'IPE 330', true, 'stal'], [36, 37, 'IPE 330', true, 'stal'], [37, 38, 'IPE 330', true, 'stal'], [38, 39, 'IPE 330', true, 'stal'], [39, 40, 'IPE 330', true, 'stal'],
-                [40, 41, 'IPE 330', true, 'stal'], [41, 42, 'IPE 330', true, 'stal'], [42, 43, 'IPE 330', true, 'stal'], [43, 44, 'IPE 330', true, 'stal'], [44, 1, 'IPE 330', true, 'stal'],
+                [0, 6, 'IPE 360', true, 'stal'], [6, 7, 'IPE 360', true, 'stal'], [7, 8, 'IPE 360', true, 'stal'], [8, 9, 'IPE 360', true, 'stal'], [9, 10, 'IPE 360', true, 'stal'],
+                [10, 11, 'IPE 360', true, 'stal'], [11, 12, 'IPE 360', true, 'stal'], [12, 13, 'IPE 360', true, 'stal'], [13, 14, 'IPE 360', true, 'stal'], [14, 15, 'IPE 360', true, 'stal'],
+                [15, 16, 'IPE 360', true, 'stal'], [16, 17, 'IPE 360', true, 'stal'], [17, 18, 'IPE 360', true, 'stal'], [18, 19, 'IPE 360', true, 'stal'], [19, 20, 'IPE 360', true, 'stal'],
+                [20, 21, 'IPE 360', true, 'stal'], [21, 22, 'IPE 360', true, 'stal'], [22, 23, 'IPE 360', true, 'stal'], [23, 24, 'IPE 360', true, 'stal'], [24, 25, 'IPE 360', true, 'stal'],
+                [25, 26, 'IPE 360', true, 'stal'], [26, 27, 'IPE 360', true, 'stal'], [27, 28, 'IPE 360', true, 'stal'], [28, 29, 'IPE 360', true, 'stal'], [29, 30, 'IPE 360', true, 'stal'],
+                [30, 31, 'IPE 360', true, 'stal'], [31, 32, 'IPE 360', true, 'stal'], [32, 33, 'IPE 360', true, 'stal'], [33, 34, 'IPE 360', true, 'stal'], [34, 35, 'IPE 360', true, 'stal'],
+                [35, 36, 'IPE 360', true, 'stal'], [36, 37, 'IPE 360', true, 'stal'], [37, 38, 'IPE 360', true, 'stal'], [38, 39, 'IPE 360', true, 'stal'], [39, 40, 'IPE 360', true, 'stal'],
+                [40, 41, 'IPE 360', true, 'stal'], [41, 42, 'IPE 360', true, 'stal'], [42, 43, 'IPE 360', true, 'stal'], [43, 44, 'IPE 360', true, 'stal'], [44, 1, 'IPE 360', true, 'stal'],
                 [4, 45, 4, false, 'betong'], [45, 46, 4, false, 'betong'], [46, 13, 4, false, 'betong'], [13, 47, 4, false, 'betong'], [47, 48, 4, false, 'betong'],
                 [48, 49, 4, false, 'betong'], [5, 50, 4, false, 'betong'], [50, 51, 4, false, 'betong'], [51, 37, 4, false, 'betong'], [37, 52, 4, false, 'betong'],
                 [52, 53, 4, false, 'betong'], [53, 54, 4, false, 'betong'], [2, 49, 5, false, 'vajer'], [49, 55, 5, false, 'vajer'], [55, 56, 5, false, 'vajer'],

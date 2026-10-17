@@ -490,6 +490,8 @@ let markYta = [];             // marken på skärmen [X, y, Y] (ritaBakgrund), f
 // Luften ovanför banan: infotexten (panelen ligger under spelytan).
 const beraknaLuft = infoLuft;
 
+const MARK_NIVA = 0.5;
+
 function anpassa() {
     scen.style.setProperty('--info', infoLuft() + 'px');
     luftNu = beraknaLuft();
@@ -499,14 +501,13 @@ function anpassa() {
     duk.height = Math.round(h * dpr);
     duk.style.width = w + 'px';
     duk.style.height = h + 'px';
-    // Luft för infotexten upptill. Hela bana.vy ska synas, och blir det
-    // höjd över (mobilen står) läggs så mycket under banan att profilrutan
-    // (den högsta rutan, nedtill) inte skymmer den, minst 15 %; resten blir himmel.
+    // Luft för infotexten upptill. Marken (y = 0) ligger på samma höjd på
+    // skärmen på alla banor (MARK_NIVA av höjden under infotexten). Vyns
+    // bredd (x0–x1) ska synas och det som är högst (y1) få plats ovanför
+    // marken; djupast nere kan vattnet hamna bakom profilrutan.
     const vy = bana.vy, luft = luftNu;
-    const sk = Math.min(w / (vy.x1 - vy.x0), (h - luft) / (vy.y1 - vy.y0));
-    const over = h - luft - sk * (vy.y1 - vy.y0);
-    const under = Math.min(over, Math.max(over * 0.15, staende() ? profilRutansHojd() + 14 : 0));
-    const oy = luft + over - under + sk * vy.y1, cy = (oy - (luft + h) / 2) / sk;
+    const sk = Math.min(w / (vy.x1 - vy.x0), MARK_NIVA * (h - luft) / vy.y1);
+    const oy = luft + MARK_NIVA * (h - luft), cy = (oy - (luft + h) / 2) / sk;
     const cx = (vy.x0 + vy.x1) / 2;
     const hw = w / 2 / sk, hh = (h - luft) / 2 / sk;
     bas = { sk, cx, cy, B: { x0: cx - hw, x1: cx + hw, y0: cy - hh, y1: cy + hh } };
@@ -1299,23 +1300,6 @@ function profilRutan(mat, st, vag) {
         html += rad('', STEGEN[mat].map((x, i) => knapp('data-s="' + i + '"', x.namn, x === p)));
     }
     return html;
-}
-
-// Den högsta profilrutan (stålets HEA, trä) på den här skärmen: mäts i en
-// osynlig kopia, så att banan kan ligga ovanför den hela tiden.
-function profilRutansHojd() {
-    const m = document.createElement('div');
-    m.id = 'popup';
-    m.className = 'popup-profil';
-    m.style.cssText = 'visibility: hidden; left: 0; top: 0;';
-    let hojd = 0;
-    document.body.appendChild(m);
-    for (const [mat, st] of [['stal', 'HEA 100'], ['limtra', '90×270']]) {
-        m.innerHTML = profilRutan(mat, st, true);
-        hojd = Math.max(hojd, m.offsetHeight);
-    }
-    m.remove();
-    return hojd;
 }
 
 // Knappen som rutan hör till syns tydligt (där stänger man den). Utan
