@@ -664,10 +664,12 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
           and 'Balken under vägen ' in sida.inner_text('#ruta .valt') and '%' in sida.inner_text('#ruta .valt'))
     bild(sida, bilder, f'{namn}-7-forlopp')
     sida.click('#ruta [data-v=forlopp-klar]')
-    kolla(f'{namn}: Klar går tillbaka till resultatet', sida.inner_text('#ruta h1').startswith('Hoppsan, bron rasade!')
-          and not sida.evaluate('() => window.bro.forlopp'))
+    kolla(f'{namn}: Klar i förloppet är samma som Bygg om', sida.evaluate('() => window.bro.lage') == 'bygg'
+          and not sida.is_visible('#ruta') and not sida.evaluate('() => window.bro.forlopp'))
 
     # Ett tryck utanför rutan när bron inte höll är samma som Bygg om.
+    sida.click('#verktyg [data-v=kor]')
+    vanta_resultat(sida)
     rb = sida.locator('#ruta').bounding_box()
     db = sida.locator('#duk').bounding_box()
     for punkt in [(7, 5), (7, -1), (-2, 4), (16, 4)]:

@@ -2256,7 +2256,7 @@ rutaEl.addEventListener('click', e => {
     const v = b.dataset.v;
     if (v === 'forlopp') { visaForlopp(0); return; }
     if (v === 'forlopp-forra' || v === 'forlopp-nasta') { visaForlopp(forlopp.nr + (v === 'forlopp-nasta' ? 1 : -1)); return; }
-    if (v === 'forlopp-klar') { stangForlopp(); visaResultat(); return; }
+    if (v === 'forlopp-klar') { stangForlopp(); bygg(); return; }     // Klar är samma som Bygg om
     stangForlopp();
     if (b.dataset.v === 'kor') kor();
     else if (b.dataset.v === 'nasta') { bygg(false); bytBana(banaNr + 1); }
