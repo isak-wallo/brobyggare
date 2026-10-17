@@ -819,3 +819,7 @@ välj en högre balk.").
 v96-test (Isak 2026-10-17): Bron ska hålla hela vägen: kommer keIWs över men något har gått sönder blir
 resultatet 'sonder' ("keIWs kom över, men bron gick sönder."), underkänt, inget rekord, keIWs jublar inte,
 och rutan har Bygg om, Kör igen och Förlopp.
+
+v97-test (Isak 2026-10-17): Tipsen är allmänna ("välj en större profil"; knäckning: "… eller gör balken
+kortare"; kabel: "välj en grövre kabel"), eftersom bredd, höjd och area spelar in olika och den bredaste
+kan redan vara vald. När bron inte höll (Plask, rasade, gick sönder) är ett tryck utanför rutan samma som Bygg om.

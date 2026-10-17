@@ -1975,19 +1975,15 @@ const balkNamn = i => {
     return (arKabel(b) ? 'Kabel' : b.vag ? 'Balken under vägen' : 'Balk') + ' ' + profil(b.material || 'limtra', b.storlek).namn;
 };
 
-// Ett tips per brott: vad som hände och vad man kan välja i stället.
+// Ett tips per brott: vad som hände och ett allmänt råd (bredd, höjd och
+// area spelar in olika, och den bredaste kan redan vara vald).
 const SONDER = { tryck: 'trycktes sönder', drag: 'drogs sönder', 'böjning': 'böjdes sönder',
                  skjuvning: 'skjuvades sönder', 'knäckning': 'knäcktes' };
 function brottTips(b) {
-    const balk = ritning.balkar[b.balk], mat = balk.material || 'limtra';
-    const typ = arKabel(balk) ? 'kabel' : 'balk';
-    const vad = typ === 'kabel' ? 'Kabeln' : balk.vag ? 'Balken under vägen' : 'Balken';
-    let rad;
-    if (typ === 'kabel') rad = 'välj en grövre kabel';
-    else if (mat === 'stal') rad = b.orsak === 'böjning' || b.orsak === 'skjuvning' ? 'välj en högre profil' : 'välj en grövre profil';
-    else if (b.orsak === 'böjning' || b.orsak === 'skjuvning') rad = 'välj en högre ' + typ;
-    else if (mat === 'betong') rad = 'välj en grövre ' + typ;
-    else rad = 'välj en bredare ' + typ;
+    const balk = ritning.balkar[b.balk], kabel = arKabel(balk);
+    const vad = kabel ? 'Kabeln' : balk.vag ? 'Balken under vägen' : 'Balken';
+    const rad = kabel ? 'välj en grövre kabel' : b.orsak === 'knäckning'
+        ? 'välj en större profil eller gör balken kortare' : 'välj en större profil';
     return vad + ' ' + (SONDER[b.orsak] || 'gick sönder') + ', ' + rad + '.';
 }
 
@@ -2442,6 +2438,17 @@ function slapp(e) {
         if (Math.hypot(p[0] - panorera.p[0], p[1] - panorera.p[1]) < 8) {
             forlopp.valt = forloppBalk(...tillVarld(e));
             forloppRuta();
+        }
+    }
+    // Bron höll inte (Plask, rasade, gick sönder): ett tryck utanför rutan är Bygg om.
+    if (!forlopp && panorera && pekare.size === 1 && sim && sim.visad && sim.resultat !== 'klarade'
+        && !rutaEl.classList.contains('dold')) {
+        const p = iDuken(e);
+        if (Math.hypot(p[0] - panorera.p[0], p[1] - panorera.p[1]) < 8) {
+            pekare.delete(e.pointerId);
+            panorera = null;
+            bygg();
+            return;
         }
     }
     // Ett tryck (utan att röra fingret) väljer det man tryckte på.

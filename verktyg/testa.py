@@ -654,7 +654,7 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
           and 'Balken under vägen ' in text and 'böjning' in text and 'egentyngden' in text, text)
     tips = sida.inner_text('#ruta .tips')
     kolla(f'{namn}: brotten utan procent, med ett tips', '%' not in sida.inner_text('#ruta p:first-of-type')
-          and 'Balken under vägen böjdes sönder, välj en högre balk' in tips, tips)
+          and 'Balken under vägen böjdes sönder, välj en större profil' in tips, tips)
     if f['antal'] > 1:
         sida.click('#ruta [data-v=forlopp-nasta]')
     kolla(f'{namn}: › går till nästa brott', f['antal'] == 1 or sida.evaluate('() => window.bro.forlopp.nr') == 1)
@@ -667,8 +667,18 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     kolla(f'{namn}: Klar går tillbaka till resultatet', sida.inner_text('#ruta h1').startswith('Hoppsan, bron rasade!')
           and not sida.evaluate('() => window.bro.forlopp'))
 
+    # Ett tryck utanför rutan när bron inte höll är samma som Bygg om.
+    rb = sida.locator('#ruta').bounding_box()
+    db = sida.locator('#duk').bounding_box()
+    for punkt in [(7, 5), (7, -1), (-2, 4), (16, 4)]:
+        px, py = skarm(sida, punkt)
+        if db['y'] + 60 < py < db['y'] + db['height'] and not (rb['x'] <= px <= rb['x'] + rb['width'] and rb['y'] <= py <= rb['y'] + rb['height']):
+            break
+    tryck(sida, punkt)
+    kolla(f'{namn}: ett tryck utanför rutan när bron rasade är Bygg om',
+          sida.evaluate('() => window.bro.lage') == 'bygg' and not sida.is_visible('#ruta'), str(punkt))
+
     # Menyn: billigaste bron som höll, hämta den, förklaringen och versionen.
-    sida.click('#ruta [data-v=bygg]')
     sida.click('#menyknapp')
     text = sida.locator('#meny').inner_text()
     kolla(f'{namn}: menyn visar billigaste bron och förklaringen',
