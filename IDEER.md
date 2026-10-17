@@ -847,3 +847,7 @@ v103-test (Isak 2026-10-17): Menyn är fem likadana veck (som "Hur funkar det?")
 bron först), "Hur funkar det?" och "Förutsättningar – för nördar"; versionen under. Dela konstruktionen är
 knappen "!" under "?" (bara testsidan/lokalt, `FELSOK`): texten kopieras och visas i en ruta, ett tryck
 utanför stänger.
+
+v104-test (Isak 2026-10-17): Kanalen har en `profil` som de tidigare vattenbanorna: branta, nästan raka
+kanalväggar genom de nedre fästena (som nu står på marken i stället för i luften) och en jämn botten
+10–11 m ner; vattnet (−6) ligger 2 m under fästena och syns inte längre genom marken.

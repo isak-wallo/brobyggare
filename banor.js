@@ -197,17 +197,22 @@ const BANOR = [
         }
     },
     {
-        // 50 m med raka kanaler: här kommer stålet, och rören (KKR). Trä finns
+        // 50 m bred kanal: här kommer stålet, och rören (KKR). Trä finns
         // kvar, men ett fackverk av trä går över budget (ca 65 700).
         namn: 'Kanalen',
         spann: 50,
         material: ['limtra', 'stal'],
         fasten: [[0, 0, 'fast'], [2, -4], [50, 0, 'glid'], [48, -4], [-4, 0], [54, 0]],
-        kant: 0.5,
+        // Branta, nästan raka kanalväggar (genom de nedre fästena) och en
+        // jämn botten 10–11 m ner; vattnet 2 m under fästena.
+        profil: [[0, 0], [0.4, -0.7], [1, -2], [1.5, -3], [2, -4], [2.5, -5.2], [3.1, -6.6], [3.8, -8], [4.8, -9.2],
+                 [6.5, -10], [10, -10.5], [15, -10.8], [20, -11.1], [25, -11.3], [30, -11], [35, -10.8], [40, -10.4],
+                 [43.5, -10], [45.2, -9.2], [46.2, -8], [46.9, -6.6], [47.5, -5.2], [48, -4], [48.5, -3], [49, -2],
+                 [49.6, -0.7], [50, 0]],
         vatten: -6,
         budget: 64000,
         omrade: { x0: -4, x1: 54, y0: -4, y1: 12 },
-        vy: { x0: -9, x1: 59, y0: -7.5, y1: 12.5 },
+        vy: { x0: -9, x1: 59, y0: -13, y1: 12.5 },
         losning: {
             // Bågfackverk, 6 m högt på mitten, fack på 5 m: väg IPE 100, båge
             // KKR 100×5 (trycks), hängare KKR 40×3 och diagonaler KKR 60×4 (60 900 $$).
