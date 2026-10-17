@@ -31,6 +31,7 @@ const SPARA_BANA = 'brobyggare-bana';     // banans namn
 const SPARA_BASTA = 'brobyggare-basta-';  // + banans namn: billigaste bron som höll
 const SPARA_HISTORIK = 'brobyggare-historik';  // ångra-listan över en omladdning
 const SPARA_BYGGFILM = 'brobyggare-byggfilm';  // 'av': keIWs bygger inte bron först (menyn)
+const SPARA_NYHETER = 'brobyggare-nyheter';    // banorna vars nyheter keIWs har berättat om
 const UPPDATERA_VAR = 10 * 60 * 1000;     // ms, leta efter en ny version
 
 const FARG = {
@@ -254,6 +255,7 @@ function bytBana(nr) {
     try { localStorage.setItem(SPARA_BANA, bana.namn); } catch (e) { /* privat läge */ }
     anpassa();
     uppdateraInfo();
+    visaNyheter();
     laddaOmOmLugnt();
 }
 
@@ -490,7 +492,8 @@ let markYta = [];             // marken på skärmen [X, y, Y] (ritaBakgrund), f
 // Luften ovanför banan: infotexten (panelen ligger under spelytan).
 const beraknaLuft = infoLuft;
 
-const MARK_NIVA = 0.5;
+// Liggande längre ner: profilrutan står mitt på skärmen bredvid panelen.
+const markNiva = () => staende() ? 0.5 : 0.72;
 
 function anpassa() {
     scen.style.setProperty('--info', infoLuft() + 'px');
@@ -502,12 +505,13 @@ function anpassa() {
     duk.style.width = w + 'px';
     duk.style.height = h + 'px';
     // Luft för infotexten upptill. Marken (y = 0) ligger på samma höjd på
-    // skärmen på alla banor (MARK_NIVA av höjden under infotexten). Vyns
+    // skärmen på alla banor (markNiva av höjden under infotexten). Vyns
     // bredd (x0–x1) ska synas och det som är högst (y1) få plats ovanför
     // marken; djupast nere kan vattnet hamna bakom profilrutan.
     const vy = bana.vy, luft = luftNu;
-    const sk = Math.min(w / (vy.x1 - vy.x0), MARK_NIVA * (h - luft) / vy.y1);
-    const oy = luft + MARK_NIVA * (h - luft), cy = (oy - (luft + h) / 2) / sk;
+    const niva = markNiva();
+    const sk = Math.min(w / (vy.x1 - vy.x0), niva * (h - luft) / vy.y1);
+    const oy = luft + niva * (h - luft), cy = (oy - (luft + h) / 2) / sk;
     const cx = (vy.x0 + vy.x1) / 2;
     const hw = w / 2 / sk, hh = (h - luft) / 2 / sk;
     bas = { sk, cx, cy, B: { x0: cx - hw, x1: cx + hw, y0: cy - hh, y1: cy + hh } };
@@ -1687,7 +1691,7 @@ menyEl.addEventListener('click', e => {
 // med mössa) berättar i en pratbubbla vad den gör. Allt annat är mörkt och
 // går inte att trycka på medan guiden visas.
 const guideEl = document.getElementById('guide');
-let guideSteg = -1;
+let guideSteg = -1, guideLista = [];
 
 const elRuta = sel => { const e = document.querySelector(sel); return e && e.offsetParent ? e.getBoundingClientRect() : null; };
 // En ruta kring punkter i banan (meter), minst m px åt varje håll.
@@ -1724,8 +1728,54 @@ const GUIDE = [
     { mal: () => elRuta('#guideknapp'), text: 'Och här startar du guiden igen. Lycka till!' }
 ];
 
-// keIWs som professor på en liten duk: vinkar i första steget, sedan
-// står han och pekar uppåt med armen (den till höger) medan han blinkar.
+// Nyheter: första gången man kommer till en bana med något nytt berättar
+// professor keIWs om det (samma rutor som guiden). Banans namn sparas när
+// han har visat dem.
+const NYHETER = {
+    Sundet: [
+        { mal: () => elRuta('#valjare [data-p=profil]'), text: '<b>Nyhet: fler profiler!</b> Från den här banan finns alla '
+            + 'bredder och höjder i trä att välja mellan, inte bara några. Tryck på Profil och titta.' }
+    ],
+    Kanalen: [
+        { mal: () => elRuta('#valjare [data-p=material]'), text: '<b>Nyhet: stål!</b> Under Material finns nu stål. '
+            + 'Det är mycket starkare än trä, men tyngre och dyrare.' },
+        { mal: () => elRuta('#valjare [data-p=profil]'), text: 'Stålet finns i serier under Profil: I-balkar (IPE, HEA, HEB) '
+            + 'och fyrkantsrör (KKR). Rören är bra till det som trycks, de knäcks inte lika lätt åt något håll.' }
+    ],
+    Dalgången: [
+        { mal: () => { const o = bana.omrade; return banRuta([[o.x0, o.y0], [o.x1, o.y1]], 8); },
+          text: '<b>En stor dal!</b> Här sitter prickarna med 2 m mellanrum, så det går fortare att bygga stort.' }
+    ],
+    Älven: [
+        { mal: () => elRuta('#valjare [data-p=material]'), text: '<b>Nyhet: betong!</b> Under Material finns nu betong. '
+            + 'Den är billig och tål tryck bra, men den är tung. Bra till höga pyloner.' },
+        { mal: () => elRuta('#valjare [data-p=typ]'), text: '<b>Kablar</b> finns nu under Typ. En kabel tar bara drag, aldrig tryck: '
+            + 'häng upp vägen i kablar från pylonerna.' },
+        { mal: () => elRuta('#valjare [data-p=typ]'), text: 'Under Typ finns också <b>pelare</b>. De står på botten och bär vägen '
+            + 'underifrån, och kostar mer ju högre de är.' },
+        { mal: () => { const f = bana.farled; return f && banRuta([[f.x0, f.y], [f.x1, 0]], 6); },
+          text: 'Det röda är <b>farleden</b>. Där ska båtarna fram, så där får du inte bygga.' },
+        { mal: () => banRuta([[keiwsStart(bana) - keiwsHalv(bana), 0], [keiwsStart(bana) + keiwsHalv(bana), keiwsBildHojd(bana)]], 6),
+          text: 'Och keIWs kör <b>bil</b> nu! Med bilen väger han 2,5 ton, fem gånger så mycket som när han går.' }
+    ]
+};
+
+function lasNyheter() {
+    try { return JSON.parse(localStorage.getItem(SPARA_NYHETER)) || []; } catch (e) { return []; }
+}
+
+// Banans nyheter, om de inte har visats än (testerna slår på dem med ?nyheter).
+function visaNyheter() {
+    const lista = NYHETER[bana.namn];
+    if (!lista || (TEST && !new URLSearchParams(location.search).has('nyheter'))) return;
+    const sedda = lasNyheter();
+    if (sedda.includes(bana.namn)) return;
+    try { localStorage.setItem(SPARA_NYHETER, JSON.stringify(sedda.concat(bana.namn))); } catch (e) { /* privat läge */ }
+    visaGuide(lista);
+}
+
+// keIWs som professor på en liten duk: vinkar i ett första steg utan mål,
+// annars står han och pekar uppåt med armen (den till höger) medan han blinkar.
 const PROFESSOR = { x0: -50, y0: -64, x1: 214, y1: 206 };     // figurens pixlar som syns
 function ritaProfessor(t) {
     const cv = guideEl.querySelector('canvas');
@@ -1736,8 +1786,8 @@ function ritaProfessor(t) {
     const s = Math.min(w / (P.x1 - P.x0), h / (P.y1 - P.y0)) * d;
     c.setTransform(s, 0, 0, s, -P.x0 * s, -P.y0 * s + (h * d - (P.y1 - P.y0) * s));
     c.clearRect(P.x0, P.y0, P.x1 - P.x0, P.y1 - P.y0);
-    const pekar = guideSteg > 0;
-    for (const [x0, y0, x1, y1, farg] of ruta(guideSteg === 0 ? FIG.vinka : FIG.idle, t)) {
+    const vinkar = guideSteg === 0 && !guideLista[0].mal, pekar = !vinkar;
+    for (const [x0, y0, x1, y1, farg] of ruta(vinkar ? FIG.vinka : FIG.idle, t)) {
         const dy = pekar && x0 >= 160 && y1 <= 110 ? -84 : 0;        // armen till höger upp
         c.fillStyle = FIG.farger[farg];
         c.fillRect(x0, y0 + dy, x1 - x0 + 0.5, y1 - y0 + 0.5);
@@ -1760,10 +1810,11 @@ function guideAnimera() {
     guideRam = requestAnimationFrame(guideAnimera);
 }
 
-function visaGuide() {
+function visaGuide(lista = GUIDE) {
     if (lageNu !== 'bygg') bygg(false);
     if (popup) stangPopup();
     if (menyOppen()) stangMeny();
+    guideLista = Array.isArray(lista) ? lista : GUIDE;
     guideSteg = -1;
     guideEl.classList.remove('dold');
     guideNasta(1);
@@ -1778,17 +1829,18 @@ function stangGuide() {
 // Nästa (eller förra) steg som har något att visa på den här banan.
 function guideNasta(d) {
     let i = guideSteg + d;
-    while (i > 0 && i < GUIDE.length && GUIDE[i].mal && !GUIDE[i].mal()) i += d;
+    const G = guideLista;
+    while (i > 0 && i < G.length && G[i].mal && !G[i].mal()) i += d;
     if (i < 0) i = 0;
-    if (i >= GUIDE.length) { stangGuide(); return; }
+    if (i >= G.length) { stangGuide(); return; }
     guideSteg = i;
     ritaGuide();
 }
 
 function ritaGuide() {
     if (guideSteg < 0) return;
-    const steg = GUIDE[guideSteg], r = steg.mal ? steg.mal() : null;
-    const synliga = GUIDE.map((s, i) => i).filter(i => !GUIDE[i].mal || GUIDE[i].mal());
+    const G = guideLista, steg = G[guideSteg], r = steg.mal ? steg.mal() : null;
+    const synliga = G.map((s, i) => i).filter(i => !G[i].mal || G[i].mal());
     const sista = guideSteg === synliga[synliga.length - 1];
     guideEl.innerHTML = '<div class="hal' + (r ? '' : ' ingen') + '"></div><div class="bubbla">'
         + '<canvas class="professor"></canvas><div class="prat">'
@@ -1820,7 +1872,7 @@ function ritaGuide() {
     guideAnimera();
 }
 
-document.getElementById('guideknapp').addEventListener('click', visaGuide);
+document.getElementById('guideknapp').addEventListener('click', () => visaGuide());
 guideEl.addEventListener('click', e => {
     const b = e.target.closest('button');
     if (!b || b.disabled) return;
@@ -2433,6 +2485,7 @@ ritVag = !vagenHel();
 anpassaTra();
 anpassa();
 uppdateraInfo();
+requestAnimationFrame(visaNyheter);
 requestAnimationFrame(loop);
 
 // Versionen = namnet på service workerns cache (brobyggare-v6-test -> v6-test).

@@ -773,3 +773,9 @@ storleken i bild; banornas `keiws` borta). Det blev fortare på de långa banorn
 lösning fick vägen steg 4 (100 620 $$) och Havets väg IPE 360 (1 024 190 $$, budgeten höjd till
 1 050 000 $$). Marken ligger på samma höjd på skärmen på alla banor (`MARK_NIVA` = 0,5 av höjden
 under infotexten; vattnet längst ner får hamna bakom profilrutan). Ån 20 % grundare under −3 m.
+
+v86-test (Isak 2026-10-17): första gången man kommer till en bana med något nytt berättar
+professor keIWs om det och pekar (`NYHETER` i app.js, samma rutor som guiden; sedda banor i
+localStorage `brobyggare-nyheter`): Sundet fler profiler, Kanalen stål och rör, Dalgången glesare
+prickar, Älven betong, kablar, pelare, farleden och bilen. Marken liggande på 0,72 av höjden
+(profilrutan står mitt på skärmen där), stående 0,5.

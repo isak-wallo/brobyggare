@@ -195,8 +195,8 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     else:
         kolla(f'{namn}: verktygen ligger till höger', lista['x'] >= duk['x'] + duk['width'] - 1)
     v = sida.evaluate('() => BANOR[0].vy')
-    (x0, y0), (x1, y1) = skarm(sida, (v['x0'], v['y1'])), skarm(sida, (v['x1'], v['y0']))
-    kolla(f'{namn}: hela banan syns',
+    (x0, y0), (x1, y1) = skarm(sida, (v['x0'], v['y1'])), skarm(sida, (v['x1'], -3))
+    kolla(f'{namn}: hela banan syns (ner till bäckens botten)',
           x0 >= duk['x'] - 1 and x1 <= duk['x'] + duk['width'] + 1
           and y0 >= duk['y'] - 1 and y1 <= duk['y'] + duk['height'] + 1)
 
@@ -794,11 +794,12 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     kolla(f'{namn}: zoomen nollas vid byte av bana', sida.evaluate('() => window.bro.zoom') == 1)
     v = sida.evaluate('() => BANOR[1].vy')
     duk = sida.locator('#duk').bounding_box()
-    (x0, y0), (x1, y1) = skarm(sida, (v['x0'], v['y1'])), skarm(sida, (v['x1'], v['y0']))
+    (x0, y0), (x1, y1) = skarm(sida, (v['x0'], v['y1'])), skarm(sida, (v['x1'], 0))
     info = sida.locator('#info').bounding_box()
-    kolla(f'{namn}: hela bana 2 syns, under infotexten',
+    niva = sida.evaluate('() => [(window.bro.kam.oy - luftNu) / (document.querySelector("#duk").clientHeight - luftNu), markNiva()]')
+    kolla(f'{namn}: bana 2 syns i bredd och höjd, under infotexten, marken på sin nivå',
           x0 >= duk['x'] - 1 and x1 <= duk['x'] + duk['width'] + 1
-          and y0 >= info['y'] + info['height'] - 1 and y1 <= duk['y'] + duk['height'] + 1)
+          and y0 >= info['y'] + info['height'] - 1 and abs(niva[0] - niva[1]) < 0.01, niva)
     valj(sida, 'vag')
     dra(sida, (0, 0), (12, 0))
     kolla(f'{namn}: en 12 m balk går att bygga', antal_balkar(sida) == 1)
@@ -992,6 +993,39 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     sida.close()
 
 
+def nyheter(webblasare, url, bilder):
+    """Första gången på en bana med något nytt berättar professor keIWs om det, sedan inte igen."""
+    sida = webblasare.new_page(viewport={'width': 390, 'height': 844})
+    sida.goto(url + '&nyheter')
+    sida.wait_for_timeout(300)
+    kolla('nyheter: inga på Bäcken', not sida.locator('#guide').is_visible())
+    sida.evaluate('() => window.bro.bytBana(2)')
+    sida.wait_for_timeout(100)
+    text = sida.inner_text('#guide .bubbla') if sida.locator('#guide').is_visible() else ''
+    hal = sida.locator('#guide .hal').bounding_box()
+    knapp = sida.locator('#valjare [data-p=profil]').bounding_box()
+    kolla('nyheter: på Sundet berättar keIWs om fler profiler och pekar på Profil',
+          'fler profiler' in text and abs(hal['x'] + hal['width'] / 2 - knapp['x'] - knapp['width'] / 2) < 2, text)
+    bild(sida, bilder, 'nyheter-sundet')
+    sida.click('#guide [data-g=nasta]')
+    kolla('nyheter: Klar stänger', not sida.locator('#guide').is_visible())
+    sida.evaluate('() => { window.bro.bytBana(1); window.bro.bytBana(2); }')
+    sida.wait_for_timeout(100)
+    kolla('nyheter: bara första gången', not sida.locator('#guide').is_visible())
+    sida.evaluate('() => window.bro.bytBana(6)')
+    sida.wait_for_timeout(100)
+    steg = 0
+    while sida.locator('#guide').is_visible() and steg < 10:
+        steg += 1
+        bild(sida, bilder, f'nyheter-alven{steg}')
+        sida.click('#guide [data-g=nasta]')
+    kolla('nyheter: på Älven fem steg (betong, kablar, pelare, farleden, bilen)', steg == 5, steg)
+    sida.reload()
+    sida.wait_for_timeout(300)
+    kolla('nyheter: inte igen efter omladdning', not sida.locator('#guide').is_visible())
+    sida.close()
+
+
 def main():
     global fel
     sys.stdout.reconfigure(encoding='utf-8')
@@ -1014,6 +1048,7 @@ def main():
             webblasare = p.chromium.launch(headless=not arg.visa)
         provka(webblasare, url, 'staende', 390, 844, arg.bilder)
         provka(webblasare, url, 'liggande', 844, 390, arg.bilder)
+        nyheter(webblasare, url, arg.bilder)
         webblasare.close()
     server.shutdown()
     print('Allt OK' if not fel else f'{fel} FEL')
