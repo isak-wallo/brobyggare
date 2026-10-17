@@ -779,3 +779,7 @@ professor keIWs om det och pekar (`NYHETER` i app.js, samma rutor som guiden; se
 localStorage `brobyggare-nyheter`): Sundet fler profiler, Kanalen stål och rör, Dalgången glesare
 prickar, Älven betong, kablar, pelare, farleden och bilen. Marken liggande på 0,72 av höjden
 (profilrutan står mitt på skärmen där), stående 0,5.
+
+v87-test (Isak 2026-10-17): keIWs står på exakt samma ställe på skärmen på alla banor när hela
+banan syns (`KEIWS_X` = 0,117 av bredden, som på Bäcken; `anpassa` visar så mycket mer av vyn som
+behövs). Testas stående och liggande.

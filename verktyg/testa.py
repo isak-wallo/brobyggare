@@ -936,14 +936,14 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     valj(sida, 'pelare')
     kolla(f'{namn}: panelen har Pelare med pris', 'Pelare' in panel('typ')
           and '540' in sida.inner_text('#valjare'), sida.inner_text('#valjare'))
-    tryck(sida, (30, -5))
-    n = sida.evaluate('() => window.bro.ritning.noder.find(n => n.x === 30 && n.y === -5)')
+    tryck(sida, (20, -5))
+    n = sida.evaluate('() => window.bro.ritning.noder.find(n => n.x === 20 && n.y === -5)')
     kolla(f'{namn}: ett tryck sätter en pelare (300 + 11 m × 15 mynt)', n and n.get('pelare') and n['fast']
           and sida.evaluate('() => window.bro.kostnad()') == fore + 4650)
     tryck(sida, (80, -5))
     tryck(sida, (80, 30))
     kolla(f'{namn}: Riv heter Riv allt utan val', sida.inner_text('#verktyg [data-v=riv]') == 'Riv allt')
-    hall(sida, (30, -5))
+    hall(sida, (20, -5))
     kolla(f'{namn}: håll väljer en pelare', '465' in sida.inner_text('#valjare')
           and not riv_av(sida), sida.inner_text('#valjare'))
     sida.click('#verktyg [data-v=riv]')
@@ -1026,6 +1026,20 @@ def nyheter(webblasare, url, bilder):
     sida.close()
 
 
+def samma_plats(webblasare, url, bredd, hojd):
+    """keIWs står på samma ställe på skärmen på alla banor när hela banan syns."""
+    sida = webblasare.new_page(viewport={'width': bredd, 'height': hojd})
+    sida.goto(url)
+    sida.wait_for_function('() => window.bro')
+    platser = []
+    for i in range(8):
+        sida.evaluate(f'() => window.bro.bytBana({i})')
+        platser.append(sida.evaluate('() => [Math.round(window.bro.kam.ox + keiwsStart(bana) * window.bro.kam.sk), Math.round(window.bro.kam.oy)]'))
+    kolla(f'{bredd}×{hojd}: keIWs står på samma ställe på alla banor', max(p[0] for p in platser) - min(p[0] for p in platser) <= 1
+          and max(p[1] for p in platser) - min(p[1] for p in platser) <= 1, platser)
+    sida.close()
+
+
 def main():
     global fel
     sys.stdout.reconfigure(encoding='utf-8')
@@ -1049,6 +1063,8 @@ def main():
         provka(webblasare, url, 'staende', 390, 844, arg.bilder)
         provka(webblasare, url, 'liggande', 844, 390, arg.bilder)
         nyheter(webblasare, url, arg.bilder)
+        samma_plats(webblasare, url, 390, 844)
+        samma_plats(webblasare, url, 844, 390)
         webblasare.close()
     server.shutdown()
     print('Allt OK' if not fel else f'{fel} FEL')
