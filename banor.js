@@ -41,9 +41,10 @@
 //           [a, b, storlek (0–5, knapparna 1–6), väg, material] (limträ om det saknas)
 //   facit:  {enkel, effektiv}: två möjliga lösningar som spelaren kan hämta
 //           i menyn (som losning, med en text), något att utgå ifrån. Den
-//           enkla är en alldeles för grov balk (över budget), den
-//           kostnadseffektiva ett fackverk med tydliga trianglar och ledade
-//           knutar, under budget men inte bäst (det får man hitta själv).
+//           enkla är en alldeles för grov bro (över budget), den
+//           kostnadseffektiva ryms precis i budgeten men är inte bäst (det
+//           får man hitta själv). Från Kanalen byggs de av lösningen med
+//           andra profiler (andraLosning, efter BANOR).
 
 // Trädimensionerna på de två första banorna (färre att välja bland).
 const TRA_ENKEL = { bredd: [42, 56, 66, 90, 115], hojd: [180, 270, 360, 450, 540] };
@@ -396,6 +397,49 @@ const BANOR = [
         }
     }
 ];
+
+// Facit från Kanalen: banans lösning med andra profiler. byt(balk) ger
+// balkens nya profil (undefined: som förut); ledad: knutpunkterna blir ledade.
+function andraLosning(bana, text, byt, ledad) {
+    const l = bana.losning, n = bana.fasten.length;
+    return {
+        text,
+        noder: l.noder.map((p, i) => ledad && i >= n && !p[2] ? [p[0], p[1], 'ledad'] : p),
+        balkar: l.balkar.map(b => { const st = byt(b); return st === undefined ? b : [b[0], b[1], st, b[3], b[4]]; })
+    };
+}
+const ENKEL = ' Den håller med råge, men är alldeles för dyr.', BILLIGARE = ' Det går att göra billigare.';
+const profilerna = tabell => b => tabell[b[2]];
+const facit = (namn, enkel, effektiv) => { const b = BANOR.find(b => b.namn === namn); b.facit = { enkel: enkel(b), effektiv: effektiv(b) }; };
+facit('Kanalen',
+    b => andraLosning(b, 'Ett bågfackverk av stål med grova rör överallt och en kraftig väg.' + ENKEL,
+        k => k[3] ? 'HEA 140' : 'KKR 120×6'),
+    b => andraLosning(b, 'Ett bågfackverk av stål: bågen av rör trycks, vägen dras, och hängarna och diagonalerna '
+        + 'bildar trianglar. Knutarna är ledade, så att balkarna dras eller trycks i stället för att böjas.' + BILLIGARE,
+        profilerna({ 'IPE 100': 'IPE 140', 'KKR 40×3': 'KKR 50×3', 'KKR 60×4': 'KKR 70×4' }), true));
+facit('Ravinen',
+    b => andraLosning(b, 'En grov väg på grova strävor från fästena i sluttningarna.' + ENKEL,
+        profilerna({ '42×225': '66×360', '66×180': '115×270', '90×180': '115×270' })),
+    b => andraLosning(b, 'Två strävor från varje fäste bildar trianglar med vägen, och knutarna är ledade, så att '
+        + 'strävorna bara trycks. De är tjocka åt sidan, så att de inte knäcks.' + BILLIGARE,
+        profilerna({ '42×225': '56×270', '66×180': '90×180' }), true));
+facit('Dalgången',
+    b => andraLosning(b, 'En båge med stolpar upp till vägen, och stöd från de övre fästena, allt grovt.' + ENKEL,
+        profilerna({ 4: 5, '140×180': '140×315', '140×225': '140×315', '42×180': '140×315' })),
+    b => andraLosning(b, 'En båge med stolpar upp till vägen, och snedsträvor och stöd från de övre fästena. '
+        + 'Allt som trycks är tjockt åt sidan, så att det inte knäcks.' + BILLIGARE,
+        profilerna({ 4: '78×315', '42×180': '56×180', '140×225': '140×270' })));
+facit('Älven',
+    b => andraLosning(b, 'En snedkabelbro med grövre väg, pyloner och kablar än det behövs.' + ENKEL,
+        k => k[3] ? 'IPE 300' : 3),
+    b => andraLosning(b, 'En snedkabelbro: två pyloner av betong på fundamenten, och fyra kablar åt var håll '
+        + 'som bär vägen.' + BILLIGARE, k => k[4] === 'vajer' ? 2 : undefined));
+facit('Havet',
+    b => andraLosning(b, 'En hängbro med en grov väg och grova hängare. Den håller, men är alldeles för dyr.',
+        k => k[3] ? 'IPE 450' : k[4] === 'vajer' && k[2] === 1 ? 3 : undefined),
+    b => andraLosning(b, 'En hängbro: huvudkabeln hänger mellan pylonerna och bär vägen med hängare, och '
+        + 'sidospannen står på pelare. Vägen är grövre på mitten, där bilen böjer den mest.' + BILLIGARE,
+        k => k[3] && k[0] >= 21 && k[1] <= 29 ? 'IPE 400' : undefined));
 
 // En banas fästpunkter som noder i en ny ritning.
 function nyRitning(bana) {

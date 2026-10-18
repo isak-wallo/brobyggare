@@ -67,7 +67,7 @@ fastnar Newton när de krossas mot marken.
 Banorna (v64): Bäcken 14 m, Ån 26 m, Sundet 38 m (bara trä), Kanalen 50 m (stål och
 rör kommer, stålet ska vinna), Ravinen, Dalgången, Älven (betong, kablar, farled, pelare),
 Havet. Varje bana har en lösning som ska hålla under budget (testa_banor.js).
-Banor kan ha `facit` {enkel, effektiv}: möjliga lösningar som spelaren hämtar i menyn
+Alla banor har `facit` {enkel, effektiv} (från Kanalen lösningen med andra profiler, `andraLosning`): möjliga lösningar som spelaren hämtar i menyn
 (banans veck, "Visa möjliga lösningar"); de ska hålla, den enkla gå över budget och den effektiva rymmas.
 Guiden (`GUIDE` i app.js, knappen "?" under menyn eller i menyn) lyser upp ett mål i taget;
 steg vars mål saknas på banan hoppas över.

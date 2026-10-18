@@ -858,3 +858,11 @@ tvärstannade vid stoppet (±0,3 m) blev stöten ett dragbrott. Utan stopp hade 
 Nu glider lagret ±0,5 m (GLID_MAX) och stoppet är mjukt: de sista 0,2 m (GLID_MJUK) får farten mot stoppet
 högst vara avståndet kvar / 0,08 s (GLID_TAU), så att lagret inte tvärstannar och stöten i sig inte bryter
 bron. Isaks bro går nu av i böjning i vägen (test i testa_banor.js).
+
+v106-test (Isak 2026-10-18): Alla banor har möjliga lösningar (fusk). Från Kanalen byggs de av banans lösning med
+andra profiler (`andraLosning` i banor.js): den enkla med grova profiler överallt (långt över budget), den
+effektiva med lite för grova profiler så att den ryms precis i budgeten (Kanalen och Ravinen också med ledade
+knutar). Kanalen 116 280 / 61 440 av 64 000, Ravinen 22 620 / 15 480 av 16 000, Dalgången 145 280 / 103 090 av
+104 000, Älven 342 000 / 233 980 av 240 000, Havet 1 194 040 / 1 043 070 av 1 050 000 (vägen IPE 400 på mitten,
+där IPE 360 i lösningen går till 99 %). Ledade knutar med lösningens profiler blir billigare än lösningen på
+Kanalen (55 450) och Ravinen (14 050), och vägen 66×315 på Dalgången (96 650): där finns mer att hämta.
