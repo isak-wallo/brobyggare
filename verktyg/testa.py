@@ -684,7 +684,13 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
         kolla(f'{namn}: förloppsrutan ligger nere på panelen, ovanför Ångra Riv Stopp',
               abs(rb['y'] + rb['height'] - (vb['y'] + vb['height'])) < 2 and rb['y'] + rb['height'] <= kb['y'],
               f"ruta {rb['y']:.0f}–{rb['y'] + rb['height']:.0f}, panelen {vb['y']:.0f}–{vb['y'] + vb['height']:.0f}")
-    kolla(f'{namn}: förloppsrutan är liten', rb['height'] < 230, f"{rb['height']:.0f} px")
+        kolla(f'{namn}: förloppsrutan är liten', rb['height'] < 230, f"{rb['height']:.0f} px")
+    else:
+        pb = sida.locator('#styrning').bounding_box()
+        kolla(f'{namn}: förloppsrutan täcker panelen till höger, inte bron',
+              all(abs(rb[k] - pb[k]) < 2 for k in ('x', 'y', 'width', 'height'))
+              and sida.locator('#ruta [data-v=forlopp-klar]').bounding_box()['y'] + 44 <= pb['y'] + pb['height'] + 1,
+              f"ruta {rb}, panelen {pb}")
     sida.click('#ruta [data-v=forlopp-klar]')
     kolla(f'{namn}: Klar i förloppet är samma som Bygg om', sida.evaluate('() => window.bro.lage') == 'bygg'
           and not sida.is_visible('#ruta') and not sida.evaluate('() => window.bro.forlopp'))
@@ -788,12 +794,16 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     kolla(f'{namn}: ✕ stänger guiden', not sida.locator('#guide').is_visible())
     # Helskärm: knappen bredvid ? slår på och av.
     sida.click('#helskarmknapp')
-    sida.wait_for_function('() => !!document.fullscreenElement', timeout=3000)
-    kolla(f'{namn}: helskärmsknappen slår på helskärm',
-          'pa' in sida.get_attribute('#helskarmknapp', 'class') and sida.is_visible('#helskarmknapp .ut'))
+    pa = lambda: sida.evaluate("() => [!!document.fullscreenElement, document.querySelector('#helskarmknapp').classList.contains('pa')]")
+    for i in range(30):
+        if pa() == [True, True]: break
+        sida.wait_for_timeout(100)
+    kolla(f'{namn}: helskärmsknappen slår på helskärm', pa() == [True, True] and sida.is_visible('#helskarmknapp .ut'), str(pa()))
     sida.click('#helskarmknapp')
-    sida.wait_for_function('() => !document.fullscreenElement', timeout=3000)
-    kolla(f'{namn}: och av igen', sida.is_visible('#helskarmknapp .in'))
+    for i in range(30):
+        if pa() == [False, False]: break
+        sida.wait_for_timeout(100)
+    kolla(f'{namn}: och av igen', pa() == [False, False] and sida.is_visible('#helskarmknapp .in'), str(pa()))
     riv_allt(sida)
     kolla(f'{namn}: håll inne Riv: Riv allt tömmer banan',
           antal_balkar(sida) == 0 and sida.evaluate('() => window.bro.ritning.noder.length')

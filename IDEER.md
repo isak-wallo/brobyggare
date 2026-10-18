@@ -870,3 +870,7 @@ Kanalen (55 450) och Ravinen (14 050), och vägen 66×315 på Dalgången (96 650
 v107-test (Isak 2026-10-18): Valfri helskärm, som Poppa och Kludda har tvingat. En knapp bredvid "?" (hörn utåt,
 i helskärm hörn inåt) slår på och av; den syns bara där webbläsaren kan helskärm (inte på iPhone). Ingen
 låsning av vridningen och ingen startskärm som i Poppa och Kludda.
+
+v108-test (Isak 2026-10-18): Förloppsrutan låg liggande mitt över bron. Nu ligger den liggande över hela panelen
+till höger (i stället för Ångra/Riv/Stopp, som den redan står på panelen stående): texten överst, ‹ › och Klar
+nederst. Den skymmer aldrig bron.

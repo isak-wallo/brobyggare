@@ -2010,10 +2010,16 @@ function forloppRingar() {
 // Förloppsrutan: stående nedtill, nere på panelen (där Material, Typ och
 // Profil vilar under provkörningen), så att bron syns; liggande upptill (CSS).
 function placeraForlopp() {
-    rutaEl.style.position = rutaEl.style.bottom = '';
-    if (innerWidth > innerHeight) return;
-    rutaEl.style.position = 'fixed';
-    rutaEl.style.bottom = innerHeight - valjareEl.getBoundingClientRect().bottom + 'px';
+    const s = rutaEl.style;
+    s.position = s.bottom = s.top = s.left = s.width = s.height = '';
+    const liggande = innerWidth > innerHeight;
+    rutaEl.classList.toggle('i-panel', liggande);
+    s.position = 'fixed';
+    if (liggande) {
+        // Liggande: över hela panelen till höger, så att rutan aldrig skymmer bron.
+        const p = document.getElementById('styrning').getBoundingClientRect();
+        Object.assign(s, { left: p.left + 'px', top: p.top + 'px', width: p.width + 'px', height: p.height + 'px' });
+    } else s.bottom = innerHeight - valjareEl.getBoundingClientRect().bottom + 'px';
 }
 addEventListener('resize', () => { if (forlopp) placeraForlopp(); });
 
@@ -2045,7 +2051,8 @@ function stangForlopp() {
     forlopp = null;
     stallTill(sim.slutBild, false);
     rutaEl.className = '';
-    rutaEl.style.position = rutaEl.style.bottom = '';
+    const s = rutaEl.style;
+    s.position = s.bottom = s.top = s.left = s.width = s.height = '';
 }
 
 // Balken närmast punkten i förloppets läge (de böjda elementen), eller -1.

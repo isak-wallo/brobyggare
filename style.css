@@ -832,7 +832,7 @@ html, body {
 }
 
 /* Förloppet: litet och nedtill, så att bron syns (stående nere på panelen,
-   placeraForlopp i app.js). */
+   liggande över hela panelen, placeraForlopp i app.js). */
 #ruta.forlopp {
     top: auto;
     bottom: 10px;
@@ -857,12 +857,34 @@ html, body {
     font-size: 15px;
 }
 
-/* Liggande: upptill (under infotexten), bron ligger mitt i bild. */
-@media (orientation: landscape) {
-    #ruta.forlopp {
-        top: var(--info);
-        bottom: auto;
-    }
+/* Liggande: i panelen till höger. Texten överst, ‹ › och Klar nederst. */
+#ruta.forlopp.i-panel {
+    box-sizing: border-box;
+    transform: none;
+    border-radius: 0;
+    box-shadow: none;
+    background-color: #f4f7f2;   /* hel, så att knapparna under inte lyser igenom */
+    padding: 12px 10px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto 1fr auto auto;
+    gap: 8px;
+    overflow: auto;
+}
+
+#ruta.forlopp.i-panel h1,
+#ruta.forlopp.i-panel p,
+#ruta.forlopp.i-panel [data-v="forlopp-klar"] {
+    grid-column: 1 / -1;
+}
+
+#ruta.forlopp.i-panel p {
+    margin: 0;
+}
+
+#ruta.forlopp.i-panel button {
+    margin: 0;
+    padding: 0;
 }
 
 #ruta button:disabled {

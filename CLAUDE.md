@@ -33,7 +33,7 @@ Idéer och beslut i `IDEER.md` (läs den först).
 - `spel.js` – provkörningen utan ritning: keIWs som rörlig last, faller
   utan vägbana, marken (`markY`) stoppar fallande bitar. Har något gått sönder när keIWs
   ska gå (START_TID) stannar han (`'hoppsan'`, resultatet `'rasade'`). Brotten sparas i `sim.forlopp`
-  (Förlopp i app.js stegar igenom dem: en liten ruta, stående nere på panelen, `placeraForlopp`). Testerna kör den i node.
+  (Förlopp i app.js stegar igenom dem: en liten ruta, stående nere på panelen, liggande över hela panelen, `placeraForlopp`). Testerna kör den i node.
 - `app.js` – ritning, verktyg, bygga med fingret, kamera och layout
   (`#styrning` = panelen Material/Typ/Profil + Ångra/Riv/Kör i samma rutnät; stående: två
   rader nedtill; liggande: två kolumner till höger; `#popup` = rutan med val).
