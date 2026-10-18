@@ -425,6 +425,7 @@ html, body {
 
 /* Guiden: ? under menyknappen, och ! under den (dela konstruktionen, testsidan) */
 #guideknapp,
+#helskarmknapp,
 #delaknapp {
     position: absolute;
     top: calc(max(8px, env(safe-area-inset-top)) + 40px);
@@ -443,6 +444,37 @@ html, body {
 
 #delaknapp {
     top: calc(max(8px, env(safe-area-inset-top)) + 80px);
+}
+
+/* Helskärm, bredvid "?": hörn utåt, i helskärm (.pa) hörn inåt */
+#helskarmknapp {
+    right: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#helskarmknapp[hidden] {
+    display: none;
+}
+
+#helskarmknapp svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: #fff;
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+#helskarmknapp .ut,
+#helskarmknapp.pa .in {
+    display: none;
+}
+
+#helskarmknapp.pa .ut {
+    display: block;
 }
 
 #delaknapp[hidden] {

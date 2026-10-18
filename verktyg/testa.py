@@ -786,6 +786,14 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     sida.click('#guideknapp')
     sida.click('#guide [data-g=stang]')
     kolla(f'{namn}: ✕ stänger guiden', not sida.locator('#guide').is_visible())
+    # Helskärm: knappen bredvid ? slår på och av.
+    sida.click('#helskarmknapp')
+    sida.wait_for_function('() => !!document.fullscreenElement', timeout=3000)
+    kolla(f'{namn}: helskärmsknappen slår på helskärm',
+          'pa' in sida.get_attribute('#helskarmknapp', 'class') and sida.is_visible('#helskarmknapp .ut'))
+    sida.click('#helskarmknapp')
+    sida.wait_for_function('() => !document.fullscreenElement', timeout=3000)
+    kolla(f'{namn}: och av igen', sida.is_visible('#helskarmknapp .in'))
     riv_allt(sida)
     kolla(f'{namn}: håll inne Riv: Riv allt tömmer banan',
           antal_balkar(sida) == 0 and sida.evaluate('() => window.bro.ritning.noder.length')

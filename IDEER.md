@@ -866,3 +866,7 @@ knutar). Kanalen 116 280 / 61 440 av 64 000, Ravinen 22 620 / 15 480 av 16 000, 
 104 000, Älven 342 000 / 233 980 av 240 000, Havet 1 194 040 / 1 043 070 av 1 050 000 (vägen IPE 400 på mitten,
 där IPE 360 i lösningen går till 99 %). Ledade knutar med lösningens profiler blir billigare än lösningen på
 Kanalen (55 450) och Ravinen (14 050), och vägen 66×315 på Dalgången (96 650): där finns mer att hämta.
+
+v107-test (Isak 2026-10-18): Valfri helskärm, som Poppa och Kludda har tvingat. En knapp bredvid "?" (hörn utåt,
+i helskärm hörn inåt) slår på och av; den syns bara där webbläsaren kan helskärm (inte på iPhone). Ingen
+låsning av vridningen och ingen startskärm som i Poppa och Kludda.

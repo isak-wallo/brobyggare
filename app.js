@@ -1889,6 +1889,25 @@ function ritaGuide() {
 }
 
 document.getElementById('guideknapp').addEventListener('click', () => visaGuide());
+
+// Helskärm (knappen bredvid "?"), valfritt: döljer webbläsarens och systemets
+// fält. Knappen syns bara där webbläsaren kan det (inte på iPhone). Scenen
+// följer storleken själv (ResizeObserver).
+const helskarmknapp = document.getElementById('helskarmknapp');
+const iHelskarm = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
+helskarmknapp.hidden = !(document.fullscreenEnabled || document.webkitFullscreenEnabled);
+helskarmknapp.addEventListener('click', () => {
+    const d = document.documentElement;
+    const p = iHelskarm() ? (document.exitFullscreen || document.webkitExitFullscreen).call(document)
+        : (d.requestFullscreen || d.webkitRequestFullscreen).call(d);
+    if (p && p.catch) p.catch(() => {});
+});
+const visaHelskarm = () => {
+    helskarmknapp.classList.toggle('pa', iHelskarm());
+    helskarmknapp.setAttribute('aria-label', iHelskarm() ? 'Lämna helskärm' : 'Helskärm');
+};
+document.addEventListener('fullscreenchange', visaHelskarm);
+document.addEventListener('webkitfullscreenchange', visaHelskarm);
 guideEl.addEventListener('click', e => {
     const b = e.target.closest('button');
     if (!b || b.disabled) return;

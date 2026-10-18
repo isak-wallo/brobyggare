@@ -73,5 +73,6 @@ Guiden (`GUIDE` i app.js, knappen "?" under menyn eller i menyn) lyser upp ett m
 steg vars mål saknas på banan hoppas över.
 Menyn (`visaMeny`) är fem likadana veck (`data-veck`: bana, guide, installningar, lekman, nord); guidens
 veck visar stegen som text. Knappen "!" under "?" (bara `FELSOK`) delar konstruktionen som text (`#dela`).
+Knappen bredvid "?" (`#helskarmknapp`) slår på och av helskärm, valfritt (syns bara där det går).
 Nyheter (`NYHETER` i app.js): första gången på en bana med något nytt visar professor keIWs det med
 guidens rutor (`visaGuide(lista)`); i testerna bara med `?test&nyheter`.
