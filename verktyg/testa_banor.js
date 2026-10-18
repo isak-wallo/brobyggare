@@ -107,7 +107,24 @@ module.exports = function (S, kolla) {
                   'HEA 160 ' + p.resultat + ', HEA 200 ' + q.resultat + ' för ' + kq + ' $$');
         }
         const glid = sim.m.punkter.findIndex(p => p.glid), u = sim.m.q[2 * glid];
-        kolla(namn + ': glidlagret stannar vid stoppet när bron rasar', glid >= 0 && Math.abs(u) <= 0.3 + 1e-9,
+        kolla(namn + ': glidlagret stannar vid stoppet när bron rasar', glid >= 0 && Math.abs(u) <= S('GLID_MAX') + 1e-9,
               (u * 1000).toFixed(0) + ' mm');
     });
+    // Mjukt lagerstopp: Isaks fackverk på Kanalen (v105) med en klen väg (KKR 40×3
+    // över 10 m) som hänger som en lina och drar glidlagret inåt. Den går av i
+    // böjning, inte i drag av en stöt när lagret når stoppet.
+    {
+        const bana = BANOR[3], r = nyRitning(bana), K = s => 'KKR ' + s;
+        for (const [x, y] of [[10, 0], [20, 0], [30, 0], [40, 0], [10, 5], [20, 5], [40, 5], [30, 5]])
+            r.noder.push({ x, y, fast: false, styv: false });
+        for (const [a, b, st, vag] of [[0, 6, '40×3', 1], [6, 7, '40×3', 1], [7, 8, '40×3', 1], [8, 9, '40×3', 1], [9, 2, '40×3', 1],
+            [3, 9, '100×5'], [1, 6, '100×5'], [10, 6, '40×3'], [10, 11, '70×4'], [11, 6, '100×5'], [11, 7, '40×3'],
+            [12, 9, '40×3'], [12, 13, '70×4'], [13, 8, '40×3'], [11, 13, '100×5'], [13, 9, '100×5']])
+            r.balkar.push({ a, b, storlek: K(st), vag: !!vag, material: 'stal' });
+        const sim = S('nySim')(r, bana), simSteg = S('simSteg');
+        let forsta = null;
+        while (!forsta && sim.t < 3) { simSteg(sim); if (sim.m.brutna.length) forsta = sim.m.brutna[0]; }
+        kolla('mjukt lagerstopp: en klen väg går av i böjning, inte i drag mot stoppet', forsta && forsta.orsak !== 'drag',
+              forsta ? forsta.orsak + ' ' + Math.round(forsta.u * 100) + ' %' : 'inget brott');
+    }
 };

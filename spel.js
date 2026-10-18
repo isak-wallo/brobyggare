@@ -21,7 +21,9 @@ const BIL_MASSA = 2500;      // kg, bilen med keIWs i
 const BIL_AXEL = 2.5;        // m mellan hjulen
 const KLIV_UPP = 0.25;       // m, så högt kliver keIWs upp utan att hoppa
 const LUFT_TID = 0.15;       // s i luften innan det räknas som att falla
-const GLID_MAX = 0.3;        // m, så långt glidlagret kan glida åt varje håll
+const GLID_MAX = 0.5;        // m, så långt glidlagret kan glida åt varje håll
+const GLID_MJUK = 0.2;       // m: så långt före stoppet bromsas lagret mjukt
+const GLID_TAU = 0.08;       // s: farten mot stoppet högst (avståndet kvar) / GLID_TAU
 
 // keIWs vikt är densamma på alla banor.
 // I bild är han lika stor på skärmen på alla banor (app.js): när hela banan
@@ -196,15 +198,18 @@ function keiwsSteg(sim, dt) {
 // Bitar som faller in i marken stannar på ytan (enkelt: noden flyttas ut
 // till närmaste yta, uppåt eller i sidled, och tappar farten in i berget).
 // Glidlagret har stopp: det rör sig bara några dm (även när bron rasar).
+// Stoppet är mjukt: de sista GLID_MJUK bromsas lagret (farten utåt högst
+// avståndet kvar / GLID_TAU), så att det inte tvärstannar och stöten i sig
+// får bron att gå sönder.
 function lagerStopp(sim) {
     const m = sim.m;
     for (let p = 0; p < m.np; p++) {
         if (!m.punkter[p].glid) continue;
-        const ix = 2 * p, u = m.q[ix];
-        if (Math.abs(u) <= GLID_MAX) continue;
-        m.q[ix] = Math.sign(u) * GLID_MAX;
-        if (m.v[ix] * u > 0) m.v[ix] = 0;
-        m.a[ix] = 0;
+        const ix = 2 * p, u = m.q[ix], kvar = GLID_MAX - Math.abs(u);
+        if (kvar >= GLID_MJUK || m.v[ix] * u <= 0) continue;
+        const vmax = Math.max(0, kvar) / GLID_TAU;
+        if (Math.abs(m.v[ix]) > vmax) { m.v[ix] = Math.sign(u) * vmax; m.a[ix] = 0; }
+        if (kvar < 0) m.q[ix] = Math.sign(u) * GLID_MAX;
     }
 }
 

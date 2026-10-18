@@ -334,7 +334,7 @@ keIWs om den annars skulle skymma honom när han jublar.
 v19-test: banan står långt ner (85 % av extra höjden går till himlen, lite
 vatten syns; v20), så rutor och text får plats ovanför. Väljaren ligger därför
 uppe under infotexten även i stående läge (annars skymde den bron).
-Glidlagret har stopp vid ±0,3 m (GLID_MAX i spel.js) och lagren ritas
+Glidlagret har stopp vid ±0,3 m (från v105 ±0,5 m med mjukt stopp; GLID_MAX i spel.js) och lagren ritas
 alltid på sin plats på berget, även när bron rasar.
 
 v21-test: rutnätet går 3 m högre (Bäcken till +7 m, Ån till +9 m) och 3 m
@@ -851,3 +851,10 @@ utanför stänger.
 v104-test (Isak 2026-10-17): Kanalen har en `profil` som de tidigare vattenbanorna: branta, nästan raka
 kanalväggar genom de nedre fästena (som nu står på marken i stället för i luften) och en jämn botten
 10–11 m ner; vattnet (−6) ligger 2 m under fästena och syns inte längre genom marken.
+
+v105-test (Isak 2026-10-18): Isaks fackverk på Kanalen gick av i drag (1119 %) vid glidlagret. Orsaken: vägen
+(KKR 40×3 över 10 m) var för klen och hängde som en lina, drog glidlagret inåt med 1,4 m/s, och när lagret
+tvärstannade vid stoppet (±0,3 m) blev stöten ett dragbrott. Utan stopp hade vägen gått av i böjning ändå.
+Nu glider lagret ±0,5 m (GLID_MAX) och stoppet är mjukt: de sista 0,2 m (GLID_MJUK) får farten mot stoppet
+högst vara avståndet kvar / 0,08 s (GLID_TAU), så att lagret inte tvärstannar och stöten i sig inte bryter
+bron. Isaks bro går nu av i böjning i vägen (test i testa_banor.js).
