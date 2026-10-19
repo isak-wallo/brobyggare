@@ -33,6 +33,17 @@ module.exports = function (S, kolla) {
                 return !bredder.includes(bb) || !hojder.includes(h) || traMatt(bb, h, false) !== st;
             });
         kolla(namn + ': träet i lösningarna finns på banan', fel.length === 0, fel.join(', '));
+        // Stålet i lösningarna finns på banan, högst 12 profiler per serie.
+        if (bana.stal) {
+            const serier = S('STAL_SERIER');
+            const stalFel = [bana.losning, ...Object.values(bana.facit || {})].flatMap(l => l.balkar)
+                .filter(b => b[4] === 'stal' && typeof b[2] === 'string').map(b => b[2])
+                .filter(st => { const [serie, nr] = st.split(' '); return !(bana.stal[serie] || []).map(String).includes(nr); });
+            const forManga = Object.entries(bana.stal).filter(([serie, l]) => l.length > 12
+                || !l.every(nr => serier[serie].some(x => x[0] === nr)) ).map(([serie]) => serie);
+            kolla(namn + ': stålet i lösningarna finns på banan, högst 12 per serie',
+                  stalFel.length === 0 && forManga.length === 0 && !('HEB' in bana.stal), stalFel.concat(forManga).join(', '));
+        }
         // Facit: två möjliga lösningar som håller. Den enkla (en för grov
         // balk) går över budget, den kostnadseffektiva ryms men är inte bäst.
         if (bana.facit) {

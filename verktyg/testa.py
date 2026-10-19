@@ -841,11 +841,14 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
           uppgradera({ version: 6, noder: [], balkar: [{ storlek: 0.75 }, { storlek: 1.75, material: 'stal' }] }).balkar
           .map(b => b.storlek).join()''') == '2,4')
     kolla(f'{namn}: nya ritningar behåller storleken (steg eller profilens namn)', sida.evaluate('''() =>
-          uppgradera({ version: 7, noder: [], balkar: [{ storlek: 3 }, { storlek: 'HEB 300', material: 'stal' }] }).balkar
-          .map(b => b.storlek).join()''') == '3,HEB 300')
-    kolla(f'{namn}: profilerna har riktiga värden', sida.evaluate('''() => profil('stal', 'HEB 300').pris > profil('stal', 'HEA 300').pris
+          uppgradera({ version: 7, noder: [], balkar: [{ storlek: 3 }, { storlek: 'IPE 300', material: 'stal' }] }).balkar
+          .map(b => b.storlek).join()''') == '3,IPE 300')
+    kolla(f'{namn}: HEB finns inte längre, en gammal HEB blir nästa HEA', sida.evaluate('''() =>
+          uppgradera({ version: 7, noder: [], balkar: [{ storlek: 'HEB 300', material: 'stal' }, { storlek: 'HEB 600', material: 'stal' }] })
+          .balkar.map(b => b.storlek).join()''') == 'HEA 320,HEA 600')
+    kolla(f'{namn}: profilerna har riktiga värden', sida.evaluate('''() => profil('stal', 'HEA 300').pris > profil('stal', 'IPE 300').pris
           && profil('stal', 'IPE 600').I > profil('stal', 'HEA 400').I && profil('limtra', '140×630').h === 0.63
-          && profil('limtra', 'nej').namn === '66×225' && Object.keys(STAL).length === 66'''))
+          && profil('limtra', 'nej').namn === '66×225' && Object.keys(STAL).length === 47'''))
     kolla(f'{namn}: gamla ritningar tappar fästena som tagits bort', sida.evaluate('''() => { const b = BANOR[0];
         const gamla = [[0, 0, 'fast'], [0, -3], [14, 0, 'glid'], [14, -3], [-3, 0], [17, 0]];
         const r = uppgradera({ version: 4, noder: gamla.map(([x, y, l]) => fastNod(x, y, l)),
@@ -994,13 +997,15 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     sida.click('#popup [data-serie=IPE]')
     sida.click('#popup [data-nr="100"]')
     ipe = sida.evaluate('() => window.bro.ritProfil.stal')
-    sida.click('#popup [data-serie=HEB]')
-    heb = sida.evaluate('() => window.bro.ritProfil.stal')
-    sida.click('#popup [data-nr="600"]')
+    sida.click('#popup [data-serie=HEA]')
+    hea = sida.evaluate('() => window.bro.ritProfil.stal')
+    hojder = sida.locator('#popup [data-nr]').all_inner_texts()
+    sida.click('#popup [data-nr="300"]')
     bild(sida, bilder, f'{namn}-10-stal')
-    kolla(f'{namn}: stål är IPE, HEA, HEB och KKR, serien behåller höjden', serier == 4 and ipe == 'IPE 100' and heb == 'HEB 100'
-          and sida.locator('#popup [data-nr]').count() == 19 and 'HEB 600' in sida.inner_text('#popup .rubrik')
-          and 'HEB 600' in panel('profil'), f'{ipe}, {heb}')
+    kolla(f'{namn}: stål är IPE, HEA och KKR, serien behåller höjden', serier == 3 and ipe == 'IPE 100' and hea == 'HEA 100'
+          and 'HEA 300' in sida.inner_text('#popup .rubrik') and 'HEA 300' in panel('profil'), f'{ipe}, {hea}')
+    kolla(f'{namn}: på Dalgången HEA 100–300, inte de största', hojder[0] == '100' and hojder[-1] == '300'
+          and len(hojder) == 11, str(hojder))
     sida.click('#popup [data-serie=KKR]')
     kkr = sida.evaluate('() => window.bro.ritProfil.stal')
     sida.click('#popup [data-nr="60×4"]')
@@ -1117,6 +1122,19 @@ def nyheter(webblasare, url, bilder):
     sida.reload()
     sida.wait_for_timeout(300)
     kolla('nyheter: inte igen efter omladdning', not sida.locator('#guide').is_visible())
+    sida.click('#menyknapp')
+    sida.click('#meny [data-veck=installningar] summary')
+    sida.click('#meny [data-v=nyheter]')
+    sida.click('#meny [data-v=stang]')
+    sida.wait_for_timeout(100)
+    kolla('nyheter: "visa nyheterna igen" i menyn visar banans nyheter när menyn stängs',
+          sida.locator('#guide').is_visible() and 'betong' in sida.inner_text('#guide .bubbla'))
+    while sida.locator('#guide').is_visible():
+        sida.click('#guide [data-g=nasta]')
+    sida.evaluate('() => window.bro.bytBana(2)')
+    sida.wait_for_timeout(100)
+    kolla('nyheter: och på de andra banorna igen', sida.locator('#guide').is_visible()
+          and 'fler profiler' in sida.inner_text('#guide .bubbla'))
     sida.close()
 
 

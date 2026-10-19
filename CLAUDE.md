@@ -18,7 +18,7 @@ Idéer och beslut i `IDEER.md` (läs den först).
 ## Filer
 
 - `material.js` – material (limträ GL30c, stål S355, betong C35/45, kabel) och profilerna:
-  trä bredd × höjd (TRA_BREDD, TRA_HOJD), stål IPE/HEA/HEB och fyrkantsrör KKR (STAL_SERIER), betong och kabel
+  trä bredd × höjd (TRA_BREDD, TRA_HOJD), stål IPE/HEA och fyrkantsrör KKR (STAL_SERIER; HEB finns inte), betong och kabel
   6 steg (STEGEN). Balkens `storlek` är profilens namn ('90×315', 'HEA 200') eller ett steg
   0–5 i STEGEN (banornas lösningar, äldre ritningar; före version 7 9 steg, se GAMLA_STEG).
   `profil(material, storlek)` ger A, I, W, vikt och pris. Vägbanan och förbanden (vikt och pris;
@@ -29,7 +29,7 @@ Idéer och beslut i `IDEER.md` (läs den först).
   vägen och knäcks med I). SI-enheter, y uppåt. Blir Newtonmatrisen indefinit
   (knäckta bitar) förstoras diagonalen; ett Newtonsteg högst MAX_DU.
 - Pengar: mynt (1 mynt = 10 $$). Allt i koden räknas i $$; `kr` i app.js visar /10 med myntet (`.mynt`).
-- `banor.js` – banorna (spann, fästpunkter, marken (`kant`/`dal`, eller `profil`: ojämn mark punkt för punkt), budget, en sparad lösning, `tra`: trädimensionerna på banan, färre på de två första).
+- `banor.js` – banorna (spann, fästpunkter, marken (`kant`/`dal`, eller `profil`: ojämn mark punkt för punkt), budget, en sparad lösning, `tra`: trädimensionerna på banan, färre på de två första; `stal`: stålprofilerna, högst 12 per serie, de första stålbanorna utan de största).
 - `spel.js` – provkörningen utan ritning: keIWs som rörlig last, faller
   utan vägbana, marken (`markY`) stoppar fallande bitar. Har något gått sönder när keIWs
   ska gå (START_TID) stannar han (`'hoppsan'`, resultatet `'rasade'`). Brotten sparas i `sim.forlopp`
@@ -75,4 +75,5 @@ Menyn (`visaMeny`) är fem likadana veck (`data-veck`: bana, guide, installninga
 veck visar stegen som text. Knappen "!" under "?" (bara `FELSOK`) delar konstruktionen som text (`#dela`).
 Knappen bredvid "?" (`#helskarmknapp`) slår på och av helskärm, valfritt (syns bara där det går).
 Nyheter (`NYHETER` i app.js): första gången på en bana med något nytt visar professor keIWs det med
-guidens rutor (`visaGuide(lista)`); i testerna bara med `?test&nyheter`.
+guidens rutor (`visaGuide(lista)`); i testerna bara med `?test&nyheter`. I menyn (Inställningar) visas de igen
+(`SPARA_NYHETER` töms, banans nyheter när menyn stängs).

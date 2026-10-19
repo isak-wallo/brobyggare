@@ -188,6 +188,12 @@ function uppgradera(r, b = bana) {
         // Trä som är för högt för sin bredd (från v55) blir bredare.
         const m = (k.material || 'limtra') === 'limtra' && /^(\d+)×(\d+)$/.exec(k.storlek);
         if (m) k.storlek = traMatt(+m[1], +m[2], true);
+        // HEB finns inte längre (v110): samma nummer i HEA är klenare, så nästa HEA.
+        const heb = k.material === 'stal' && /^HEB (\d+)$/.exec(k.storlek);
+        if (heb) {
+            const i = STAL_SERIER.HEA.findIndex(x => String(x[0]) === heb[1]);
+            k.storlek = 'HEA ' + STAL_SERIER.HEA[Math.min(i + 1, STAL_SERIER.HEA.length - 1)][0];
+        }
     }
     r.version = 7;
     return r;
@@ -229,12 +235,18 @@ function sparaBasta(k) {
     return true;
 }
 
-// Träprofilen man bygger med finns på banan (de två första har färre mått).
+// Trä- och stålprofilen man bygger med finns på banan (bana.tra, bana.stal).
 function anpassaTra() {
-    if (!bana.tra) return;
-    const p = profil('limtra', ritProfil.limtra);
-    ritProfil.limtra = traMatt(narmast(traBredder(), p.b * 1000), narmast(traHojder(), p.h * 1000), false,
-                               traBredder(), traHojder());
+    if (bana.tra) {
+        const p = profil('limtra', ritProfil.limtra);
+        ritProfil.limtra = traMatt(narmast(traBredder(), p.b * 1000), narmast(traHojder(), p.h * 1000), false,
+                                   traBredder(), traHojder());
+    }
+    if (bana.stal && typeof ritProfil.stal === 'string') {
+        const p = profil('stal', ritProfil.stal), serie = p.namn.split(' ')[0], rader = stalRader(serie);
+        const h = narmast(rader.map(x => x[1]), p.h * 1000);
+        ritProfil.stal = serie + ' ' + rader.find(x => x[1] === h)[0];
+    }
 }
 
 function bytBana(nr) {
@@ -1294,6 +1306,8 @@ function visaPopup(typ, ankare) {
 // Trädimensionerna som finns på banan (färre på de två första, bana.tra).
 const traBredder = () => bana.tra ? bana.tra.bredd : TRA_BREDD;
 const traHojder = () => bana.tra ? bana.tra.hojd : TRA_HOJD;
+// Stålprofilerna i serien som finns på banan (bana.stal), som rader i STAL_SERIER.
+const stalRader = serie => STAL_SERIER[serie].filter(([nr]) => !bana.stal || bana.stal[serie].includes(nr));
 
 // Profilrutan: bredd och höjd (trä), serie och höjd (stål) eller stegen.
 function profilRutan(mat, st, vag) {
@@ -1307,7 +1321,7 @@ function profilRutan(mat, st, vag) {
     } else if (mat === 'stal') {
         const [serie, nr] = p.namn.split(' ');
         html += rad('Serie', Object.keys(STAL_SERIER).map(s => knapp('data-serie="' + s + '"', s, s === serie)))
-            + rad(serie === 'KKR' ? 'Mått' : 'Höjd', STAL_SERIER[serie].map(([n]) => knapp('data-nr="' + n + '"', n, String(n) === nr)));
+            + rad(serie === 'KKR' ? 'Mått' : 'Höjd', stalRader(serie).map(([n]) => knapp('data-nr="' + n + '"', n, String(n) === nr)));
     } else {
         html += rad('', STEGEN[mat].map((x, i) => knapp('data-s="' + i + '"', x.namn, x === p)));
     }
@@ -1517,7 +1531,7 @@ function nordText() {
     }).join('');
     const urval = {
         limtra: [TRA_BREDD[0] + '×' + TRA_HOJD[0], '90×315', TRA_BREDD.at(-1) + '×' + TRA_HOJD.at(-1)],
-        stal: ['IPE 80', 'IPE 600', 'HEA 100', 'HEA 600', 'HEB 100', 'HEB 600'],
+        stal: ['IPE 80', 'IPE 600', 'HEA 100', 'HEA 600', 'KKR 40×3', 'KKR 200×8'],
         betong: [0, 1, 2, 3, 4, 5], vajer: [0, 1, 2, 3, 4, 5]
     };
     const profiler = Object.entries(urval).map(([nyckel, lista]) => lista.map((s, i) => {
@@ -1563,7 +1577,7 @@ ${brott}
 <p>Ett element som går sönder försvinner, en balk som knäcks går av på mitten.</p>
 <h4>Profiler</h4>
 <p>Limträ: bredd ${TRA_BREDD[0]}–${TRA_BREDD.at(-1)} mm, höjd ${TRA_HOJD[0]}–${TRA_HOJD.at(-1)} mm (lameller
-på 45 mm), höjden högst ${TRA_SLANK} gånger bredden (en högre balk väljs bredare). Stål: IPE 80–600, HEA och HEB 100–600, fyrkantsrör KKR 40×3–200×8. Några av dem:</p>
+på 45 mm), höjden högst ${TRA_SLANK} gånger bredden (en högre balk väljs bredare). Stål: IPE 80–600, HEA 100–600 och fyrkantsrör KKR 40×3–200×8, högst 12 av varje på en bana (de första stålbanorna upp till 300). Några av dem:</p>
 <div class="rulla"><table class="tabell">
 <tr><th></th><th class="v">Profil</th><th>kg/m</th><th>${MYNT}/m</th></tr>
 ${profiler}
@@ -1599,7 +1613,8 @@ function visaMeny(oppna = []) {
         + veck('bana', 'Bana ' + (banaNr + 1) + ' · ' + bana.namn, '<p>Budget ' + kr(bana.budget) + '.</p>' + basta + facitText())
         + veck('guide', 'Guiden', guideText() + '<p><button data-v="guide">Visa guiden med professorn</button></p>')
         + veck('installningar', 'Inställningar',
-            '<p><button data-v="byggfilm">keIWs bygger bron först: ' + (visaByggfilm() ? 'Ja' : 'Nej') + '</button></p>')
+            '<p><button data-v="byggfilm">keIWs bygger bron först: ' + (visaByggfilm() ? 'Ja' : 'Nej') + '</button></p>'
+            + '<p><button data-v="nyheter">Professorn visar nyheterna igen</button></p>')
         + veck('lekman', 'Hur funkar det?', LEKMAN_TEXT)
         + veck('nord', 'Förutsättningar – för nördar', nordText())
         + '<p class="liten">Version ' + (version || 'okänd') + '</p>';
@@ -1655,8 +1670,11 @@ function delaKonstruktion() {
 delaknapp.addEventListener('click', delaKonstruktion);
 delaEl.addEventListener('click', e => { if (e.target === delaEl) delaEl.classList.add('dold'); });
 
+let nyheterIgen = false;   // nyheterna nollställda i menyn: visa banans när menyn stängs
+
 function stangMeny() {
     menyEl.classList.add('dold');
+    if (nyheterIgen) { nyheterIgen = false; visaNyheter(); }
     laddaOmOmLugnt();
 }
 
@@ -1668,6 +1686,15 @@ menyEl.addEventListener('click', e => {
     if (e.target === menyEl) { stangMeny(); return; }   // utanför panelen
     const b = e.target.closest('button');
     if (!b || b.disabled) return;
+    // Nyheterna igen: professorn berättar om dem på varje bana igen (den här
+    // banan när menyn stängs).
+    if (b.dataset.v === 'nyheter') {
+        try { localStorage.removeItem(SPARA_NYHETER); } catch (err) { /* privat läge */ }
+        nyheterIgen = true;
+        b.textContent = 'Nyheterna visas igen ✓';
+        b.disabled = true;
+        return;
+    }
     if (b.dataset.v === 'byggfilm') {
         try { localStorage.setItem(SPARA_BYGGFILM, visaByggfilm() ? 'av' : 'pa'); } catch (err) { /* privat läge */ }
         b.textContent = 'keIWs bygger bron först: ' + (visaByggfilm() ? 'Ja' : 'Nej');
@@ -1755,7 +1782,7 @@ const NYHETER = {
     Kanalen: [
         { mal: () => elRuta('#valjare [data-p=material]'), text: '<b>Nyhet: stål!</b> Under Material finns nu stål. '
             + 'Det är mycket starkare än trä, men tyngre och dyrare.' },
-        { mal: () => elRuta('#valjare [data-p=profil]'), text: 'Stålet finns i serier under Profil: I-balkar (IPE, HEA, HEB) '
+        { mal: () => elRuta('#valjare [data-p=profil]'), text: 'Stålet finns i serier under Profil: I-balkar (IPE, HEA) '
             + 'och fyrkantsrör (KKR). Rören är bra till det som trycks, de knäcks inte lika lätt åt något håll.' }
     ],
     Dalgången: [
@@ -2190,7 +2217,7 @@ popupEl.addEventListener('click', e => {
         else if (d.h) s = traMatt(narmast(traBredder(), p.b * 1000), +d.h, true, traBredder(), traHojder());
         else if (d.serie) {
             // Samma höjd (så nära det går) i den nya serien.
-            const rader = STAL_SERIER[d.serie], h = narmast(rader.map(x => x[1]), p.h * 1000);
+            const rader = stalRader(d.serie), h = narmast(rader.map(x => x[1]), p.h * 1000);
             s = d.serie + ' ' + rader.find(x => x[1] === h)[0];
         }
         else if (d.nr) s = p.namn.split(' ')[0] + ' ' + d.nr;

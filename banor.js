@@ -10,6 +10,8 @@
 //           markY i spel.js)
 //   tra:    {bredd, hojd} i mm: de trädimensioner som finns (de två första
 //           banorna har färre, för att göra det enklare; alla om det saknas)
+//   stal:   {IPE, HEA, KKR}: de stålprofiler som finns (högst 12 per serie;
+//           de första stålbanorna utan de största, alla om det saknas)
 //   material: vilka material som finns (trä och stål om det saknas);
 //           Bäcken, Ån och Sundet har bara trä, stålet (och rören) kommer
 //           på Kanalen, betongen och kablarna på Älven
@@ -48,6 +50,13 @@
 
 // Trädimensionerna på de två första banorna (färre att välja bland).
 const TRA_ENKEL = { bredd: [42, 56, 66, 90, 115], hojd: [180, 270, 360, 450, 540] };
+// Stålet: högst 12 profiler per serie. De första stålbanorna (Kanalen,
+// Ravinen, Dalgången) har inte de största, de långa (Älven, Havet) varannan.
+const KKR_ALLA = ['40×3', '50×3', '60×4', '70×4', '80×4', '90×5', '100×5', '120×6', '150×6', '200×8'];
+const STAL_KORT = { IPE: [80, 100, 120, 140, 160, 180, 200, 220, 240, 270, 300],
+                    HEA: [100, 120, 140, 160, 180, 200, 220, 240, 260, 280, 300], KKR: KKR_ALLA };
+const STAL_LANG = { IPE: [100, 140, 180, 220, 270, 300, 360, 400, 450, 500, 550, 600],
+                    HEA: [100, 140, 180, 220, 260, 300, 340, 400, 450, 500, 550, 600], KKR: KKR_ALLA };
 
 // Sundets fackverk (facit): 4 m högt med fack på 4 m (3 m kring mitten),
 // vägen, överramen, stolparna och diagonalerna i var sin profil; typ 'ledad'
@@ -201,6 +210,7 @@ const BANOR = [
         // 50 m bred kanal: här kommer stålet, och rören (KKR). Trä finns
         // kvar, men ett fackverk av trä går över budget (ca 65 700).
         namn: 'Kanalen',
+        stal: STAL_KORT,
         spann: 50,
         material: ['limtra', 'stal'],
         fasten: [[0, 0, 'fast'], [2, -4], [50, 0, 'glid'], [48, -4], [-4, 0], [54, 0]],
@@ -235,6 +245,7 @@ const BANOR = [
         // En kort ravin utan vatten, med mjuka sluttningar och ett fäste
         // halvvägs ner på var sida.
         namn: 'Ravinen',
+        stal: STAL_KORT,
         spann: 20,
         fasten: [[0, 0, 'fast'], [4, -5], [20, 0, 'glid'], [16, -5]],
         dal: { djup: 10, bredd: 8 },
@@ -259,6 +270,7 @@ const BANOR = [
         // En bred och djup dalgång utan vatten, med långa sluttningar där
         // man kan ställa stöd.
         namn: 'Dalgången',
+        stal: STAL_KORT,
         spann: 60,
         rutnat: 2,
         material: ['limtra', 'stal'],
@@ -298,6 +310,7 @@ const BANOR = [
         // En bred älv med en farled på 70 m, och två fundament i vattnet
         // för pyloner: en snedkabelbro.
         namn: 'Älven',
+        stal: STAL_LANG,
         spann: 160,
         rutnat: 5,
         material: ['limtra', 'stal', 'betong', 'vajer'],
@@ -344,6 +357,7 @@ const BANOR = [
         // Ut till en ö: 400 m över havet, med en farled på 200 m för
         // de stora fartygen. En hängbro.
         namn: 'Havet',
+        stal: STAL_LANG,
         spann: 400,
         rutnat: 10,
         material: ['limtra', 'stal', 'betong', 'vajer'],

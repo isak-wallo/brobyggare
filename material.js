@@ -1,7 +1,7 @@
 // Material och tvärsnitt.
 //
 // Trä och stål väljs ur riktiga profiler: limträ bredd × höjd (TRA_BREDD,
-// TRA_HOJD) och stålets IPE, HEA, HEB och KKR (STAL), så att lösaren räknar med
+// TRA_HOJD) och stålets IPE, HEA och KKR (STAL), så att lösaren räknar med
 // verkliga A, I, W, vikt och pris. I ritningen är balkens storlek profilens
 // namn ('90×315', 'HEA 200'), eller ett steg 0–5 i STEGEN (betongen,
 // kabeln, banornas lösningar och äldre ritningar).
@@ -95,8 +95,7 @@ function rektangel(material, b, h) {
 // det hållet (flänsarnas bredd), inte kring den styva axeln.
 const STAL_IZ = {
     IPE: [8.49, 15.9, 27.7, 44.9, 68.3, 101, 142, 205, 284, 420, 604, 788, 1043, 1318, 1676, 2142, 2668, 3387],
-    HEA: [134, 231, 389, 616, 925, 1336, 1955, 2769, 3668, 4763, 6310, 6985, 7436, 7887, 8564, 9465, 10370, 10820, 11270],
-    HEB: [167, 318, 550, 889, 1363, 2003, 2843, 3923, 5135, 6595, 8563, 9239, 9690, 10140, 10820, 11720, 12620, 13080, 13530]
+    HEA: [134, 231, 389, 616, 925, 1336, 1955, 2769, 3668, 4763, 6310, 6985, 7436, 7887, 8564, 9465, 10370, 10820, 11270]
 };
 const izFor = namn => {
     const [serie, nr] = namn.split(' '), i = (STAL_SERIER[serie] || []).findIndex(r => String(r[0]) === nr);
@@ -151,17 +150,7 @@ const STAL_SERIER = {
           [340, 330, 300, 9.5, 16.5, 27, 133.5, 27690, 1678], [360, 350, 300, 10, 17.5, 27, 142.8, 33090, 1891],
           [400, 390, 300, 11, 19, 27, 159.0, 45070, 2311], [450, 440, 300, 11.5, 21, 27, 178.0, 63720, 2896],
           [500, 490, 300, 12, 23, 27, 197.5, 86970, 3550], [550, 540, 300, 12.5, 24, 27, 211.8, 111900, 4146],
-          [600, 590, 300, 13, 25, 27, 226.5, 141200, 4787]],
-    HEB: [[100, 100, 100, 6, 10, 12, 26.0, 450, 89.9], [120, 120, 120, 6.5, 11, 12, 34.0, 864, 144],
-          [140, 140, 140, 7, 12, 12, 43.0, 1509, 216], [160, 160, 160, 8, 13, 15, 54.3, 2492, 311],
-          [180, 180, 180, 8.5, 14, 15, 65.3, 3831, 426], [200, 200, 200, 9, 15, 18, 78.1, 5696, 570],
-          [220, 220, 220, 9.5, 16, 18, 91.0, 8091, 736], [240, 240, 240, 10, 17, 21, 106, 11260, 938],
-          [260, 260, 260, 10, 17.5, 24, 118.4, 14920, 1148], [280, 280, 280, 10.5, 18, 24, 131.4, 19270, 1376],
-          [300, 300, 300, 11, 19, 27, 149.1, 25170, 1678], [320, 320, 300, 11.5, 20.5, 27, 161.3, 30820, 1926],
-          [340, 340, 300, 12, 21.5, 27, 170.9, 36660, 2156], [360, 360, 300, 12.5, 22.5, 27, 180.6, 43190, 2400],
-          [400, 400, 300, 13.5, 24, 27, 197.8, 57680, 2884], [450, 450, 300, 14, 26, 27, 218.0, 79890, 3551],
-          [500, 500, 300, 14.5, 28, 27, 238.6, 107200, 4287], [550, 550, 300, 15, 29, 27, 254.1, 136700, 4971],
-          [600, 600, 300, 15.5, 30, 27, 270.0, 171000, 5701]]
+          [600, 590, 300, 13, 25, 27, 226.5, 141200, 4787]]
 };
 // Kvadratiska rör (KKR, kallformade): [mått 'b×t', b, t (mm)]. Lätta och
 // lika styva åt alla håll, för fackverkens stänger; för böjning är en
@@ -202,8 +191,8 @@ const STEGEN = {
     limtra: [[56, 180], [56, 215], [66, 225], [90, 245], [90, 270], [90, 345]]
         .map(([b, h]) => rektangel('limtra', b, h)),
     // IPE 80 och 100, sedan HEA 100–200. Böjning kring den styva axeln (W
-    // elastiskt, A_v = livets area). HEB och HEM är tyngre för samma
-    // styvhet, så de skulle bli dyrare men klenare än ett HEA-steg bredvid.
+    // elastiskt, A_v = livets area). HEB och HEM finns inte i spelet: de är
+    // för lika HEA (tyngre för samma styvhet).
     stal: [iprofil('IPE 80', 7.64, 80.1, 20.0, 3.58, 80), iprofil('IPE 100', 10.3, 171, 34.2, 5.08, 100),
            iprofil('HEA 100', 21.2, 349, 72.8, 7.56, 96), iprofil('HEA 140', 31.4, 1033, 155, 10.1, 133),
            iprofil('HEA 160', 38.8, 1673, 220, 13.2, 152), iprofil('HEA 200', 53.8, 3692, 389, 18.1, 190)],
