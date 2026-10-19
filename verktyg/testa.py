@@ -1138,6 +1138,24 @@ def nyheter(webblasare, url, bilder):
     sida.close()
 
 
+def rekord(webblasare, url):
+    """Rekorden provkörs igen i bakgrunden: en bro som inte håller längre glöms, kostnaden räknas om."""
+    sida = webblasare.new_page(viewport={'width': 390, 'height': 844})
+    sida.goto(url)
+    sida.wait_for_function('() => !!version', timeout=5000)
+    sida.evaluate('''() => {
+        const spara = (nr, ritning) => localStorage.setItem('brobyggare-basta-' + BANOR[nr].namn,
+            JSON.stringify({ kostnad: 1, ritning, kollad: 'v1-test' }));
+        spara(0, nyRitning(BANOR[0]));
+        spara(1, losningsRitning(BANOR[1]));
+        kollaRekord(); }''')
+    sida.wait_for_function('''() => { const b = lasBasta(1); return lasBasta(0) === null && b && b.kollad === version; }''',
+                           timeout=30000)
+    kolla('rekord: en bro som inte håller längre glöms, en som håller får dagens kostnad',
+          sida.evaluate('() => lasBasta(1).kostnad === ritningensKostnad(losningsRitning(BANOR[1]), BANOR[1])'))
+    sida.close()
+
+
 def samma_plats(webblasare, url, bredd, hojd):
     """keIWs står på samma ställe på skärmen på alla banor när hela banan syns."""
     sida = webblasare.new_page(viewport={'width': bredd, 'height': hojd})
@@ -1175,6 +1193,7 @@ def main():
         provka(webblasare, url, 'staende', 390, 844, arg.bilder)
         provka(webblasare, url, 'liggande', 844, 390, arg.bilder)
         nyheter(webblasare, url, arg.bilder)
+        rekord(webblasare, url)
         samma_plats(webblasare, url, 390, 844)
         samma_plats(webblasare, url, 844, 390)
         webblasare.close()

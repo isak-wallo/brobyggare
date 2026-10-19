@@ -230,9 +230,61 @@ function sparaBasta(k) {
     const b = lasBasta(banaNr);
     if (b && b.kostnad <= k) return false;
     try {
-        localStorage.setItem(SPARA_BASTA + bana.namn, JSON.stringify({ kostnad: k, ritning }));
+        localStorage.setItem(SPARA_BASTA + bana.namn, JSON.stringify({ kostnad: k, ritning, kollad: version }));
     } catch (e) { /* privat läge */ }
     return true;
+}
+
+// Rekorden provkörs igen i bakgrunden efter en ny version (fysiken,
+// profilerna eller priserna kan ha ändrats): en bro som inte håller längre
+// glöms, och kostnaden räknas om för dem som håller. Kontrollerade rekord
+// märks med versionen (kollad). Bara medan man bygger och en liten bit i
+// taget, så att spelet inte hackar.
+let kollarRekord = false;
+function kollaRekord() {
+    if (kollarRekord || !version) return;
+    kollarRekord = true;
+    let k = null;       // rekordet som provkörs: {nr, text, ritning, sim}
+    const bit = () => {
+        if (lageNu !== 'bygg' || document.hidden) { setTimeout(bit, 500); return; }
+        const slut = performance.now() + 8;
+        try {
+            while (performance.now() < slut) {
+                if (!k) {
+                    k = nastaRekord();
+                    if (!k) { kollarRekord = false; return; }
+                    k.sim = nySim(k.ritning, BANOR[k.nr]);
+                } else if (!k.sim.resultat && k.sim.t < 30) {
+                    simSteg(k.sim);
+                } else {
+                    // Har ett nytt rekord kommit under tiden gäller det i stället.
+                    const nyckel = SPARA_BASTA + BANOR[k.nr].namn;
+                    if (localStorage.getItem(nyckel) === k.text) {
+                        if (k.sim.resultat === 'klarade') localStorage.setItem(nyckel, JSON.stringify(
+                            { kostnad: ritningensKostnad(k.ritning, BANOR[k.nr]), ritning: k.ritning, kollad: version }));
+                        else localStorage.removeItem(nyckel);
+                    }
+                    k = null;
+                }
+            }
+        } catch (e) { kollarRekord = false; return; }     // privat läge
+        setTimeout(bit, 20);
+    };
+    setTimeout(bit, 1000);
+}
+
+// Nästa rekord som inte är kontrollerat i den här versionen (rekord från
+// före version 7 glöms direkt, se lasBasta).
+function nastaRekord() {
+    for (let nr = 0; nr < BANOR.length; nr++) {
+        const nyckel = SPARA_BASTA + BANOR[nr].namn, text = localStorage.getItem(nyckel);
+        if (text === null) continue;
+        let b = null;
+        try { b = JSON.parse(text); } catch (e) { /* trasigt */ }
+        if (!b || !b.ritning || (b.ritning.version || 0) < 7) { localStorage.removeItem(nyckel); continue; }
+        if (b.kollad !== version) return { nr, text, ritning: uppgradera(JSON.parse(JSON.stringify(b.ritning)), BANOR[nr]) };
+    }
+    return null;
 }
 
 // Trä- och stålprofilen man bygger med finns på banan (bana.tra, bana.stal).
@@ -2653,6 +2705,7 @@ requestAnimationFrame(loop);
 function visaVersion(v) {
     version = v;
     versionEl.textContent = v;
+    kollaRekord();
 }
 (async () => {
     try {

@@ -883,3 +883,7 @@ v110-test (Isak 2026-10-19): Färre stålprofiler. HEB borta (för lik HEA): en 
 Högst 12 per serie och bana (`stal` i banor.js): Kanalen, Ravinen och Dalgången IPE 80–300 och HEA 100–300 (11
 var), Älven och Havet varannan upp till 600 (12 var); rören alla tio. Gamla ritningar med HEB får nästa HEA
 (HEB 300 → HEA 320). I menyn (Inställningar) kan professorn visa nyheterna igen på alla banor.
+
+v111-test (Isak 2026-10-19): Rekord som inte håller längre tas bort. Efter varje ny version provkörs de sparade
+rekorden igen i bakgrunden (bara medan man bygger, lite i taget); en bro som inte håller glöms och kostnaden
+räknas om för dem som håller (priserna kan ha ändrats).

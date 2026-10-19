@@ -77,3 +77,5 @@ Knappen bredvid "?" (`#helskarmknapp`) slår på och av helskärm, valfritt (syn
 Nyheter (`NYHETER` i app.js): första gången på en bana med något nytt visar professor keIWs det med
 guidens rutor (`visaGuide(lista)`); i testerna bara med `?test&nyheter`. I menyn (Inställningar) visas de igen
 (`SPARA_NYHETER` töms, banans nyheter när menyn stängs).
+Rekorden (`SPARA_BASTA`, billigaste bron som höll per bana) provkörs igen i bakgrunden efter en ny version
+(`kollaRekord`, märks `kollad` med versionen): de som inte håller glöms, kostnaden räknas om.
