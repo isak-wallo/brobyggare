@@ -680,13 +680,15 @@ def provka(webblasare, url, namn, bredd, hojd, bilder):
     rb = sida.locator('#ruta').bounding_box()
     vb = sida.locator('#valjare').bounding_box()
     kb = sida.locator('#verktyg').bounding_box()
+    pb = sida.locator('#styrning').bounding_box()
     if namn == 'staende':
-        kolla(f'{namn}: förloppsrutan ligger nere på panelen, ovanför Ångra Riv Stopp',
-              abs(rb['y'] + rb['height'] - (vb['y'] + vb['height'])) < 2 and rb['y'] + rb['height'] <= kb['y'],
-              f"ruta {rb['y']:.0f}–{rb['y'] + rb['height']:.0f}, panelen {vb['y']:.0f}–{vb['y'] + vb['height']:.0f}")
-        kolla(f'{namn}: förloppsrutan är liten', rb['height'] < 230, f"{rb['height']:.0f} px")
+        kb = sida.locator('#ruta [data-v=forlopp-klar]').bounding_box()
+        kolla(f'{namn}: förloppsrutan täcker panelen i hela bredden nedtill och är inte för hög',
+              abs(rb['x'] - pb['x']) < 2 and abs(rb['width'] - pb['width']) < 2
+              and abs(rb['y'] + rb['height'] - pb['y'] - pb['height']) < 2 and pb['height'] - 2 <= rb['height'] < 260
+              and kb['y'] + kb['height'] <= pb['y'] + pb['height'],
+              f"ruta {rb}, panelen {pb}")
     else:
-        pb = sida.locator('#styrning').bounding_box()
         kolla(f'{namn}: förloppsrutan täcker panelen till höger, inte bron',
               all(abs(rb[k] - pb[k]) < 2 for k in ('x', 'y', 'width', 'height'))
               and sida.locator('#ruta [data-v=forlopp-klar]').bounding_box()['y'] + 44 <= pb['y'] + pb['height'] + 1,

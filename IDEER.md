@@ -874,3 +874,7 @@ låsning av vridningen och ingen startskärm som i Poppa och Kludda.
 v108-test (Isak 2026-10-18): Förloppsrutan låg liggande mitt över bron. Nu ligger den liggande över hela panelen
 till höger (i stället för Ångra/Riv/Stopp, som den redan står på panelen stående): texten överst, ‹ › och Klar
 nederst. Den skymmer aldrig bron.
+
+v109-test (Isak 2026-10-19): Förloppsrutan stående som liggande: över hela panelen nedtill (hela bredden, i
+stället för Ångra/Riv/Stopp och valen), minst panelens höjd och växer uppåt om texten behöver fler rader.
+‹ › och Klar på en rad nederst.

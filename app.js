@@ -2009,17 +2009,15 @@ function forloppRingar() {
 
 // Förloppsrutan: stående nedtill, nere på panelen (där Material, Typ och
 // Profil vilar under provkörningen), så att bron syns; liggande upptill (CSS).
+// Förloppsrutan ligger över panelen, så att den aldrig skymmer bron: liggande
+// över hela panelen till höger, stående över hela bredden nedtill (minst
+// panelens höjd, växer uppåt om texten behöver fler rader).
 function placeraForlopp() {
-    const s = rutaEl.style;
-    s.position = s.bottom = s.top = s.left = s.width = s.height = '';
-    const liggande = innerWidth > innerHeight;
-    rutaEl.classList.toggle('i-panel', liggande);
-    s.position = 'fixed';
-    if (liggande) {
-        // Liggande: över hela panelen till höger, så att rutan aldrig skymmer bron.
-        const p = document.getElementById('styrning').getBoundingClientRect();
-        Object.assign(s, { left: p.left + 'px', top: p.top + 'px', width: p.width + 'px', height: p.height + 'px' });
-    } else s.bottom = innerHeight - valjareEl.getBoundingClientRect().bottom + 'px';
+    const s = rutaEl.style, p = document.getElementById('styrning').getBoundingClientRect();
+    Object.assign(s, { position: 'fixed', left: p.left + 'px', width: p.width + 'px' });
+    if (innerWidth > innerHeight)
+        Object.assign(s, { top: p.top + 'px', height: p.height + 'px', bottom: '', minHeight: '' });
+    else Object.assign(s, { bottom: innerHeight - p.bottom + 'px', minHeight: p.height + 'px', top: '', height: '' });
 }
 addEventListener('resize', () => { if (forlopp) placeraForlopp(); });
 
@@ -2052,7 +2050,7 @@ function stangForlopp() {
     stallTill(sim.slutBild, false);
     rutaEl.className = '';
     const s = rutaEl.style;
-    s.position = s.bottom = s.top = s.left = s.width = s.height = '';
+    s.position = s.bottom = s.top = s.left = s.width = s.height = s.minHeight = '';
 }
 
 // Balken närmast punkten i förloppets läge (de böjda elementen), eller -1.

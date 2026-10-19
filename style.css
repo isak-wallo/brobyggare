@@ -831,60 +831,59 @@ html, body {
     display: none;
 }
 
-/* Förloppet: litet och nedtill, så att bron syns (stående nere på panelen,
-   liggande över hela panelen, placeraForlopp i app.js). */
+/* Förloppet ligger över panelen (placeraForlopp i app.js), så att bron syns:
+   stående över hela bredden nedtill, och växer uppåt om texten behöver fler
+   rader; liggande över hela panelen till höger. Hel bakgrund, så att
+   knapparna under inte lyser igenom. Texten överst, ‹ › och Klar nederst. */
 #ruta.forlopp {
     top: auto;
-    bottom: 10px;
     z-index: 20;
-    transform: translateX(-50%);
-    width: min(86%, 320px);
-    padding: 8px 12px 10px;
-}
-
-#ruta.forlopp h1 {
-    margin-bottom: 2px;
-    font-size: 16px;
-}
-
-#ruta.forlopp p {
-    margin-bottom: 6px;
-    font-size: 13px;
-}
-
-#ruta.forlopp button {
-    padding: 6px 16px;
-    font-size: 15px;
-}
-
-/* Liggande: i panelen till höger. Texten överst, ‹ › och Klar nederst. */
-#ruta.forlopp.i-panel {
     box-sizing: border-box;
     transform: none;
     border-radius: 0;
     box-shadow: none;
-    background-color: #f4f7f2;   /* hel, så att knapparna under inte lyser igenom */
-    padding: 12px 10px;
+    background-color: #f4f7f2;
+    padding: 10px 12px max(22px, calc(env(safe-area-inset-bottom) + 8px));
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto auto 1fr auto auto;
-    gap: 8px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-rows: auto auto 1fr auto;
+    gap: 6px;
+    max-height: 60vh;
     overflow: auto;
 }
 
-#ruta.forlopp.i-panel h1,
-#ruta.forlopp.i-panel p,
-#ruta.forlopp.i-panel [data-v="forlopp-klar"] {
+#ruta.forlopp h1,
+#ruta.forlopp p {
     grid-column: 1 / -1;
-}
-
-#ruta.forlopp.i-panel p {
     margin: 0;
 }
 
-#ruta.forlopp.i-panel button {
+#ruta.forlopp h1 {
+    font-size: 16px;
+}
+
+#ruta.forlopp p {
+    font-size: 13px;
+}
+
+#ruta.forlopp button {
     margin: 0;
     padding: 0;
+    font-size: 15px;
+}
+
+@media (orientation: landscape) {
+    #ruta.forlopp {
+        padding: 12px 10px;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: auto auto 1fr auto auto;
+        gap: 8px;
+        max-height: none;
+    }
+
+    #ruta.forlopp [data-v="forlopp-klar"] {
+        grid-column: 1 / -1;
+    }
 }
 
 #ruta button:disabled {
